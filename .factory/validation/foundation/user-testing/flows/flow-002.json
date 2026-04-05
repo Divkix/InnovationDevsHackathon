@@ -1,0 +1,24 @@
+{
+  "assertionId": "VAL-ONB-009",
+  "status": "pass",
+  "summary": "Successfully tested that completing onboarding persists policy selection. After selecting Auto Insurance policy and clicking 'Complete Onboarding', refreshing the page correctly skips the onboarding flow and goes directly to the main view with the selected policy ('auto') still active.",
+  "evidence": [
+    "foundation/flow-002/VAL-ONB-009-01-policy-selection.png",
+    "foundation/flow-002/VAL-ONB-009-02-main-view.png",
+    "foundation/flow-002/VAL-ONB-009-03-after-refresh.png",
+    "foundation/flow-002/VAL-ONB-009-04-persisted-policy.png"
+  ],
+  "findings": {
+    "passed": [
+      "After completing onboarding, the selected policy type ('auto') is persisted in localStorage",
+      "Refreshing the page correctly skips the onboarding flow and shows the main view directly",
+      "The previously selected policy remains active after page refresh",
+      "Onboarding completion state is properly persisted in localStorage"
+    ],
+    "failed": [],
+    "blocked": []
+  },
+  "frictions": [],
+  "blockers": [],
+  "toolsUsed": ["agent-browser"]
+}

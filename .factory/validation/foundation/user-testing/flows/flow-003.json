@@ -1,0 +1,22 @@
+{
+  "assertionId": "VAL-PS-004",
+  "status": "pass",
+  "summary": "Successfully tested that policy selection persists across page refreshes. After selecting 'Homeowners' policy type, the value is stored in localStorage under 'insurescope_policyType' key. Refreshing the page preserves this value.",
+  "evidence": [
+    "/Users/divkix/.factory/missions/223f9bc1-6385-4720-93ec-21c47bb6bc0d/evidence/foundation/flow-003/VAL-PS-004-01-initial-state.png",
+    "/Users/divkix/.factory/missions/223f9bc1-6385-4720-93ec-21c47bb6bc0d/evidence/foundation/flow-003/VAL-PS-004-02-policy-selected.png",
+    "/Users/divkix/.factory/missions/223f9bc1-6385-4720-93ec-21c47bb6bc0d/evidence/foundation/flow-003/VAL-PS-004-03-after-refresh.png"
+  ],
+  "findings": {
+    "passed": [
+      "Policy type 'homeowners' is correctly stored in localStorage under 'insurescope_policyType' key after selection",
+      "localStorage value persists after page refresh: {\"insurescope_policyType\":\"homeowners\"}",
+      "Policy selection mechanism works correctly via policy selector buttons"
+    ],
+    "failed": [],
+    "blocked": []
+  },
+  "frictions": [],
+  "blockers": [],
+  "toolsUsed": ["agent-browser"]
+}
