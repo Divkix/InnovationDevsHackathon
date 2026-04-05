@@ -1,15 +1,4 @@
-import type { BoundingBox, DetectedItem, Detection } from "@/types";
-
-type HazardSeverity = "low" | "medium" | "high";
-
-export interface HazardWarning {
-  id: string;
-  title: string;
-  severity: HazardSeverity;
-  message: string;
-  relatedCategories: string[];
-  positive?: boolean;
-}
+import type { BoundingBox, DetectedItem, Detection, HazardWarning } from "@/types";
 
 interface HazardSubject {
   category: string;

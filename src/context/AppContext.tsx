@@ -7,6 +7,9 @@ import {
   useMemo,
   useState,
 } from "react";
+import { simulateDisaster } from "@/utils/disasterSimulator";
+import { getHazardWarnings } from "@/utils/hazardRules";
+import { getCoverageRecommendations } from "@/utils/recommendationEngine";
 import type {
   AppContextValue,
   AppTab,
@@ -157,16 +160,34 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     ),
   );
 
-  // Transient state (not persisted)
-  const [hazardWarnings, setHazardWarningsState] = useState<HazardWarning[]>(
-    DEFAULT_STATE.hazardWarnings,
+  // Transient state (not persisted) - COMPUTED from detections and items
+  const detectedItemsList = useMemo(() => Array.from(detectedItems.values()), [detectedItems]);
+
+  // Compute hazard warnings from detected items
+  const hazardWarnings = useMemo(() => getHazardWarnings(detectedItemsList), [detectedItemsList]);
+
+  // Compute recommendations from items and policy
+  const recommendations = useMemo(
+    () =>
+      getCoverageRecommendations({
+        detectedItems: detectedItemsList,
+        manualItems,
+        policyType,
+        hazards: hazardWarnings,
+      }),
+    [detectedItemsList, manualItems, policyType, hazardWarnings],
   );
-  const [simulationResult, setSimulationResultState] = useState<DisasterSimulationResult | null>(
-    DEFAULT_STATE.simulationResult,
-  );
-  const [recommendations, setRecommendationsState] = useState<CoverageRecommendation[]>(
-    DEFAULT_STATE.recommendations,
-  );
+
+  // Compute simulation result when simulator type changes
+  const simulationResult = useMemo(() => {
+    if (!activeSimulatorType) return null;
+    return simulateDisaster({
+      disasterType: activeSimulatorType,
+      detectedItems: detectedItemsList,
+      manualItems,
+      policyType,
+    });
+  }, [activeSimulatorType, detectedItemsList, manualItems, policyType]);
 
   /**
    * Action: setPolicyType
@@ -341,26 +362,29 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
 
   /**
    * Action: setHazardWarnings
-   * Updates hazard warnings (transient, computed from detections)
+   * DEPRECATED: Hazard warnings are now computed automatically from detections.
+   * This setter is kept for API compatibility but has no effect.
    */
-  const setHazardWarnings = useCallback((warnings: HazardWarning[]): void => {
-    setHazardWarningsState(warnings);
+  const setHazardWarnings = useCallback((_warnings: HazardWarning[]): void => {
+    // No-op: computed from detected items automatically
   }, []);
 
   /**
    * Action: setSimulationResult
-   * Updates disaster simulation result (transient, computed on demand)
+   * DEPRECATED: Simulation result is now computed automatically when activeSimulatorType changes.
+   * This setter is kept for API compatibility but has no effect.
    */
-  const setSimulationResult = useCallback((result: DisasterSimulationResult | null): void => {
-    setSimulationResultState(result);
+  const setSimulationResult = useCallback((_result: DisasterSimulationResult | null): void => {
+    // No-op: computed from activeSimulatorType, items, and policy automatically
   }, []);
 
   /**
    * Action: setRecommendations
-   * Updates coverage recommendations (transient, computed from gaps)
+   * DEPRECATED: Recommendations are now computed automatically from items and policy.
+   * This setter is kept for API compatibility but has no effect.
    */
-  const setRecommendations = useCallback((newRecommendations: CoverageRecommendation[]): void => {
-    setRecommendationsState(newRecommendations);
+  const setRecommendations = useCallback((_newRecommendations: CoverageRecommendation[]): void => {
+    // No-op: computed from detectedItems, manualItems, policyType, and hazards automatically
   }, []);
 
   // Memoize the context value to prevent unnecessary re-renders

@@ -1,16 +1,13 @@
-import type { DetectedItem, ItemBreakdown, ManualItem, PolicyType } from "@/types";
+import type {
+  CoverageRecommendation,
+  DetectedItem,
+  HazardWarning,
+  ItemBreakdown,
+  ManualItem,
+  PolicyType,
+} from "@/types";
 import { simulateDisaster } from "@/utils/disasterSimulator";
-import type { HazardWarning } from "@/utils/hazardRules";
 import { createItemBreakdown, getUpgradeRecommendations } from "@/utils/valueCalculator";
-
-export interface CoverageRecommendation {
-  id: string;
-  title: string;
-  description: string;
-  priority: "high" | "medium" | "low";
-  estimatedMonthlyCost?: number;
-  exposureReductionPercent?: number;
-}
 
 interface RecommendationArgs {
   detectedItems: DetectedItem[];

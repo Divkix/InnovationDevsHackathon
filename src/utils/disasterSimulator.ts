@@ -1,26 +1,12 @@
-import type { DetectedItem, ItemBreakdown, ManualItem, PolicyType } from "@/types";
+import type {
+  DetectedItem,
+  DisasterSimulationResult,
+  DisasterType,
+  ItemBreakdown,
+  ManualItem,
+  PolicyType,
+} from "@/types";
 import { createItemBreakdown } from "@/utils/valueCalculator";
-
-export type DisasterType = "fire" | "theft" | "flood" | "earthquake";
-
-export interface DisasterImpactItem {
-  itemId: string;
-  category: string;
-  estimatedValue: number;
-  lossAmount: number;
-  coveredAmount: number;
-  outOfPocketAmount: number;
-}
-
-export interface DisasterSimulationResult {
-  type: DisasterType;
-  totalLoss: number;
-  currentPolicyOutOfPocket: number;
-  recommendedPolicyOutOfPocket: number;
-  uncoveredItems: number;
-  impactedItems: DisasterImpactItem[];
-  insight: string;
-}
 
 interface SimulationArgs {
   disasterType: DisasterType;
