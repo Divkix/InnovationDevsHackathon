@@ -1,12 +1,13 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { lookupCoverage } from '@/utils/coverageLookup'
+import { getObjectCoverLayout, projectBoundingBoxToCanvas } from './layout'
 import type {
   PolicyType,
   CoverageResult,
   CoverageStatus,
   Detection,
-  BoundingBox,
 } from '@/types'
+import type { ObjectCoverLayout, CanvasCoordinates } from './layout'
 
 /**
  * Color definitions for coverage status - State Farm branding
@@ -93,25 +94,6 @@ function formatCurrency(value: number): string {
 }
 
 /**
- * Layout result for object-fit cover calculations
- */
-export interface ObjectCoverLayout {
-  scale: number
-  offsetX: number
-  offsetY: number
-}
-
-/**
- * Canvas coordinate system
- */
-export interface CanvasCoordinates {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
-/**
  * Tracked item with coverage information
  */
 interface TrackedItem {
@@ -143,45 +125,6 @@ export interface CoverageOverlayProps {
   policyType: PolicyType
   confidenceThreshold?: number
   onItemClick?: (item: ClickedItem) => void
-}
-
-/**
- * Calculate object-fit cover layout
- */
-export function getObjectCoverLayout(
-  videoWidth: number,
-  videoHeight: number,
-  containerWidth: number,
-  containerHeight: number
-): ObjectCoverLayout {
-  if (!videoWidth || !videoHeight || !containerWidth || !containerHeight) {
-    return { scale: 1, offsetX: 0, offsetY: 0 }
-  }
-
-  const scale = Math.max(containerWidth / videoWidth, containerHeight / videoHeight)
-  const renderedWidth = videoWidth * scale
-  const renderedHeight = videoHeight * scale
-
-  return {
-    scale,
-    offsetX: (containerWidth - renderedWidth) / 2,
-    offsetY: (containerHeight - renderedHeight) / 2
-  }
-}
-
-/**
- * Project bounding box coordinates to canvas space
- */
-export function projectBoundingBoxToCanvas(
-  box: BoundingBox,
-  layout: ObjectCoverLayout
-): CanvasCoordinates {
-  return {
-    x: (box.originX || 0) * layout.scale + layout.offsetX,
-    y: (box.originY || 0) * layout.scale + layout.offsetY,
-    width: (box.width || 0) * layout.scale,
-    height: (box.height || 0) * layout.scale
-  }
 }
 
 /**

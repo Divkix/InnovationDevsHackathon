@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
-import { CoverageOverlay, getObjectCoverLayout, projectBoundingBoxToCanvas } from './CoverageOverlay'
+import { CoverageOverlay } from './CoverageOverlay'
+import { getObjectCoverLayout, projectBoundingBoxToCanvas } from './layout'
 import { lookupCoverage } from '@/utils/coverageLookup'
 import type { Detection, PolicyType } from '@/types'
 

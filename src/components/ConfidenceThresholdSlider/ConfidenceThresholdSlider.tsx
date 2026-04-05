@@ -1,35 +1,12 @@
 import { useState, useCallback } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import type { ConfidenceThresholdSliderProps } from '../../types';
-
-/**
- * Default confidence threshold value (50%)
- */
-export const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
-
-/**
- * Minimum confidence threshold value (10%)
- */
-export const MIN_CONFIDENCE_THRESHOLD = 0.1;
-
-/**
- * Maximum confidence threshold value (90%)
- */
-export const MAX_CONFIDENCE_THRESHOLD = 0.9;
-
-/**
- * Step value for threshold adjustments (5%)
- */
-export const THRESHOLD_STEP = 0.05;
-
-/**
- * Format threshold value as percentage string
- * @param value - Threshold value (0.1 to 0.9)
- * @returns Percentage string (e.g., "50%")
- */
-export function formatThresholdPercentage(value: number): string {
-  return `${Math.round(value * 100)}%`;
-}
+import {
+  MIN_CONFIDENCE_THRESHOLD,
+  MAX_CONFIDENCE_THRESHOLD,
+  THRESHOLD_STEP,
+  formatThresholdPercentage
+} from './thresholdUtils';
 
 /**
  * ConfidenceThresholdSlider component - Collapsible slider for adjusting detection confidence threshold

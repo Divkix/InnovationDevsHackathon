@@ -8,10 +8,31 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist', '.venv', 'public/wasm', '*.config.js']),
+  // Disable react-refresh rule for context provider modules
+  {
+    files: ['src/context/AppContext.tsx'],
+    plugins: {
+      'react-refresh': reactRefresh,
+    },
+    languageOptions: {
+      ecmaVersion: 2024,
+      globals: globals.browser,
+      parser: tsEslint.parser,
+      parserOptions: {
+        ecmaVersion: 2024,
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+        project: './tsconfig.app.json',
+      },
+    },
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
   // JavaScript and TypeScript files (non-test)
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**/*', '*.config.js'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**/*', '*.config.js', 'src/context/AppContext.tsx'],
     extends: [
       js.configs.recommended,
       ...tsEslint.configs.recommended,
