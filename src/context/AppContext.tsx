@@ -7,15 +7,24 @@ import {
   useMemo,
   useState,
 } from "react";
+import { simulateDisaster } from "@/utils/disasterSimulator";
+import { getHazardWarnings } from "@/utils/hazardRules";
+import { getCoverageRecommendations } from "@/utils/recommendationEngine";
 import type {
   AppContextValue,
   AppTab,
+  CoverageRecommendation,
   DetectedItem,
   DetectedItemsInput,
+  DisasterSimulationResult,
+  DisasterType,
+  HazardWarning,
   ManualItem,
   PolicyType,
+  PrivacyModeState,
 } from "../types";
-import { DEFAULT_STATE, STORAGE_KEYS, VALID_POLICY_TYPES } from "./appState";
+import { VALID_POLICY_TYPES } from "../types";
+import { DEFAULT_STATE, STORAGE_KEYS } from "./appState";
 
 // Re-export AppContextValue for backward compatibility
 export type { AppContextValue };
@@ -132,6 +141,53 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
   const [selectedItemId, setSelectedItemIdState] = useState<string | null>(
     DEFAULT_STATE.selectedItemId,
   );
+
+  // Load persisted privacy mode
+  const [privacyMode, setPrivacyModeState] = useState<PrivacyModeState>(() =>
+    loadFromStorage<PrivacyModeState>(
+      STORAGE_KEYS.privacyMode,
+      DEFAULT_STATE.privacyMode,
+      (v) => JSON.parse(v) as PrivacyModeState,
+    ),
+  );
+
+  // Load persisted simulator type
+  const [activeSimulatorType, setActiveSimulatorTypeState] = useState<DisasterType | null>(() =>
+    loadFromStorage<DisasterType | null>(
+      STORAGE_KEYS.activeSimulatorType,
+      DEFAULT_STATE.activeSimulatorType,
+      (v) => v as DisasterType | null,
+    ),
+  );
+
+  // Transient state (not persisted) - COMPUTED from detections and items
+  const detectedItemsList = useMemo(() => Array.from(detectedItems.values()), [detectedItems]);
+
+  // Compute hazard warnings from detected items
+  const hazardWarnings = useMemo(() => getHazardWarnings(detectedItemsList), [detectedItemsList]);
+
+  // Compute recommendations from items and policy
+  const recommendations = useMemo(
+    () =>
+      getCoverageRecommendations({
+        detectedItems: detectedItemsList,
+        manualItems,
+        policyType,
+        hazards: hazardWarnings,
+      }),
+    [detectedItemsList, manualItems, policyType, hazardWarnings],
+  );
+
+  // Compute simulation result when simulator type changes
+  const simulationResult = useMemo(() => {
+    if (!activeSimulatorType) return null;
+    return simulateDisaster({
+      disasterType: activeSimulatorType,
+      detectedItems: detectedItemsList,
+      manualItems,
+      policyType,
+    });
+  }, [activeSimulatorType, detectedItemsList, manualItems, policyType]);
 
   /**
    * Action: setPolicyType
@@ -279,6 +335,58 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     saveToStorage(STORAGE_KEYS.cameraPermissionDenied, "false");
   }, []);
 
+  /**
+   * Action: setPrivacyMode
+   * Enables/disables privacy mode and persists to localStorage
+   */
+  const setPrivacyMode = useCallback((enabled: boolean): void => {
+    setPrivacyModeState((prevMode) => {
+      const newMode: PrivacyModeState = { ...prevMode, enabled };
+      saveToStorage(STORAGE_KEYS.privacyMode, JSON.stringify(newMode));
+      return newMode;
+    });
+  }, []);
+
+  /**
+   * Action: setActiveSimulatorType
+   * Sets the active disaster simulator type and persists to localStorage
+   */
+  const setActiveSimulatorType = useCallback((type: DisasterType | null): void => {
+    setActiveSimulatorTypeState(type);
+    if (type) {
+      saveToStorage(STORAGE_KEYS.activeSimulatorType, type);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.activeSimulatorType);
+    }
+  }, []);
+
+  /**
+   * Action: setHazardWarnings
+   * DEPRECATED: Hazard warnings are now computed automatically from detections.
+   * This setter is kept for API compatibility but has no effect.
+   */
+  const setHazardWarnings = useCallback((_warnings: HazardWarning[]): void => {
+    // No-op: computed from detected items automatically
+  }, []);
+
+  /**
+   * Action: setSimulationResult
+   * DEPRECATED: Simulation result is now computed automatically when activeSimulatorType changes.
+   * This setter is kept for API compatibility but has no effect.
+   */
+  const setSimulationResult = useCallback((_result: DisasterSimulationResult | null): void => {
+    // No-op: computed from activeSimulatorType, items, and policy automatically
+  }, []);
+
+  /**
+   * Action: setRecommendations
+   * DEPRECATED: Recommendations are now computed automatically from items and policy.
+   * This setter is kept for API compatibility but has no effect.
+   */
+  const setRecommendations = useCallback((_newRecommendations: CoverageRecommendation[]): void => {
+    // No-op: computed from detectedItems, manualItems, policyType, and hazards automatically
+  }, []);
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo<AppContextValue>(
     () => ({
@@ -292,6 +400,12 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       confidenceThreshold,
       cameraPermissionDenied,
       manualModeEnabled,
+      // New state
+      privacyMode,
+      activeSimulatorType,
+      hazardWarnings,
+      simulationResult,
+      recommendations,
       // Actions
       setPolicyType,
       completeOnboarding,
@@ -306,6 +420,12 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       enableManualMode,
       disableManualMode,
       resetCameraPermission,
+      // New actions
+      setPrivacyMode,
+      setActiveSimulatorType,
+      setHazardWarnings,
+      setSimulationResult,
+      setRecommendations,
     }),
     [
       policyType,
@@ -317,6 +437,11 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       confidenceThreshold,
       cameraPermissionDenied,
       manualModeEnabled,
+      privacyMode,
+      activeSimulatorType,
+      hazardWarnings,
+      simulationResult,
+      recommendations,
       setPolicyType,
       completeOnboarding,
       setActiveTab,
@@ -330,6 +455,11 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       enableManualMode,
       disableManualMode,
       resetCameraPermission,
+      setPrivacyMode,
+      setActiveSimulatorType,
+      setHazardWarnings,
+      setSimulationResult,
+      setRecommendations,
     ],
   );
 

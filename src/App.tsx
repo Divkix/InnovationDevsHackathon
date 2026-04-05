@@ -5,13 +5,31 @@ import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemFo
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
 import { DetailModal } from "./components/DetailModal/DetailModal";
+import { DisasterSimulator } from "./components/DisasterSimulator";
 import { OnboardingFlow } from "./components/OnboardingFlow/OnboardingFlow";
 import { PolicySelector } from "./components/PolicySelector/PolicySelector";
+import { PrivacyModeBanner } from "./components/PrivacyModeBanner";
+import { RecommendationCards } from "./components/RecommendationCards";
+import { ReportCard } from "./components/ReportCard";
 import { SwissButton } from "./components/Swiss";
 import { TabNavigation } from "./components/TabNavigation/TabNavigation";
 import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
 import type { ManualItem } from "./types";
+import { createItemBreakdown } from "./utils/valueCalculator";
+
+/**
+ * INTEGRATION NOTES FOR TEAMMATES
+ *
+ * This file contains placeholder sections for new features being built
+ * by Matin (hazard warnings, disaster simulator) and Maitreyee (recommendations, privacy mode).
+ *
+ * Placeholder sections are marked with data-owner and data-section attributes.
+ * When implementing your feature, replace the placeholder content inside these sections.
+ *
+ * DO NOT modify section containers (they're owned by Divanshu/Integrator).
+ * DO modify content inside sections (that's your feature code).
+ */
 
 function App(): ReactElement {
   const {
@@ -22,11 +40,18 @@ function App(): ReactElement {
     selectedItemId,
     onboardingComplete,
     manualModeEnabled,
+    privacyMode,
+    activeSimulatorType,
+    hazardWarnings,
+    simulationResult,
+    recommendations,
     removeManualItem,
     setActiveTab,
     setSelectedItem,
     enableManualMode,
     disableManualMode,
+    setPrivacyMode,
+    setActiveSimulatorType,
   } = useAppContext();
 
   const gemini = useGemini();
@@ -50,6 +75,17 @@ function App(): ReactElement {
             | "dashboard",
         }
       : null;
+
+  // Computed values for ReportCard
+  const detectedItemsList = Array.from(detectedItems.values());
+  const itemBreakdown = createItemBreakdown(detectedItemsList, manualItems, policyType);
+  const totalValue = itemBreakdown.reduce((sum, item) => sum + item.estimatedValue, 0);
+  const protectedValue = itemBreakdown.reduce(
+    (sum, item) => sum + (item.status === "covered" ? item.estimatedValue : 0),
+    0,
+  );
+  const coverageGapPercentage =
+    totalValue > 0 ? Math.round(((totalValue - protectedValue) / totalValue) * 100) : 0;
 
   const handleCloseDetailModal = (): void => setSelectedItem(null);
   const handleOpenAddItem = (): void => {
@@ -189,6 +225,77 @@ function App(): ReactElement {
                   manualItems={manualItems}
                   policyType={policyType}
                   onItemClick={(item) => setSelectedItem(item.id)}
+                />
+
+                {/* Hazard Warnings Section */}
+                <section className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern">
+                  <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
+                    <h3 className="font-black uppercase tracking-widest">Hazard Warnings</h3>
+                  </div>
+                  <div className="p-6">
+                    {hazardWarnings.length > 0 ? (
+                      <ul className="space-y-3">
+                        {hazardWarnings.map((warning) => (
+                          <li
+                            key={warning.id}
+                            className={`p-4 border-2 ${
+                              warning.severity === "high"
+                                ? "border-red-500 bg-red-50"
+                                : warning.severity === "medium"
+                                  ? "border-yellow-500 bg-yellow-50"
+                                  : "border-green-500 bg-green-50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold">{warning.title}</span>
+                              <span
+                                className={`text-xs uppercase px-2 py-1 ${
+                                  warning.severity === "high"
+                                    ? "bg-red-500 text-white"
+                                    : warning.severity === "medium"
+                                      ? "bg-yellow-500 text-black"
+                                      : "bg-green-500 text-white"
+                                }`}
+                              >
+                                {warning.severity}
+                              </span>
+                            </div>
+                            <p className="text-sm mt-2 text-swiss-fg/80">{warning.message}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-swiss-fg/60 italic">
+                        No hazards detected. Scan items to see warnings.
+                      </p>
+                    )}
+                  </div>
+                </section>
+
+                {/* Disaster Simulator Section */}
+                <DisasterSimulator
+                  result={simulationResult}
+                  selectedType={activeSimulatorType}
+                  onSelectType={setActiveSimulatorType}
+                />
+
+                {/* Recommendations Section */}
+                <RecommendationCards recommendations={recommendations} />
+
+                {/* Report Card Section */}
+                <ReportCard
+                  totalValue={totalValue}
+                  protectedValue={protectedValue}
+                  coverageGapPercentage={coverageGapPercentage}
+                  items={itemBreakdown}
+                  policyType={policyType}
+                />
+
+                {/* Privacy Mode Section */}
+                <PrivacyModeBanner
+                  enabled={privacyMode.enabled}
+                  onToggle={() => setPrivacyMode(!privacyMode.enabled)}
+                  localOnlyMessage={privacyMode.localOnlyMessage}
                 />
 
                 <AnimatePresence>

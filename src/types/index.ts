@@ -120,6 +120,8 @@ export interface StorageKeys {
   confidenceThreshold: string;
   cameraPermissionDenied: string;
   manualModeEnabled: string;
+  privacyMode: string;
+  activeSimulatorType: string;
 }
 
 /** Default/initial state values */
@@ -131,6 +133,12 @@ export interface AppState {
   manualItems: ManualItem[];
   selectedItemId: string | null;
   confidenceThreshold: number;
+  // New feature state
+  privacyMode: PrivacyModeState;
+  activeSimulatorType: DisasterType | null;
+  hazardWarnings: HazardWarning[];
+  simulationResult: DisasterSimulationResult | null;
+  recommendations: CoverageRecommendation[];
 }
 
 /** Input type for updating detected items */
@@ -155,6 +163,12 @@ export interface AppContextValue {
   confidenceThreshold: number;
   cameraPermissionDenied: boolean;
   manualModeEnabled: boolean;
+  // New state
+  privacyMode: PrivacyModeState;
+  activeSimulatorType: DisasterType | null;
+  hazardWarnings: HazardWarning[];
+  simulationResult: DisasterSimulationResult | null;
+  recommendations: CoverageRecommendation[];
   // Actions
   setPolicyType: (policy: PolicyType) => void;
   completeOnboarding: () => void;
@@ -169,6 +183,12 @@ export interface AppContextValue {
   enableManualMode: () => void;
   disableManualMode: () => void;
   resetCameraPermission: () => void;
+  // New actions
+  setPrivacyMode: (enabled: boolean) => void;
+  setActiveSimulatorType: (type: DisasterType | null) => void;
+  setHazardWarnings: (warnings: HazardWarning[]) => void;
+  setSimulationResult: (result: DisasterSimulationResult | null) => void;
+  setRecommendations: (recommendations: CoverageRecommendation[]) => void;
 }
 
 // ============================================================================
@@ -319,4 +339,56 @@ export interface AnimationProps {
 /** Test environment globals */
 export interface TestGlobals {
   __TESTING__?: boolean;
+}
+
+// ============================================================================
+// Hazard & Disaster Types
+// ============================================================================
+
+export type DisasterType = "fire" | "theft" | "flood" | "earthquake";
+
+export interface HazardWarning {
+  id: string;
+  title: string;
+  severity: "low" | "medium" | "high";
+  message: string;
+  relatedCategories: string[];
+  positive?: boolean;
+}
+
+export interface DisasterImpactItem {
+  itemId: string;
+  category: string;
+  estimatedValue: number;
+  lossAmount: number;
+  coveredAmount: number;
+  outOfPocketAmount: number;
+}
+
+export interface DisasterSimulationResult {
+  type: DisasterType;
+  totalLoss: number;
+  currentPolicyOutOfPocket: number;
+  recommendedPolicyOutOfPocket: number;
+  uncoveredItems: number;
+  impactedItems: DisasterImpactItem[];
+  insight: string;
+}
+
+// ============================================================================
+// Recommendation & Privacy Types
+// ============================================================================
+
+export interface CoverageRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  estimatedMonthlyCost?: number;
+  exposureReductionPercent?: number;
+  priority: "high" | "medium" | "low";
+}
+
+export interface PrivacyModeState {
+  enabled: boolean;
+  localOnlyMessage: string;
 }
