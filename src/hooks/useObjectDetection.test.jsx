@@ -89,9 +89,9 @@ describe('useObjectDetection', () => {
         expect(mockForVisionTasks).toHaveBeenCalled()
       })
       
-      // Verify CDN URL is used
+      // Verify local WASM path is used
       expect(mockForVisionTasks).toHaveBeenCalledWith(
-        expect.stringContaining('cdn.jsdelivr.net')
+        '/wasm'
       )
     })
 
@@ -102,12 +102,12 @@ describe('useObjectDetection', () => {
         expect(mockCreateFromOptions).toHaveBeenCalled()
       })
       
-      // Verify model configuration
+      // Verify model configuration with local model path
       expect(mockCreateFromOptions).toHaveBeenCalledWith(
         'vision-wasm-files',
         {
           baseOptions: {
-            modelAssetPath: expect.stringContaining('efficientdet_lite0_uint8'),
+            modelAssetPath: '/models/efficientdet_lite0.tflite',
             delegate: 'GPU'
           },
           runningMode: 'VIDEO',

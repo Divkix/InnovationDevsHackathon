@@ -70,9 +70,9 @@ export function useObjectDetection() {
           }, timeoutMs)
         })
 
-        // Load MediaPipe WASM files from CDN
+        // Load MediaPipe WASM files from local path
         const visionPromise = FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm'
+          '/wasm'
         )
 
         // Race between initialization and timeout
@@ -81,10 +81,10 @@ export function useObjectDetection() {
         // Check if component is still mounted
         if (cancelledRef.current) return
 
-        // Create ObjectDetector with specified model configuration
+        // Create ObjectDetector with local model path
         const detectorPromise = ObjectDetector.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0_uint8.tflite',
+            modelAssetPath: '/models/efficientdet_lite0.tflite',
             delegate: 'GPU'
           },
           runningMode: 'VIDEO',
