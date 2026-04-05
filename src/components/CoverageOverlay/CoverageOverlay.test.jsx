@@ -769,6 +769,45 @@ describe('CoverageOverlay', () => {
   })
 
   describe('detection confidence filtering', () => {
+    it('filters out person detections', () => {
+      lookupCoverage.mockReturnValue({
+        status: 'covered',
+        color: 'green',
+        estimatedValue: 800,
+        note: 'Covered'
+      })
+
+      const personDetection = {
+        boundingBox: { originX: 100, originY: 100, width: 200, height: 300 },
+        categories: [{ categoryName: 'person', score: 0.95 }]
+      }
+      
+      const laptopDetection = {
+        boundingBox: { originX: 400, originY: 200, width: 100, height: 80 },
+        categories: [{ categoryName: 'laptop', score: 0.88 }]
+      }
+      
+      const mockVideoWithReady = { current: { ...createMockVideoElement(), readyState: 2 } }
+
+      const { container } = render(
+        <CoverageOverlay
+          videoRef={mockVideoWithReady}
+          detections={[personDetection, laptopDetection]}
+          policyType="renters"
+        />
+      )
+      
+      // Flush animation frames to trigger detection processing
+      flushAnimationFrames()
+      
+      // Only laptop should be rendered, person should be filtered
+      const canvas = container.querySelector('canvas')
+      expect(canvas).toBeInTheDocument()
+      // Only laptop should be looked up, person should be filtered out
+      expect(lookupCoverage).toHaveBeenCalledTimes(1)
+      expect(lookupCoverage).toHaveBeenCalledWith('laptop', 'renters')
+    })
+
     it('renders boxes only for high confidence detections', () => {
       lookupCoverage.mockReturnValue({
         status: 'covered',

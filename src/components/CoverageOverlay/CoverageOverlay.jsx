@@ -268,9 +268,14 @@ export function CoverageOverlay({
     const now = Date.now()
     const currentIds = new Set()
 
-    // Filter detections by confidence threshold
+    // Filter detections by confidence threshold AND exclude person class
     const validDetections = (detections || []).filter(d => {
       const score = d.categories?.[0]?.score || 0
+      const category = d.categories?.[0]?.categoryName || 'unknown'
+      
+      // Skip person detections (humans are not insurable property)
+      if (category === 'person') return false
+      
       return score >= confidenceThreshold
     })
 
