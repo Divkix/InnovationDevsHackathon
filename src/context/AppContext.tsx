@@ -15,7 +15,8 @@ import type {
   ManualItem,
   PolicyType,
 } from "../types";
-import { DEFAULT_STATE, STORAGE_KEYS, VALID_POLICY_TYPES } from "./appState";
+import { VALID_POLICY_TYPES } from "../types";
+import { DEFAULT_STATE, STORAGE_KEYS } from "./appState";
 
 // Re-export AppContextValue for backward compatibility
 export type { AppContextValue };

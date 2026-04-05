@@ -1,9 +1,4 @@
-import type { AppState, PolicyType, StorageKeys } from "../types";
-
-/**
- * Valid policy types for the application
- */
-export const VALID_POLICY_TYPES: PolicyType[] = ["renters", "homeowners", "auto", "none"];
+import type { AppState, StorageKeys } from "../types";
 
 /**
  * Default/initial state values
