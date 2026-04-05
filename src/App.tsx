@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Package, Plus, Shield } from "lucide-react";
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useCallback, useState } from "react";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
@@ -43,6 +43,13 @@ function App(): ReactElement {
 
   const handleManualMode = (): void => enableManualMode();
   const handleEnableCamera = (): void => disableManualMode();
+
+  const handleSimulatorChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>): void => {
+      setActiveSimulatorType((e.target.value as DisasterType) || null);
+    },
+    [setActiveSimulatorType],
+  );
 
   const selectedItem = selectedItemId
     ? detectedItems.get(selectedItemId) || manualItems.find((item) => item.id === selectedItemId)
@@ -247,7 +254,7 @@ function App(): ReactElement {
                     <h3 className="font-black uppercase tracking-widest">Disaster Simulator</h3>
                     <select
                       value={activeSimulatorType || ''}
-                      onChange={(e) => setActiveSimulatorType(e.target.value as DisasterType || null)}
+                      onChange={handleSimulatorChange}
                       className="bg-swiss-bg text-swiss-fg border-2 border-swiss-fg px-3 py-1 text-sm uppercase font-bold"
                     >
                       <option value="">Select disaster type...</option>
