@@ -1,3 +1,5 @@
+import type { AnimationProps } from '../types';
+
 /**
  * Test environment detection utility
  * 
@@ -5,11 +7,11 @@
  * and adjust behavior accordingly (e.g., disable animations)
  */
 
-import type { AnimationProps, TestGlobals } from '../types';
-
 // Extend Window interface to include test globals
 declare global {
-  interface Window extends TestGlobals {}
+  interface Window {
+    __TESTING__?: boolean
+  }
 }
 
 /**

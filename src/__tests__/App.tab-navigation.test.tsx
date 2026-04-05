@@ -100,7 +100,7 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }): ReactElement => (
       <div {...props}>{children}</div>
     ),
-    button: ({ children, whileHover, whileTap, ...props }: { children: React.ReactNode; whileHover?: unknown; whileTap?: unknown; [key: string]: unknown }): ReactElement => (
+    button: ({ children, whileHover: _whileHover, whileTap: _whileTap, ...props }: { children: React.ReactNode; whileHover?: unknown; whileTap?: unknown; [key: string]: unknown }): ReactElement => (
       <button {...props}>{children}</button>
     ),
     nav: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }): ReactElement => (

@@ -87,29 +87,27 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock framer-motion for tests - comprehensive mock to replace all motion components
 vi.mock('framer-motion', () => {
-  const createMotionComponent = (element: string) => {
-    return React.forwardRef(({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }, ref: unknown) => {
-      // Strip animation-specific props
-      const { 
-        animate, initial, exit, variants, transition, 
-        whileHover, whileTap, whileFocus, whileDrag, whileInView,
-        viewport, drag, dragConstraints, dragElastic, dragMomentum,
-        layout, layoutId, layoutDependency, layoutScroll,
-        onHoverStart, onHoverEnd, onTap, onTapStart, onTapCancel,
-        onPan, onPanStart, onPanEnd, onDrag, onDragStart, onDragEnd,
-        onViewportEnter, onViewportLeave,
-        style, ...restProps 
-      } = props
-      
-      // Convert style object to React-compatible format
-      const safeProps = { ...restProps }
-      if (style && typeof style === 'object') {
-        safeProps.style = style
-      }
-      
-      return React.createElement(element, { ...safeProps, ref }, children)
-    })
-  }
+const MOTION_PROP_KEYS = new Set([
+  'animate', 'initial', 'exit', 'variants', 'transition',
+  'whileHover', 'whileTap', 'whileFocus', 'whileDrag', 'whileInView',
+  'viewport', 'drag', 'dragConstraints', 'dragElastic', 'dragMomentum',
+  'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
+  'onHoverStart', 'onHoverEnd', 'onTap', 'onTapStart', 'onTapCancel',
+  'onPan', 'onPanStart', 'onPanEnd', 'onDrag', 'onDragStart', 'onDragEnd',
+  'onViewportEnter', 'onViewportLeave',
+])
+
+function stripMotionProps(props: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(props).filter(([key]) => !MOTION_PROP_KEYS.has(key) && key !== 'ref')
+  )
+}
+
+const createMotionComponent = (element: string) =>
+  React.forwardRef(({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }, ref: unknown) => {
+    const safeProps = stripMotionProps(props)
+    return React.createElement(element, { ...safeProps, ref }, children)
+  })
 
   return {
     __esModule: true,
@@ -151,12 +149,14 @@ vi.mock('framer-motion', () => {
       radialGradient: createMotionComponent('radialGradient'),
       stop: createMotionComponent('stop'),
       animate: createMotionComponent('animate'),
+    motion: {
       custom: (Component: React.ComponentType<{ children?: React.ReactNode }>) => {
         return ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
-          const { animate, initial, exit, variants, transition, style, ref, ...restProps } = props
-          return React.createElement(Component, restProps, children)
+          const safeProps = stripMotionProps(props)
+          return React.createElement(Component, safeProps, children)
         }
       },
+    },
     },
     AnimatePresence: ({ children }: { children?: React.ReactNode }) => children,
     AnimateSharedLayout: ({ children }: { children?: React.ReactNode }) => children,
@@ -244,7 +244,7 @@ vi.mock('framer-motion', () => {
       start: vi.fn(),
       stop: vi.fn(),
     })),
-    useMotionTemplate: vi.fn((...values: unknown[]) => ({
+    useMotionTemplate: vi.fn((..._values: unknown[]) => ({
       get: vi.fn(),
       on: vi.fn(() => vi.fn()),
     })),

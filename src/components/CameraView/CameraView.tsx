@@ -235,7 +235,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [isMockMode])
+  }, [isMockMode, requestCamera, stopCamera])
   
   // Start detection loop when video is ready and model is loaded
   useEffect(() => {

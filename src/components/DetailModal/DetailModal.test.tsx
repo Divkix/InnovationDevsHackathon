@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
-import { render, screen, fireEvent, waitFor, type RenderResult } from '@testing-library/react'
+import { render, screen, fireEvent, type RenderResult } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { AppProvider } from '@/context/AppContext'
 import { DetailModal } from './DetailModal'

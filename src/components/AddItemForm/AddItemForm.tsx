@@ -125,6 +125,19 @@ export function AddItemForm({ isOpen, onClose, editItem = null, onSave }: AddIte
   }, [name, category, value])
 
   /**
+   * Handle close and reset
+   */
+  const handleClose = useCallback((): void => {
+    if (!isEditMode) {
+      setName('')
+      setCategory('')
+      setValue('')
+    }
+    setErrors({})
+    onClose()
+  }, [isEditMode, onClose])
+
+  /**
    * Handle form submission
    */
   const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>): void => {
@@ -171,20 +184,7 @@ export function AddItemForm({ isOpen, onClose, editItem = null, onSave }: AddIte
     // Reset and close
     setIsSubmitting(false)
     handleClose()
-  }, [name, category, value, editItem, isEditMode, policyType, addManualItem, updateManualItem, onSave, validateForm])
-
-  /**
-   * Handle close and reset
-   */
-  const handleClose = useCallback((): void => {
-    if (!isEditMode) {
-      setName('')
-      setCategory('')
-      setValue('')
-    }
-    setErrors({})
-    onClose()
-  }, [isEditMode, onClose])
+  }, [name, category, value, editItem, isEditMode, policyType, addManualItem, updateManualItem, onSave, validateForm, handleClose])
 
   /**
    * Handle value input with currency formatting
