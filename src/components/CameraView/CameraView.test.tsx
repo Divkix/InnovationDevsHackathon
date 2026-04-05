@@ -29,6 +29,11 @@ describe("CameraView", () => {
     confidenceThreshold: 0.5,
     cameraPermissionDenied: false,
     manualModeEnabled: false,
+    privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+    activeSimulatorType: null,
+    hazardWarnings: [],
+    simulationResult: null,
+    recommendations: [],
     setPolicyType: vi.fn(),
     completeOnboarding: vi.fn(),
     setActiveTab: vi.fn(),
@@ -41,6 +46,11 @@ describe("CameraView", () => {
     enableManualMode: vi.fn(),
     disableManualMode: vi.fn(),
     resetCameraPermission: vi.fn(),
+    setPrivacyMode: vi.fn(),
+    setActiveSimulatorType: vi.fn(),
+    setHazardWarnings: vi.fn(),
+    setSimulationResult: vi.fn(),
+    setRecommendations: vi.fn(),
   };
 
   // Mock getUserMedia
@@ -107,6 +117,11 @@ describe("CameraView", () => {
       confidenceThreshold: 0.5,
       cameraPermissionDenied: false,
       manualModeEnabled: false,
+      privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+      activeSimulatorType: null,
+      hazardWarnings: [],
+      simulationResult: null,
+      recommendations: [],
       setPolicyType: vi.fn(),
       completeOnboarding: vi.fn(),
       setActiveTab: vi.fn(),
@@ -119,6 +134,11 @@ describe("CameraView", () => {
       enableManualMode: vi.fn(),
       disableManualMode: vi.fn(),
       resetCameraPermission: vi.fn(),
+      setPrivacyMode: vi.fn(),
+      setActiveSimulatorType: vi.fn(),
+      setHazardWarnings: vi.fn(),
+      setSimulationResult: vi.fn(),
+      setRecommendations: vi.fn(),
     });
 
     const mockUseObjectDetection = useObjectDetection as Mock<() => UseYOLODetectionReturn>;
@@ -353,6 +373,11 @@ describe("CameraView", () => {
         confidenceThreshold: 0.5,
         cameraPermissionDenied: false,
         manualModeEnabled: false,
+        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+        activeSimulatorType: null,
+        hazardWarnings: [],
+        simulationResult: null,
+        recommendations: [],
         setPolicyType: vi.fn(),
         completeOnboarding: vi.fn(),
         setActiveTab: vi.fn(),
@@ -365,6 +390,11 @@ describe("CameraView", () => {
         enableManualMode: vi.fn(),
         disableManualMode: vi.fn(),
         resetCameraPermission: vi.fn(),
+        setPrivacyMode: vi.fn(),
+        setActiveSimulatorType: vi.fn(),
+        setHazardWarnings: vi.fn(),
+        setSimulationResult: vi.fn(),
+        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -386,6 +416,11 @@ describe("CameraView", () => {
         confidenceThreshold: 0.5,
         cameraPermissionDenied: false,
         manualModeEnabled: false,
+        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+        activeSimulatorType: null,
+        hazardWarnings: [],
+        simulationResult: null,
+        recommendations: [],
         setPolicyType: vi.fn(),
         completeOnboarding: vi.fn(),
         setActiveTab: vi.fn(),
@@ -398,6 +433,11 @@ describe("CameraView", () => {
         enableManualMode: vi.fn(),
         disableManualMode: vi.fn(),
         resetCameraPermission: vi.fn(),
+        setPrivacyMode: vi.fn(),
+        setActiveSimulatorType: vi.fn(),
+        setHazardWarnings: vi.fn(),
+        setSimulationResult: vi.fn(),
+        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -419,6 +459,11 @@ describe("CameraView", () => {
         confidenceThreshold: 0.5,
         cameraPermissionDenied: false,
         manualModeEnabled: false,
+        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+        activeSimulatorType: null,
+        hazardWarnings: [],
+        simulationResult: null,
+        recommendations: [],
         setPolicyType: vi.fn(),
         completeOnboarding: vi.fn(),
         setActiveTab: vi.fn(),
@@ -431,6 +476,11 @@ describe("CameraView", () => {
         enableManualMode: vi.fn(),
         disableManualMode: vi.fn(),
         resetCameraPermission: vi.fn(),
+        setPrivacyMode: vi.fn(),
+        setActiveSimulatorType: vi.fn(),
+        setHazardWarnings: vi.fn(),
+        setSimulationResult: vi.fn(),
+        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -452,6 +502,11 @@ describe("CameraView", () => {
         confidenceThreshold: 0.5,
         cameraPermissionDenied: false,
         manualModeEnabled: false,
+        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+        activeSimulatorType: null,
+        hazardWarnings: [],
+        simulationResult: null,
+        recommendations: [],
         setPolicyType: vi.fn(),
         completeOnboarding: vi.fn(),
         setActiveTab: vi.fn(),
@@ -464,6 +519,11 @@ describe("CameraView", () => {
         enableManualMode: vi.fn(),
         disableManualMode: vi.fn(),
         resetCameraPermission: vi.fn(),
+        setPrivacyMode: vi.fn(),
+        setActiveSimulatorType: vi.fn(),
+        setHazardWarnings: vi.fn(),
+        setSimulationResult: vi.fn(),
+        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -682,6 +742,11 @@ describe("CameraView", () => {
         confidenceThreshold: 0.5,
         cameraPermissionDenied: false,
         manualModeEnabled: false,
+        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+        activeSimulatorType: null,
+        hazardWarnings: [],
+        simulationResult: null,
+        recommendations: [],
         setPolicyType: vi.fn(),
         completeOnboarding: vi.fn(),
         setActiveTab: vi.fn(),
@@ -694,6 +759,11 @@ describe("CameraView", () => {
         enableManualMode: vi.fn(),
         disableManualMode: vi.fn(),
         resetCameraPermission: vi.fn(),
+        setPrivacyMode: vi.fn(),
+        setActiveSimulatorType: vi.fn(),
+        setHazardWarnings: vi.fn(),
+        setSimulationResult: vi.fn(),
+        setRecommendations: vi.fn(),
       });
 
       const mockDetections: { detections: Detection[] } = {
