@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "lint": "biome check .",
     "typecheck": "bun run typecheck:app && bun run typecheck:test && bun run typecheck:tooling",
     "typecheck:app": "tsc --project tsconfig.app.json --noEmit",
     "typecheck:test": "tsc --project tsconfig.test.json --noEmit",
