@@ -1,11 +1,8 @@
-/**
- * Swiss International Style Design System
- * Pure black/white with Swiss Red (#FF3000)
- * Zero rounded corners, visible grid structure
- */
-
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+/* ============================================
+   SWISS INTERNATIONAL STYLE DESIGN SYSTEM
+   Pure black/white with Swiss Red (#FF3000)
+   Zero rounded corners, visible grid structure
+   ============================================ */
 
 :root {
   /* Swiss Color System */
