@@ -2,6 +2,7 @@ import { motion, useSpring, useTransform } from "framer-motion";
 import { AlertTriangle, CheckCircle, DollarSign, Shield, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { OwnershipSummaryCard } from "@/components/OwnershipSummaryCard";
+import { ProofHistoryPanel } from "@/components/ProofHistoryPanel";
 import {
   countOwnershipStatus,
   countReviewFlags,
@@ -66,15 +67,15 @@ export function Dashboard({
   policyType = "renters",
   onItemClick,
 }: DashboardProps) {
+  const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : [];
+  const safeManualItems = Array.isArray(manualItems) ? manualItems : [];
+
   // Calculate all dashboard values using the value calculator
   const calculationResult = useMemo(() => {
-    // Handle null/undefined inputs gracefully
-    const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : [];
-    const safeManualItems = Array.isArray(manualItems) ? manualItems : [];
     const safePolicyType = policyType || "renters";
 
     return calculateValues(safeDetectedItems, safeManualItems, safePolicyType);
-  }, [detectedItems, manualItems, policyType]);
+  }, [policyType, safeDetectedItems, safeManualItems]);
 
   // Get upgrade recommendations
   const recommendations = useMemo(() => {
@@ -90,27 +91,30 @@ export function Dashboard({
   const hasItems = items.length > 0;
   const hasRecommendations = recommendations.length > 0;
   const verifiedItemsCount = useMemo(
-    () => countOwnershipStatus(manualItems, "verified"),
-    [manualItems],
+    () => countOwnershipStatus(safeManualItems, "verified"),
+    [safeManualItems],
   );
   const pendingSerialCaptures = useMemo(
     () =>
-      countOwnershipStatus(manualItems, "needs_serial") +
-      countOwnershipStatus(manualItems, "serial_captured"),
-    [manualItems],
+      countOwnershipStatus(safeManualItems, "needs_serial") +
+      countOwnershipStatus(safeManualItems, "serial_captured"),
+    [safeManualItems],
   );
-  const reviewFlags = useMemo(() => countReviewFlags(manualItems), [manualItems]);
+  const reviewFlags = useMemo(() => countReviewFlags(safeManualItems), [safeManualItems]);
   const totalVerifiedValue = useMemo(
     () =>
-      manualItems.reduce((total, item) => {
+      safeManualItems.reduce((total, item) => {
         if (item.ownership?.status !== "verified") {
           return total;
         }
 
         return total + getFinalItemValue(item);
       }, 0),
-    [manualItems],
+    [safeManualItems],
   );
+  const hasOwnershipEvidence =
+    safeManualItems.length > 0 ||
+    safeDetectedItems.some((item) => item.ownership || item.valuation);
 
   // Status color mapping for Tailwind classes - State Farm branding
   const statusColors: Record<
@@ -159,11 +163,23 @@ export function Dashboard({
         </div>
 
         {/* Financial Summary Cards - Responsive Grid */}
-        <OwnershipSummaryCard
-          verifiedItemsCount={verifiedItemsCount}
-          pendingSerialCaptures={pendingSerialCaptures}
-          reviewFlags={reviewFlags}
-          totalVerifiedValue={totalVerifiedValue}
+        {hasOwnershipEvidence && (
+          <OwnershipSummaryCard
+            verifiedItemsCount={verifiedItemsCount}
+            pendingSerialCaptures={pendingSerialCaptures}
+            reviewFlags={reviewFlags}
+            totalVerifiedValue={totalVerifiedValue}
+          />
+        )}
+
+        <ProofHistoryPanel
+          policyType={policyType}
+          detectedItems={safeDetectedItems}
+          manualItems={safeManualItems}
+          totalValue={totalValue}
+          protectedValue={protectedValue}
+          unprotectedValue={unprotectedValue}
+          coverageGapPercentage={coverageGapPercentage}
         />
 
         <motion.div
