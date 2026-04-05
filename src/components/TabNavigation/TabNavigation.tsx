@@ -151,7 +151,7 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
                   <motion.div
                     layoutId="activeTabIndicator"
                     className="absolute -bottom-[2px] w-8 h-1 bg-[#E31837] rounded-full md:hidden"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                   />
                 )}
               </motion.button>

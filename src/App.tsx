@@ -1,13 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Package, Plus, Shield } from "lucide-react";
 import { type ReactElement, useState } from "react";
-import { SwissButton } from "./components/Swiss";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
 import { DetailModal } from "./components/DetailModal/DetailModal";
 import { OnboardingFlow } from "./components/OnboardingFlow/OnboardingFlow";
 import { PolicySelector } from "./components/PolicySelector/PolicySelector";
+import { SwissButton } from "./components/Swiss";
 import { TabNavigation } from "./components/TabNavigation/TabNavigation";
 import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
@@ -41,17 +41,32 @@ function App(): ReactElement {
     ? detectedItems.get(selectedItemId) || manualItems.find((item) => item.id === selectedItemId)
     : null;
 
-  const detailModalItem = selectedItem && selectedItemId
-    ? { ...selectedItem, source: (detectedItems.has(selectedItemId) ? "camera" : "dashboard") as "camera" | "dashboard" }
-    : null;
+  const detailModalItem =
+    selectedItem && selectedItemId
+      ? {
+          ...selectedItem,
+          source: (detectedItems.has(selectedItemId) ? "camera" : "dashboard") as
+            | "camera"
+            | "dashboard",
+        }
+      : null;
 
   const handleCloseDetailModal = (): void => setSelectedItem(null);
-  const handleOpenAddItem = (): void => { setEditItem(null); setIsAddItemFormOpen(true); };
-  const handleEditItem = (item: ManualItem): void => { setEditItem(item); setIsAddItemFormOpen(true); };
+  const handleOpenAddItem = (): void => {
+    setEditItem(null);
+    setIsAddItemFormOpen(true);
+  };
+  const handleEditItem = (item: ManualItem): void => {
+    setEditItem(item);
+    setIsAddItemFormOpen(true);
+  };
   const handleRemoveItem = (item: ManualItem): void => {
     if (confirm(`Remove "${item.name}"?`)) removeManualItem(item.id);
   };
-  const handleCloseAddItem = (): void => { setIsAddItemFormOpen(false); setEditItem(null); };
+  const handleCloseAddItem = (): void => {
+    setIsAddItemFormOpen(false);
+    setEditItem(null);
+  };
 
   if (!onboardingComplete) {
     return <OnboardingFlow onComplete={() => {}} />;
@@ -109,7 +124,11 @@ function App(): ReactElement {
                 </motion.button>
               )}
             </AnimatePresence>
-            <PolicySelector variant="compact" detectedItems={Array.from(detectedItems?.values() || [])} manualItems={manualItems} />
+            <PolicySelector
+              variant="compact"
+              detectedItems={Array.from(detectedItems?.values() || [])}
+              manualItems={manualItems}
+            />
           </div>
         </div>
       </header>
@@ -135,7 +154,11 @@ function App(): ReactElement {
                   <Plus className="w-4 h-4" />
                   Add Item
                 </SwissButton>
-                <CameraView onError={setCameraError} onManualMode={handleManualMode} onItemClick={(item) => setSelectedItem(item.id)} />
+                <CameraView
+                  onError={setCameraError}
+                  onManualMode={handleManualMode}
+                  onItemClick={(item) => setSelectedItem(item.id)}
+                />
               </div>
             </motion.div>
           )}
@@ -201,7 +224,12 @@ function App(): ReactElement {
       </main>
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <DetailModal isOpen={!!selectedItemId} onClose={handleCloseDetailModal} item={detailModalItem} policyType={policyType} />
+      <DetailModal
+        isOpen={!!selectedItemId}
+        onClose={handleCloseDetailModal}
+        item={detailModalItem}
+        policyType={policyType}
+      />
       <AddItemForm isOpen={isAddItemFormOpen} onClose={handleCloseAddItem} editItem={editItem} />
     </div>
   );

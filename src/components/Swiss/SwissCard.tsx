@@ -1,19 +1,19 @@
-import { motion } from 'framer-motion';
-import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
+import { type HTMLMotionProps, motion } from "framer-motion";
+import type { ReactElement, ReactNode } from "react";
 
-export interface SwissCardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'muted' | 'accent';
-  pattern?: 'none' | 'grid' | 'dots' | 'diagonal';
+export interface SwissCardProps extends Omit<HTMLMotionProps<"div">, "ref"> {
+  variant?: "default" | "muted" | "accent";
+  pattern?: "none" | "grid" | "dots" | "diagonal";
   hoverable?: boolean;
   children: ReactNode;
 }
 
 export function SwissCard({
-  variant = 'default',
-  pattern = 'none',
+  variant = "default",
+  pattern = "none",
   hoverable = false,
   children,
-  className = '',
+  className = "",
   ...props
 }: SwissCardProps): ReactElement {
   const baseClasses = `
@@ -22,26 +22,24 @@ export function SwissCard({
   `;
 
   const variantClasses = {
-    default: 'bg-swiss text-swiss-fg',
-    muted: 'bg-swiss-muted text-swiss-fg',
-    accent: 'bg-swiss-accent text-swiss-bg',
+    default: "bg-swiss text-swiss-fg",
+    muted: "bg-swiss-muted text-swiss-fg",
+    accent: "bg-swiss-accent text-swiss-bg",
   };
 
   const patternClasses = {
-    none: '',
-    grid: 'swiss-grid-pattern',
-    dots: 'swiss-dots',
-    diagonal: 'swiss-diagonal',
+    none: "",
+    grid: "swiss-grid-pattern",
+    dots: "swiss-dots",
+    diagonal: "swiss-diagonal",
   };
 
-  const hoverClasses = hoverable
-    ? 'hover:bg-swiss-fg hover:text-swiss-bg cursor-pointer'
-    : '';
+  const hoverClasses = hoverable ? "hover:bg-swiss-fg hover:text-swiss-bg cursor-pointer" : "";
 
   return (
     <motion.div
       whileHover={hoverable ? { scale: 1.02 } : {}}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={`
         ${baseClasses}
         ${variantClasses[variant]}

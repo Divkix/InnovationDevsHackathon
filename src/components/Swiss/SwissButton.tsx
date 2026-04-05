@@ -1,17 +1,17 @@
-import { motion } from 'framer-motion';
-import type { ButtonHTMLAttributes, ReactElement, ReactNode } from 'react';
+import { type HTMLMotionProps, motion } from "framer-motion";
+import type { ReactElement, ReactNode } from "react";
 
-export interface SwissButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'accent';
-  size?: 'default' | 'large';
+export interface SwissButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
+  variant?: "primary" | "secondary" | "accent";
+  size?: "default" | "large";
   children: ReactNode;
 }
 
 export function SwissButton({
-  variant = 'primary',
-  size = 'default',
+  variant = "primary",
+  size = "default",
   children,
-  className = '',
+  className = "",
   disabled,
   ...props
 }: SwissButtonProps): ReactElement {
@@ -22,9 +22,7 @@ export function SwissButton({
     swiss-touch-target
   `;
 
-  const sizeClasses = size === 'large'
-    ? 'px-8 py-4 text-base'
-    : 'px-6 py-3 text-sm';
+  const sizeClasses = size === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm";
 
   const variantClasses = {
     primary: `
@@ -41,9 +39,7 @@ export function SwissButton({
     `,
   };
 
-  const disabledClasses = disabled
-    ? 'opacity-50 cursor-not-allowed'
-    : 'cursor-pointer';
+  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
 
   return (
     <motion.button
