@@ -72,6 +72,8 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
     >
       <div className="max-w-6xl mx-auto">
         <div
+          role="tablist"
+          aria-label="Main navigation"
           className={`
           flex
           /* Mobile: Equal distribution, padding for safe areas */
