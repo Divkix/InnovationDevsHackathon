@@ -15,7 +15,7 @@ import { Shield, AlertTriangle, CheckCircle, DollarSign, TrendingUp } from 'luci
  * - Protected Value (green items only)
  * - UNPROTECTED VALUE (red + yellow items, BIG RED prominent)
  * - Coverage Gap % (unprotected/total * 100)
- * - Per-item breakdown list with name, value, and color-coded status
+ * - Per-item breakdown list with name, value, and color-coded status (clickable)
  * - Empty/zero state with helpful message when no items
  * - Upgrade recommendations when items are uncovered
  * - Positive message when all covered
@@ -24,8 +24,9 @@ import { Shield, AlertTriangle, CheckCircle, DollarSign, TrendingUp } from 'luci
  * @param {Array} props.detectedItems - Array of detected items from camera
  * @param {Array} props.manualItems - Array of manually added items
  * @param {string} props.policyType - The active policy type
+ * @param {Function} props.onItemClick - Callback when an item is clicked
  */
-export function Dashboard({ detectedItems = [], manualItems = [], policyType = 'renters' }) {
+export function Dashboard({ detectedItems = [], manualItems = [], policyType = 'renters', onItemClick }) {
   // Calculate all dashboard values using the value calculator
   const calculationResult = useMemo(() => {
     // Handle null/undefined inputs gracefully
@@ -203,10 +204,11 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
               {items.map((item) => {
                 const colors = statusColors[item.status] || statusColors.not_covered
                 return (
-                  <div
+                  <button
                     key={item.id}
                     data-testid="item-row"
-                    className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    onClick={() => onItemClick && onItemClick(item)}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-3 h-3 rounded-full ${colors.bg.replace('bg-', 'bg-').replace('100', '500')}`} />
@@ -222,7 +224,7 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
                     <p className="font-semibold text-gray-900">
                       {formatCurrency(item.estimatedValue)}
                     </p>
-                  </div>
+                  </button>
                 )
               })}
             </div>

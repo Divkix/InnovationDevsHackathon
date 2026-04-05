@@ -89,19 +89,22 @@ function formatCurrency(value) {
  * - Overlapping boxes with semi-transparent fills
  * - Label repositioning for partial off-screen items
  * - Canvas resizing to match video dimensions
+ * - Click handling to open detail modal
  *
  * @param {Object} props
  * @param {React.RefObject<HTMLVideoElement>} props.videoRef - Reference to video element
  * @param {Array} props.detections - Array of detection objects from MediaPipe
  * @param {string} props.policyType - Current policy type ('renters', 'homeowners', 'auto', 'none')
  * @param {number} [props.confidenceThreshold=0.5] - Minimum confidence score to render
+ * @param {Function} [props.onItemClick] - Callback when a bounding box is clicked
  * @returns {JSX.Element}
  */
 export function CoverageOverlay({
   videoRef,
   detections,
   policyType,
-  confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD
+  confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
+  onItemClick
 }) {
   const canvasRef = useRef(null)
   const trackedItemsRef = useRef(new Map())
@@ -348,6 +351,49 @@ export function CoverageOverlay({
     animationFrameRef.current = requestAnimationFrame(animate)
   }, [render])
 
+  /**
+   * Handle canvas click to detect which item was clicked
+   */
+  const handleCanvasClick = useCallback((event) => {
+    if (!onItemClick) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    // Get click coordinates relative to canvas
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const clickX = (event.clientX - rect.left) * scaleX
+    const clickY = (event.clientY - rect.top) * scaleY
+
+    // Check which item was clicked (iterate in reverse to click top items first)
+    const items = Array.from(trackedItemsRef.current.values()).reverse()
+
+    for (const item of items) {
+      const { x, y, width, height } = item.coordinates
+
+      // Check if click is within bounding box (with some padding for easier clicking)
+      const padding = 10
+      if (
+        clickX >= x - padding &&
+        clickX <= x + width + padding &&
+        clickY >= y - padding &&
+        clickY <= y + height + padding
+      ) {
+        // Call the onItemClick callback with the clicked item
+        onItemClick({
+          id: item.id,
+          category: item.name,
+          estimatedValue: item.coverage.estimatedValue,
+          status: item.coverage.status,
+          source: 'camera'
+        })
+        break
+      }
+    }
+  }, [onItemClick])
+
   // Start/stop animation loop
   useEffect(() => {
     animationFrameRef.current = requestAnimationFrame(animate)
@@ -371,15 +417,17 @@ export function CoverageOverlay({
     left: 0,
     width: '100%',
     height: '100%',
-    pointerEvents: 'none'
-  }), [])
+    pointerEvents: onItemClick ? 'auto' : 'none',
+    cursor: onItemClick ? 'pointer' : 'default'
+  }), [onItemClick])
 
   return (
     <canvas
       ref={canvasRef}
       data-testid="coverage-overlay"
       style={canvasStyle}
-      className="absolute inset-0 w-full h-full pointer-events-none"
+      className="absolute inset-0 w-full h-full"
+      onClick={handleCanvasClick}
     />
   )
 }

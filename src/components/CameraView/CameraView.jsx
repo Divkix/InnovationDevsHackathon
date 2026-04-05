@@ -21,9 +21,10 @@ import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
  * @param {Object} props
  * @param {Function} props.onError - Callback when an error occurs
  * @param {Function} props.onManualMode - Callback when user selects manual mode
+ * @param {Function} props.onItemClick - Callback when a detected item is clicked
  * @returns {JSX.Element}
  */
-export function CameraView({ onError, onManualMode }) {
+export function CameraView({ onError, onManualMode, onItemClick }) {
   const { policyType, updateDetectedItems } = useAppContext()
   const { detect, isLoaded, error: modelError } = useObjectDetection()
   
@@ -303,6 +304,7 @@ export function CameraView({ onError, onManualMode }) {
         videoRef={videoRef}
         detections={detections}
         policyType={policyType}
+        onItemClick={onItemClick}
       />
       
       {/* Camera requesting indicator */}

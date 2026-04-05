@@ -4,6 +4,7 @@ import { Dashboard } from './components/Dashboard/Dashboard.jsx'
 import { PolicySelector } from './components/PolicySelector/PolicySelector.jsx'
 import { CameraView } from './components/CameraView/CameraView.jsx'
 import { TabNavigation } from './components/TabNavigation/TabNavigation.jsx'
+import { DetailModal } from './components/DetailModal/DetailModal.jsx'
 
 function App() {
   const { 
@@ -11,7 +12,9 @@ function App() {
     activeTab,
     manualItems,
     detectedItems,
+    selectedItemId,
     setActiveTab,
+    setSelectedItem,
   } = useAppContext()
 
   // Handle camera errors (shown in error state)
@@ -22,6 +25,23 @@ function App() {
     // When camera is unavailable, switch to dashboard
     // User can add items manually
     setActiveTab('dashboard')
+  }
+
+  // Find selected item from detected or manual items
+  const selectedItem = selectedItemId ? 
+    (detectedItems.get(selectedItemId) || manualItems.find(item => item.id === selectedItemId)) : 
+    null
+
+  // Prepare item for DetailModal
+  const detailModalItem = selectedItem ? {
+    ...selectedItem,
+    // Add source based on which collection it came from
+    source: detectedItems.has(selectedItemId) ? 'camera' : 'dashboard'
+  } : null
+
+  // Handle modal close
+  const handleCloseDetailModal = () => {
+    setSelectedItem(null)
   }
 
   return (
@@ -54,6 +74,7 @@ function App() {
               <CameraView 
                 onError={setCameraError}
                 onManualMode={handleManualMode}
+                onItemClick={(item) => setSelectedItem(item.id)}
               />
             </div>
           </div>
@@ -67,6 +88,7 @@ function App() {
                 detectedItems={Array.from(detectedItems?.values() || [])}
                 manualItems={manualItems}
                 policyType={policyType}
+                onItemClick={(item) => setSelectedItem(item.id)}
               />
             </div>
           </div>
@@ -77,6 +99,14 @@ function App() {
       <TabNavigation 
         activeTab={activeTab}
         onTabChange={setActiveTab}
+      />
+
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={!!selectedItemId}
+        onClose={handleCloseDetailModal}
+        item={detailModalItem}
+        policyType={policyType}
       />
     </div>
   )
