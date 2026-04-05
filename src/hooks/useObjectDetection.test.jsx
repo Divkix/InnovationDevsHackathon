@@ -409,6 +409,7 @@ describe('useObjectDetection', () => {
       // Should not throw and close should be called once
       expect(mockClose).toHaveBeenCalledTimes(1)
     })
+
   })
 
   describe('hook API shape', () => {
@@ -441,11 +442,95 @@ describe('useObjectDetection', () => {
     })
   })
 
+  describe('timeout handling', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('times out when FilesetResolver.forVisionTasks hangs', async () => {
+      // Simulate WASM loading that never resolves
+      mockForVisionTasks.mockImplementation(() => new Promise(() => {}))
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      // Advance time past the 15 second timeout
+      await act(async () => {
+        vi.advanceTimersByTime(16000)
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      // Should have timed out with an error
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull()
+      })
+
+      expect(result.current.error.message).toContain('timeout')
+    })
+  })
+
+  describe('GPU fallback', () => {
+    it('retries with CPU delegate when GPU initialization fails', async () => {
+      // First call fails (GPU), second call succeeds (CPU)
+      mockCreateFromOptions
+        .mockRejectedValueOnce(new Error('GPU initialization failed'))
+        .mockResolvedValueOnce(mockObjectDetector)
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      await waitFor(() => {
+        expect(result.current.isLoaded).toBe(true)
+      })
+
+      // Should have been called twice - once with GPU, once with CPU
+      expect(mockCreateFromOptions).toHaveBeenCalledTimes(2)
+      
+      // First call with GPU
+      expect(mockCreateFromOptions).toHaveBeenNthCalledWith(
+        1,
+        'vision-wasm-files',
+        expect.objectContaining({
+          baseOptions: expect.objectContaining({ delegate: 'GPU' })
+        })
+      )
+
+      // Second call with CPU
+      expect(mockCreateFromOptions).toHaveBeenNthCalledWith(
+        2,
+        'vision-wasm-files',
+        expect.objectContaining({
+          baseOptions: expect.objectContaining({ delegate: 'CPU' })
+        })
+      )
+
+      expect(result.current.error).toBeNull()
+    })
+
+    it('returns error when both GPU and CPU initialization fail', async () => {
+      // Both calls fail
+      mockCreateFromOptions
+        .mockRejectedValueOnce(new Error('GPU failed'))
+        .mockRejectedValueOnce(new Error('CPU also failed'))
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull()
+      })
+
+      expect(mockCreateFromOptions).toHaveBeenCalledTimes(2)
+      expect(result.current.isLoaded).toBe(false)
+      expect(result.current.error.message).toBe('CPU also failed')
+    })
+  })
+
   describe('mock detection mode', () => {
     let originalLocation
     let originalLocalStorage
     let getItemSpy
-    let setItemSpy
 
     beforeEach(() => {
       originalLocation = window.location
@@ -463,7 +548,6 @@ describe('useObjectDetection', () => {
       })
 
       getItemSpy = vi.spyOn(window.localStorage, 'getItem')
-      setItemSpy = vi.spyOn(window.localStorage, 'setItem')
     })
 
     afterEach(() => {

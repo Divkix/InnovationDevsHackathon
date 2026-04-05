@@ -1,115 +1,83 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { FilesetResolver, ObjectDetector } from '@mediapipe/tasks-vision'
-import { useMockDetection, MOCK_STORAGE_KEY } from './useMockDetection.js'
+import { MOCK_STORAGE_KEY } from './useMockDetection.js'
 import { getMockDetections } from './mockDetections.js'
 
-/**
- * Custom hook that manages MediaPipe ObjectDetector lifecycle.
- * Loads model from CDN on mount, provides detect(video, timestamp) function,
- * tracks isLoaded and error states, and handles cleanup on unmount.
- * 
- * Supports mock detection mode for automated testing:
- * - Set ?mock=true query parameter, OR
- * - Set localStorage 'insurescope_mock_detection' to 'true'
- * 
- * In mock mode, bypasses MediaPipe and returns predefined mock detections.
- * 
- * @returns {Object} Object containing detect function, isLoaded state, and error state
- * @returns {Function} detect - Function to run object detection on a video element
- * @returns {boolean} isLoaded - Whether the model has finished loading
- * @returns {Error|null} error - Error object if model loading failed, null otherwise
- * @returns {boolean} isMockMode - Whether mock detection mode is active
- */
-export function useObjectDetection() {
-  // Use refs for detector and cancellation
-  const detectorRef = useRef(null)
-  const cancelledRef = useRef(false)
+function createTimeoutPromise(ms) {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Model loading timeout after ${ms}ms. Check network connection and CDN accessibility.`))
+    }, ms)
+  })
+}
 
-  // Check for mock mode synchronously during initial render
-  const checkMockMode = () => {
-    if (typeof window === 'undefined') return false
+function checkMockMode() {
+  if (typeof window === 'undefined') return false
 
-    // Check URL query parameter
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('mock') === 'true') {
-      return true
-    }
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('mock') === 'true') return true
 
-    // Check localStorage
-    try {
-      const stored = localStorage.getItem(MOCK_STORAGE_KEY)
-      if (stored === 'true') {
-        return true
-      }
-    } catch (error) {
-      // localStorage not available
-    }
-
-    return false
+  try {
+    if (localStorage.getItem(MOCK_STORAGE_KEY) === 'true') return true
+  } catch {
+    // localStorage not available
   }
+
+  return false
+}
+
+export function useObjectDetection() {
+  const detectorRef = useRef(null)
 
   const initialMockMode = checkMockMode()
   const [isLoaded, setIsLoaded] = useState(initialMockMode)
   const [error, setError] = useState(null)
   const [isMockMode] = useState(initialMockMode)
 
-  // Only initialize MediaPipe if NOT in mock mode
   useEffect(() => {
-    // Skip MediaPipe initialization in mock mode
     if (isMockMode) return
 
     let detectorInstance = null
+    let isCancelled = false
+
+    async function createDetectorWithDelegate(vision, delegate) {
+      const detectorPromise = ObjectDetector.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: '/models/efficientdet_lite0.tflite',
+          delegate
+        },
+        runningMode: 'VIDEO',
+        scoreThreshold: 0.5
+      })
+      return Promise.race([detectorPromise, createTimeoutPromise(15000)])
+    }
 
     async function initializeDetector() {
       try {
-        // Create a timeout promise to detect hanging initialization
-        const timeoutMs = 15000
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error(`Model loading timeout after ${timeoutMs}ms. Check network connection and CDN accessibility.`))
-          }, timeoutMs)
-        })
+        const visionPromise = FilesetResolver.forVisionTasks('/wasm')
+        const vision = await Promise.race([visionPromise, createTimeoutPromise(15000)])
 
-        // Load MediaPipe WASM files from local path
-        const visionPromise = FilesetResolver.forVisionTasks(
-          '/wasm'
-        )
+        if (isCancelled) return
 
-        // Race between initialization and timeout
-        const vision = await Promise.race([visionPromise, timeoutPromise])
+        // Try GPU first, fall back to CPU on failure
+        try {
+          detectorInstance = await createDetectorWithDelegate(vision, 'GPU')
+        } catch {
+          if (isCancelled) return
+          detectorInstance = await createDetectorWithDelegate(vision, 'CPU')
+        }
 
-        // Check if component is still mounted
-        if (cancelledRef.current) return
-
-        // Create ObjectDetector with local model path
-        const detectorPromise = ObjectDetector.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: '/models/efficientdet_lite0.tflite',
-            delegate: 'GPU'
-          },
-          runningMode: 'VIDEO',
-          scoreThreshold: 0.5
-        })
-
-        // Race detector creation with timeout
-        detectorInstance = await Promise.race([detectorPromise, timeoutPromise])
-
-        // Check again if component is still mounted after async operation
-        if (cancelledRef.current) {
-          // Clean up the detector since component unmounted during load
+        if (isCancelled) {
           detectorInstance.close()
           return
         }
 
-        // Store detector in ref and update state
         detectorRef.current = detectorInstance
         setIsLoaded(true)
         setError(null)
       } catch (err) {
-        // Don't update state if component unmounted during error
-        if (cancelledRef.current) return
+        if (isCancelled) return
 
-        // Set appropriate error message based on error type
         let errorMessage = 'Failed to initialize object detection'
         if (err.message?.includes('timeout')) {
           errorMessage = err.message
@@ -126,63 +94,32 @@ export function useObjectDetection() {
       }
     }
 
-    // Start model loading
     initializeDetector()
 
-    // Cleanup function
     return () => {
-      cancelledRef.current = true
-      
-      // Close the detector instance if it exists
+      isCancelled = true
       if (detectorInstance) {
         detectorInstance.close()
       }
     }
   }, [isMockMode])
 
-  /**
-   * Run object detection on a video element.
-   * In mock mode, returns predefined mock detections instead of running MediaPipe.
-   * 
-   * @param {HTMLVideoElement|null} video - The video element to detect objects in (ignored in mock mode)
-   * @param {number} timestamp - The timestamp for the video frame (ignored in mock mode)
-   * @returns {Promise<Object>} Detection results in MediaPipe format { detections: [...] }
-   */
   const detect = useCallback(async (video, timestamp) => {
-    // Return mock detections if in mock mode
     if (isMockMode) {
-      return {
-        detections: getMockDetections()
-      }
+      return { detections: getMockDetections() }
     }
 
     const detector = detectorRef.current
-
-    // Return empty detections if detector is not loaded
-    if (!detector || !isLoaded) {
-      return { detections: [] }
-    }
-
-    // Handle null video element
-    if (!video) {
-      return { detections: [] }
-    }
+    if (!detector || !isLoaded) return { detections: [] }
+    if (!video) return { detections: [] }
 
     try {
-      // Run detection using MediaPipe
-      const results = await detector.detectForVideo(video, timestamp)
-      return results
+      return await detector.detectForVideo(video, timestamp)
     } catch (err) {
-      // Return empty detections on error
       console.error('Detection error:', err)
       return { detections: [] }
     }
   }, [isMockMode, isLoaded])
 
-  return {
-    detect,
-    isLoaded,
-    error,
-    isMockMode
-  }
+  return { detect, isLoaded, error, isMockMode }
 }
