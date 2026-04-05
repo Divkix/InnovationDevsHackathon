@@ -391,22 +391,6 @@ export function OnboardingFlow({ onComplete }) {
       </div>
     </motion.div>
   )
-        >
-          {isTransitioning ? (
-            <span className="flex items-center justify-center gap-2">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Starting...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <Camera className="w-5 h-5" />
-              Start Camera
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  )
 
   return (
     <div 
