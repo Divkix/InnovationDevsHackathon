@@ -18,6 +18,24 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
   },
+  // TensorFlow.js optimizations
+  optimizeDeps: {
+    include: ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-webgl'],
+    exclude: ['@tensorflow/tfjs-backend-wasm'] // Let TF.js lazy-load WASM
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true, // Required for TF.js CommonJS modules
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate TF.js into its own chunk for better caching
+          'tensorflow': ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-webgl']
+        }
+      }
+    }
+  },
   test: {
     environment: 'jsdom',
     globals: true,
