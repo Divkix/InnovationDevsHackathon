@@ -16,6 +16,15 @@ export type { ReactNode, RefObject };
 
 /** Valid insurance policy types */
 export type PolicyType = "renters" | "homeowners" | "auto" | "none";
+export type SupportedLanguage = "en" | "es" | "hi";
+export type OwnershipStatus =
+  | "unverified"
+  | "needs_serial"
+  | "serial_captured"
+  | "verified"
+  | "needs_review";
+export type FraudSeverity = "low" | "review" | "high";
+export type ValuationSource = "ai" | "user" | "receipt";
 
 /** Coverage status for an item */
 export type CoverageStatus = "covered" | "conditional" | "not_covered";
@@ -31,6 +40,59 @@ export interface CoverageResult {
   note: string;
   conditions: string[];
   upgrade: string | null;
+}
+
+export interface FraudFlag {
+  code: string;
+  label: string;
+  severity: FraudSeverity;
+  message: string;
+}
+
+export interface OwnershipLedgerEntry {
+  id: string;
+  eventType:
+    | "item_detected"
+    | "ownership_capture_started"
+    | "serial_verified"
+    | "value_overridden"
+    | "receipt_attached"
+    | "ownership_record_finalized";
+  timestamp: string;
+  actor: "user" | "ai" | "system";
+  summary: string;
+  hash: string;
+  previousHash?: string;
+}
+
+export interface OwnershipEvidence {
+  itemPhotoUrl?: string;
+  serialPhotoUrl?: string;
+  receiptUrl?: string;
+  capturedAt?: string;
+  imageHashes?: string[];
+  ocrConfidence?: number;
+  sourceNotes?: string;
+}
+
+export interface OwnershipRecord {
+  status: OwnershipStatus;
+  serialNumber?: string;
+  imei?: string;
+  modelNumber?: string;
+  verifiedAt?: string;
+  agentSummary?: string;
+  evidence?: OwnershipEvidence;
+  fraudFlags?: FraudFlag[];
+  ledger?: OwnershipLedgerEntry[];
+}
+
+export interface ValuationRecord {
+  estimatedValue: number;
+  finalValue: number;
+  source: ValuationSource;
+  overrideValue?: number;
+  overrideReason?: string;
 }
 
 /** Valid policy type values for runtime checks */
@@ -77,6 +139,8 @@ export interface DetectedItem extends Detection {
   /** Detection confidence 0-1 */
   confidence: number;
   coverage?: CoverageResult;
+  ownership?: OwnershipRecord;
+  valuation?: ValuationRecord;
 }
 
 /** Item added manually by user */
@@ -85,6 +149,8 @@ export interface ManualItem {
   name: string;
   category: string;
   estimatedValue: number;
+  ownership?: OwnershipRecord;
+  valuation?: ValuationRecord;
 }
 
 /** YOLO model output format: [x1, y1, x2, y2, confidence, class_id] */
@@ -122,6 +188,9 @@ export interface StorageKeys {
   manualModeEnabled: string;
   privacyMode: string;
   activeSimulatorType: string;
+  language: string;
+  voiceEnabled: string;
+  ttsEnabled: string;
 }
 
 /** Default/initial state values */
@@ -133,12 +202,14 @@ export interface AppState {
   manualItems: ManualItem[];
   selectedItemId: string | null;
   confidenceThreshold: number;
-  // New feature state
   privacyMode: PrivacyModeState;
   activeSimulatorType: DisasterType | null;
   hazardWarnings: HazardWarning[];
   simulationResult: DisasterSimulationResult | null;
   recommendations: CoverageRecommendation[];
+  language: SupportedLanguage;
+  voiceEnabled: boolean;
+  ttsEnabled: boolean;
 }
 
 /** Input type for updating detected items */
@@ -146,9 +217,33 @@ export type DetectedItemsInput = Map<string, DetectedItem> | Record<string, Dete
 
 /** Gemini API coverage response */
 export interface GeminiCoverageResponse {
-  status: CoverageStatus;
-  reasoning: string;
+  explanation: string;
+  language: SupportedLanguage;
   confidence: number;
+}
+
+/** Gemini coverage explanation request */
+export interface GeminiCoverageRequest {
+  item: string;
+  policyType: PolicyType;
+  coverageStatus: CoverageStatus;
+  coverageNote?: string;
+  language?: SupportedLanguage;
+}
+
+export interface GeminiRoomScanResponse {
+  summary: string;
+  objects: string[];
+  items: Array<{
+    label: string;
+    category: string;
+    estimatedValue: number;
+    coverageStatus: CoverageStatus;
+    agentNote: string;
+  }>;
+  priorities: string[];
+  nextSteps: string[];
+  language: SupportedLanguage;
 }
 
 /** Context value shape for AppContext */
@@ -163,12 +258,14 @@ export interface AppContextValue {
   confidenceThreshold: number;
   cameraPermissionDenied: boolean;
   manualModeEnabled: boolean;
-  // New state
   privacyMode: PrivacyModeState;
   activeSimulatorType: DisasterType | null;
   hazardWarnings: HazardWarning[];
   simulationResult: DisasterSimulationResult | null;
   recommendations: CoverageRecommendation[];
+  language: SupportedLanguage;
+  voiceEnabled: boolean;
+  ttsEnabled: boolean;
   // Actions
   setPolicyType: (policy: PolicyType) => void;
   completeOnboarding: () => void;
@@ -183,12 +280,14 @@ export interface AppContextValue {
   enableManualMode: () => void;
   disableManualMode: () => void;
   resetCameraPermission: () => void;
-  // New actions
   setPrivacyMode: (enabled: boolean) => void;
   setActiveSimulatorType: (type: DisasterType | null) => void;
   setHazardWarnings: (warnings: HazardWarning[]) => void;
   setSimulationResult: (result: DisasterSimulationResult | null) => void;
   setRecommendations: (recommendations: CoverageRecommendation[]) => void;
+  setLanguage: (language: SupportedLanguage) => void;
+  setVoiceEnabled: (enabled: boolean) => void;
+  setTtsEnabled: (enabled: boolean) => void;
 }
 
 // ============================================================================
@@ -223,10 +322,26 @@ export interface ValueCalculationResult {
 export interface GeminiClient {
   apiKey: string;
   isConfigured: true;
-  askAboutCoverage: (
-    item: string,
-    policyType: PolicyType,
-  ) => Promise<GeminiCoverageResponse | null>;
+  askAboutCoverage: (input: GeminiCoverageRequest) => Promise<GeminiCoverageResponse | null>;
+  analyzeRoom: (input: {
+    imageBase64: string;
+    mimeType?: string;
+    policyType: PolicyType;
+    detectedCategories?: string[];
+    language?: SupportedLanguage;
+  }) => Promise<GeminiRoomScanResponse | null>;
+}
+
+export interface SpeechPlaybackResult {
+  supported: boolean;
+  spokenText: string;
+}
+
+export interface SpeechOptions {
+  language?: SupportedLanguage | null;
+  rate?: number;
+  pitch?: number;
+  volume?: number;
 }
 
 // ============================================================================
