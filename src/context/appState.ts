@@ -1,4 +1,9 @@
-import type { AppState, StorageKeys } from "../types";
+import type { AppState, PolicyType, StorageKeys } from "../types";
+
+/**
+ * Valid policy types for the application
+ */
+export const VALID_POLICY_TYPES: PolicyType[] = ["renters", "homeowners", "auto", "none"];
 
 /**
  * Default/initial state values
@@ -11,8 +16,6 @@ export const DEFAULT_STATE: AppState = {
   manualItems: [],
   selectedItemId: null,
   confidenceThreshold: 0.5,
-
-  // New feature defaults
   privacyMode: {
     enabled: false,
     localOnlyMessage: "All processing happens on your device. No data leaves your browser.",
@@ -21,6 +24,9 @@ export const DEFAULT_STATE: AppState = {
   hazardWarnings: [],
   simulationResult: null,
   recommendations: [],
+  language: "en",
+  voiceEnabled: true,
+  ttsEnabled: true,
 };
 
 /**
@@ -35,4 +41,7 @@ export const STORAGE_KEYS: StorageKeys = {
   manualModeEnabled: "insurescope_manualModeEnabled",
   privacyMode: "insurescope_privacyMode",
   activeSimulatorType: "insurescope_activeSimulatorType",
+  language: "insurescope_language",
+  voiceEnabled: "insurescope_voiceEnabled",
+  ttsEnabled: "insurescope_ttsEnabled",
 };

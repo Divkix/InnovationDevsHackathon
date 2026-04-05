@@ -1,35 +1,17 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, Package, Plus, Shield } from "lucide-react";
+import { Globe, MessageCircle, Package, Plus, Shield, Volume2, VolumeX } from "lucide-react";
 import { type ReactElement, useState } from "react";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
 import { DetailModal } from "./components/DetailModal/DetailModal";
-import { DisasterSimulator } from "./components/DisasterSimulator";
 import { OnboardingFlow } from "./components/OnboardingFlow/OnboardingFlow";
 import { PolicySelector } from "./components/PolicySelector/PolicySelector";
-import { PrivacyModeBanner } from "./components/PrivacyModeBanner";
-import { RecommendationCards } from "./components/RecommendationCards";
-import { ReportCard } from "./components/ReportCard";
-import { SwissButton } from "./components/Swiss";
 import { TabNavigation } from "./components/TabNavigation/TabNavigation";
 import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
 import type { ManualItem } from "./types";
-import { createItemBreakdown } from "./utils/valueCalculator";
-
-/**
- * INTEGRATION NOTES FOR TEAMMATES
- *
- * This file contains placeholder sections for new features being built
- * by Matin (hazard warnings, disaster simulator) and Maitreyee (recommendations, privacy mode).
- *
- * Placeholder sections are marked with data-owner and data-section attributes.
- * When implementing your feature, replace the placeholder content inside these sections.
- *
- * DO NOT modify section containers (they're owned by Divanshu/Integrator).
- * DO modify content inside sections (that's your feature code).
- */
+import { getCopy, SUPPORTED_LANGUAGES } from "./utils/language";
 
 function App(): ReactElement {
   const {
@@ -40,126 +22,190 @@ function App(): ReactElement {
     selectedItemId,
     onboardingComplete,
     manualModeEnabled,
-    privacyMode,
-    activeSimulatorType,
-    hazardWarnings,
-    simulationResult,
-    recommendations,
+    language,
+    ttsEnabled,
     removeManualItem,
     setActiveTab,
     setSelectedItem,
+    setLanguage,
+    setTtsEnabled,
     enableManualMode,
     disableManualMode,
-    setPrivacyMode,
-    setActiveSimulatorType,
   } = useAppContext();
 
+  // Gemini hook for AI assistance
   const gemini = useGemini();
+  const copy = getCopy(language);
+
+  // Handle camera errors (shown in error state)
   const [, setCameraError] = useState<Error | string | null>(null);
+
+  // State for Add Item form modal
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState<boolean>(false);
   const [editItem, setEditItem] = useState<ManualItem | null>(null);
 
-  const handleManualMode = (): void => enableManualMode();
-  const handleEnableCamera = (): void => disableManualMode();
+  // Handle manual mode fallback
+  const handleManualMode = (): void => {
+    // When camera is unavailable, enable manual mode
+    enableManualMode();
+  };
 
+  // Handle enabling camera from manual mode
+  const handleEnableCamera = (): void => {
+    disableManualMode();
+  };
+
+  // Find selected item from detected or manual items
   const selectedItem = selectedItemId
     ? detectedItems.get(selectedItemId) || manualItems.find((item) => item.id === selectedItemId)
     : null;
 
+  // Prepare item for DetailModal
   const detailModalItem =
     selectedItem && selectedItemId
       ? {
           ...selectedItem,
+          // Add source based on which collection it came from
           source: (detectedItems.has(selectedItemId) ? "camera" : "dashboard") as
             | "camera"
             | "dashboard",
         }
       : null;
 
-  // Computed values for ReportCard
-  const detectedItemsList = Array.from(detectedItems.values());
-  const itemBreakdown = createItemBreakdown(detectedItemsList, manualItems, policyType);
-  const totalValue = itemBreakdown.reduce((sum, item) => sum + item.estimatedValue, 0);
-  const protectedValue = itemBreakdown.reduce(
-    (sum, item) => sum + (item.status === "covered" ? item.estimatedValue : 0),
-    0,
-  );
-  const coverageGapPercentage =
-    totalValue > 0 ? Math.round(((totalValue - protectedValue) / totalValue) * 100) : 0;
+  // Handle modal close
+  const handleCloseDetailModal = (): void => {
+    setSelectedItem(null);
+  };
 
-  const handleCloseDetailModal = (): void => setSelectedItem(null);
+  // Handle opening Add Item form
   const handleOpenAddItem = (): void => {
     setEditItem(null);
     setIsAddItemFormOpen(true);
   };
+
+  // Handle editing an item
   const handleEditItem = (item: ManualItem): void => {
     setEditItem(item);
     setIsAddItemFormOpen(true);
   };
+
+  // Handle removing an item
   const handleRemoveItem = (item: ManualItem): void => {
-    if (confirm(`Remove "${item.name}"?`)) removeManualItem(item.id);
+    if (confirm(`Are you sure you want to remove "${item.name}"?`)) {
+      removeManualItem(item.id);
+    }
   };
+
+  // Handle closing Add Item form
   const handleCloseAddItem = (): void => {
     setIsAddItemFormOpen(false);
     setEditItem(null);
   };
 
+  // Show onboarding if not complete
   if (!onboardingComplete) {
-    return <OnboardingFlow onComplete={() => {}} />;
+    return (
+      <OnboardingFlow
+        onComplete={() => {
+          // Onboarding complete - App will re-render and show main view
+        }}
+      />
+    );
   }
 
   return (
-    <div className="min-h-screen bg-swiss flex flex-col overflow-x-hidden">
-      {/* Manual Mode Banner — Swiss Style */}
+    <div className="min-h-screen bg-[var(--swiss-bg)] text-[var(--swiss-fg)] flex flex-col overflow-x-hidden">
+      {/* Manual Mode Banner */}
       <AnimatePresence>
         {manualModeEnabled && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-swiss-fg text-swiss-bg px-4 py-3 text-center border-b-2 border-swiss-accent"
+            className="swiss-accent-block border-b-2 border-[var(--swiss-border)] px-4 py-2 text-center text-sm"
           >
-            <span className="font-bold uppercase tracking-widest text-sm">Manual Mode Active</span>
-            <span className="mx-2 text-swiss-accent">—</span>
-            <span className="text-sm">Camera disabled.</span>
+            <span className="font-medium">{copy.common.manualModeActive}</span> —{" "}
+            {copy.common.cameraDisabled}
             <button
               onClick={handleEnableCamera}
-              className="ml-3 underline hover:text-swiss-accent uppercase text-sm font-bold"
+              className="ml-2 underline hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded px-1"
             >
-              Enable Camera
+              {copy.common.enableCamera}
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Header — Swiss Style */}
-      <header className="bg-swiss border-b-4 border-swiss-fg px-6 py-5 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-swiss-fg border-2 border-swiss-fg flex items-center justify-center">
-              <Shield className="w-7 h-7 text-swiss-bg" />
+      {/* Header with State Farm Branding */}
+      <header className="bg-[var(--swiss-bg)] border-b-2 border-[var(--swiss-border)] px-3 sm:px-6 py-3 sticky top-0 z-40 safe-top swiss-grid-pattern">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          {/* Logo - State Farm Style */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--swiss-accent)] border-2 border-[var(--swiss-border)] flex items-center justify-center">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-black text-swiss-fg uppercase tracking-tight">
-              InsureScope
-            </h1>
+            <div className="flex flex-col items-start">
+              <h1 className="text-lg sm:text-2xl font-black leading-tight uppercase tracking-[-0.05em]">
+                InsureScope
+              </h1>
+              <span className="swiss-label text-[var(--swiss-accent)] hidden sm:block">
+                By State Farm
+              </span>
+            </div>
           </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-4">
+          {/* Right side: Gemini button + Policy Selector */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Gemini Ask Button - Only show when API key is set */}
             <AnimatePresence>
               {gemini && (
                 <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-swiss-fg text-swiss-bg border-2 border-swiss-fg uppercase font-bold text-sm tracking-widest hover:bg-swiss-accent hover:border-swiss-accent transition-colors duration-200"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  onClick={() => setActiveTab("camera")}
+                  className="hidden sm:flex items-center gap-2 px-4 py-3 swiss-button text-xs"
+                  aria-label="Ask about coverage"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>Ask</span>
+                  <span className="hidden md:inline">{copy.common.askAboutCoverage}</span>
                 </motion.button>
               )}
             </AnimatePresence>
+
+            <div className="hidden md:flex items-center gap-1 swiss-panel px-1 py-1">
+              <Globe className="w-4 h-4 text-[var(--swiss-fg)] ml-1" />
+              {SUPPORTED_LANGUAGES.map((entry) => {
+                const active = entry.code === language;
+                return (
+                  <button
+                    key={entry.code}
+                    type="button"
+                    onClick={() => setLanguage(entry.code)}
+                    aria-pressed={active}
+                    className={`px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors ${
+                      active
+                        ? "bg-[var(--swiss-accent)] text-white"
+                        : "text-gray-500 hover:bg-[var(--swiss-muted)]"
+                    }`}
+                  >
+                    {entry.code.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setTtsEnabled(!ttsEnabled)}
+              className="hidden sm:flex items-center gap-2 px-4 py-3 swiss-button-secondary text-xs"
+              aria-pressed={ttsEnabled}
+              aria-label={ttsEnabled ? "Disable voice playback" : "Enable voice playback"}
+            >
+              {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            {/* Policy Selector in Header */}
             <PolicySelector
               variant="compact"
               detectedItems={Array.from(detectedItems?.values() || [])}
@@ -169,27 +215,32 @@ function App(): ReactElement {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">
+          {/* Camera Tab Content */}
           {activeTab === "camera" && (
             <motion.div
               key="camera-tab"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
-              className="h-full p-4 pb-24 md:pb-4"
+              className="h-full p-3 sm:p-6 pb-24 md:pb-6"
             >
-              <div className="max-w-6xl mx-auto h-full relative">
-                <SwissButton
+              <div className="max-w-6xl mx-auto h-full relative camera-container swiss-panel">
+                {/* Add Item Button - Camera View */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleOpenAddItem}
-                  variant="secondary"
-                  className="absolute top-4 right-4 z-30"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-2 px-4 py-3 swiss-button-secondary text-xs"
+                  aria-label="Add manual item"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Item
-                </SwissButton>
+                  <span className="hidden sm:inline">{copy.common.addItem}</span>
+                </motion.button>
+
                 <CameraView
                   onError={setCameraError}
                   onManualMode={handleManualMode}
@@ -199,26 +250,38 @@ function App(): ReactElement {
             </motion.div>
           )}
 
+          {/* Dashboard Tab Content */}
           {activeTab === "dashboard" && (
             <motion.div
               key="dashboard-tab"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              className="h-full overflow-y-auto p-4 pb-24 md:pb-4"
+              className="h-full overflow-y-auto p-3 sm:p-6 pb-24 md:pb-6"
             >
-              <div className="max-w-6xl mx-auto space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-swiss-fg pb-4">
-                  <h2 className="text-xl font-black text-swiss-fg uppercase tracking-widest flex items-center gap-2">
-                    <Package className="w-6 h-6" />
+              <div className="max-w-5xl xl:max-w-6xl mx-auto space-y-4">
+                {/* Add Item Button - Dashboard View */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-between flex-wrap gap-2"
+                >
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-[#E31837]" />
                     Your Items
                   </h2>
-                  <SwissButton onClick={handleOpenAddItem} variant="accent">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleOpenAddItem}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#E31837] text-white rounded-lg font-medium hover:bg-[#B8122C] transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2 text-sm sm:text-base"
+                    aria-label="Add manual item"
+                  >
                     <Plus className="w-4 h-4" />
                     Add Item
-                  </SwissButton>
-                </div>
+                  </motion.button>
+                </motion.div>
 
                 <Dashboard
                   detectedItems={Array.from(detectedItems?.values() || [])}
@@ -227,93 +290,25 @@ function App(): ReactElement {
                   onItemClick={(item) => setSelectedItem(item.id)}
                 />
 
-                {/* Hazard Warnings Section */}
-                <section className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern">
-                  <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
-                    <h3 className="font-black uppercase tracking-widest">Hazard Warnings</h3>
-                  </div>
-                  <div className="p-6">
-                    {hazardWarnings.length > 0 ? (
-                      <ul className="space-y-3">
-                        {hazardWarnings.map((warning) => (
-                          <li
-                            key={warning.id}
-                            className={`p-4 border-2 ${
-                              warning.severity === "high"
-                                ? "border-red-500 bg-red-50"
-                                : warning.severity === "medium"
-                                  ? "border-yellow-500 bg-yellow-50"
-                                  : "border-green-500 bg-green-50"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold">{warning.title}</span>
-                              <span
-                                className={`text-xs uppercase px-2 py-1 ${
-                                  warning.severity === "high"
-                                    ? "bg-red-500 text-white"
-                                    : warning.severity === "medium"
-                                      ? "bg-yellow-500 text-black"
-                                      : "bg-green-500 text-white"
-                                }`}
-                              >
-                                {warning.severity}
-                              </span>
-                            </div>
-                            <p className="text-sm mt-2 text-swiss-fg/80">{warning.message}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-swiss-fg/60 italic">
-                        No hazards detected. Scan items to see warnings.
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                {/* Disaster Simulator Section */}
-                <DisasterSimulator
-                  result={simulationResult}
-                  selectedType={activeSimulatorType}
-                  onSelectType={setActiveSimulatorType}
-                />
-
-                {/* Recommendations Section */}
-                <RecommendationCards recommendations={recommendations} />
-
-                {/* Report Card Section */}
-                <ReportCard
-                  totalValue={totalValue}
-                  protectedValue={protectedValue}
-                  coverageGapPercentage={coverageGapPercentage}
-                  items={itemBreakdown}
-                  policyType={policyType}
-                />
-
-                {/* Privacy Mode Section */}
-                <PrivacyModeBanner
-                  enabled={privacyMode.enabled}
-                  onToggle={() => setPrivacyMode(!privacyMode.enabled)}
-                  localOnlyMessage={privacyMode.localOnlyMessage}
-                />
-
+                {/* Manual Items Section */}
                 <AnimatePresence>
                   {manualItems.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern"
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                     >
-                      <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
-                        <h3 className="font-black uppercase tracking-widest flex items-center gap-2">
-                          <Package className="w-5 h-5" />
+                      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
+                          <Package className="w-4 h-4 text-[#E31837]" />
                           Manual Items
-                          <span className="text-sm font-normal ml-2">({manualItems.length})</span>
+                          <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">
+                            ({manualItems.length} item{manualItems.length !== 1 ? "s" : ""})
+                          </span>
                         </h3>
                       </div>
-                      <div className="p-6">
+                      <div className="p-3 sm:p-4">
                         <ManualItemsList
                           items={manualItems}
                           onEdit={handleEditItem}
@@ -330,13 +325,18 @@ function App(): ReactElement {
         </AnimatePresence>
       </main>
 
+      {/* Tab Navigation - Responsive: bottom on mobile, top content area on desktop */}
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Detail Modal */}
       <DetailModal
         isOpen={!!selectedItemId}
         onClose={handleCloseDetailModal}
         item={detailModalItem}
         policyType={policyType}
       />
+
+      {/* Add Item Form Modal */}
       <AddItemForm isOpen={isAddItemFormOpen} onClose={handleCloseAddItem} editItem={editItem} />
     </div>
   );

@@ -34,6 +34,9 @@ describe("CameraView", () => {
     hazardWarnings: [],
     simulationResult: null,
     recommendations: [],
+    language: "en",
+    voiceEnabled: true,
+    ttsEnabled: true,
     setPolicyType: vi.fn(),
     completeOnboarding: vi.fn(),
     setActiveTab: vi.fn(),
@@ -51,6 +54,9 @@ describe("CameraView", () => {
     setHazardWarnings: vi.fn(),
     setSimulationResult: vi.fn(),
     setRecommendations: vi.fn(),
+    setLanguage: vi.fn(),
+    setVoiceEnabled: vi.fn(),
+    setTtsEnabled: vi.fn(),
   };
 
   // Mock getUserMedia
@@ -107,6 +113,7 @@ describe("CameraView", () => {
     // Default mock implementations
     const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
     mockUseAppContext.mockReturnValue({
+      ...baseContextValue,
       policyType: "renters",
       updateDetectedItems: vi.fn(),
       onboardingComplete: false,
@@ -122,6 +129,9 @@ describe("CameraView", () => {
       hazardWarnings: [],
       simulationResult: null,
       recommendations: [],
+      language: "en",
+      voiceEnabled: true,
+      ttsEnabled: true,
       setPolicyType: vi.fn(),
       completeOnboarding: vi.fn(),
       setActiveTab: vi.fn(),
@@ -139,6 +149,9 @@ describe("CameraView", () => {
       setHazardWarnings: vi.fn(),
       setSimulationResult: vi.fn(),
       setRecommendations: vi.fn(),
+      setLanguage: vi.fn(),
+      setVoiceEnabled: vi.fn(),
+      setTtsEnabled: vi.fn(),
     });
 
     const mockUseObjectDetection = useObjectDetection as Mock<() => UseYOLODetectionReturn>;
@@ -363,38 +376,8 @@ describe("CameraView", () => {
     it("displays current policy type indicator badge", () => {
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
         policyType: "homeowners",
-        updateDetectedItems: vi.fn(),
-        onboardingComplete: false,
-        activeTab: "camera",
-        detectedItems: new Map(),
-        manualItems: [],
-        selectedItemId: null,
-        confidenceThreshold: 0.5,
-        cameraPermissionDenied: false,
-        manualModeEnabled: false,
-        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
-        activeSimulatorType: null,
-        hazardWarnings: [],
-        simulationResult: null,
-        recommendations: [],
-        setPolicyType: vi.fn(),
-        completeOnboarding: vi.fn(),
-        setActiveTab: vi.fn(),
-        addManualItem: vi.fn(),
-        removeManualItem: vi.fn(),
-        updateManualItem: vi.fn(),
-        setSelectedItem: vi.fn(),
-        setConfidenceThreshold: vi.fn(),
-        setCameraPermissionDenied: vi.fn(),
-        enableManualMode: vi.fn(),
-        disableManualMode: vi.fn(),
-        resetCameraPermission: vi.fn(),
-        setPrivacyMode: vi.fn(),
-        setActiveSimulatorType: vi.fn(),
-        setHazardWarnings: vi.fn(),
-        setSimulationResult: vi.fn(),
-        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -406,38 +389,8 @@ describe("CameraView", () => {
     it("shows different badge for renters policy", () => {
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
         policyType: "renters",
-        updateDetectedItems: vi.fn(),
-        onboardingComplete: false,
-        activeTab: "camera",
-        detectedItems: new Map(),
-        manualItems: [],
-        selectedItemId: null,
-        confidenceThreshold: 0.5,
-        cameraPermissionDenied: false,
-        manualModeEnabled: false,
-        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
-        activeSimulatorType: null,
-        hazardWarnings: [],
-        simulationResult: null,
-        recommendations: [],
-        setPolicyType: vi.fn(),
-        completeOnboarding: vi.fn(),
-        setActiveTab: vi.fn(),
-        addManualItem: vi.fn(),
-        removeManualItem: vi.fn(),
-        updateManualItem: vi.fn(),
-        setSelectedItem: vi.fn(),
-        setConfidenceThreshold: vi.fn(),
-        setCameraPermissionDenied: vi.fn(),
-        enableManualMode: vi.fn(),
-        disableManualMode: vi.fn(),
-        resetCameraPermission: vi.fn(),
-        setPrivacyMode: vi.fn(),
-        setActiveSimulatorType: vi.fn(),
-        setHazardWarnings: vi.fn(),
-        setSimulationResult: vi.fn(),
-        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -449,38 +402,8 @@ describe("CameraView", () => {
     it("shows different badge for auto policy", () => {
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
         policyType: "auto",
-        updateDetectedItems: vi.fn(),
-        onboardingComplete: false,
-        activeTab: "camera",
-        detectedItems: new Map(),
-        manualItems: [],
-        selectedItemId: null,
-        confidenceThreshold: 0.5,
-        cameraPermissionDenied: false,
-        manualModeEnabled: false,
-        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
-        activeSimulatorType: null,
-        hazardWarnings: [],
-        simulationResult: null,
-        recommendations: [],
-        setPolicyType: vi.fn(),
-        completeOnboarding: vi.fn(),
-        setActiveTab: vi.fn(),
-        addManualItem: vi.fn(),
-        removeManualItem: vi.fn(),
-        updateManualItem: vi.fn(),
-        setSelectedItem: vi.fn(),
-        setConfidenceThreshold: vi.fn(),
-        setCameraPermissionDenied: vi.fn(),
-        enableManualMode: vi.fn(),
-        disableManualMode: vi.fn(),
-        resetCameraPermission: vi.fn(),
-        setPrivacyMode: vi.fn(),
-        setActiveSimulatorType: vi.fn(),
-        setHazardWarnings: vi.fn(),
-        setSimulationResult: vi.fn(),
-        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -492,38 +415,8 @@ describe("CameraView", () => {
     it("shows different badge for no insurance", () => {
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
         policyType: "none",
-        updateDetectedItems: vi.fn(),
-        onboardingComplete: false,
-        activeTab: "camera",
-        detectedItems: new Map(),
-        manualItems: [],
-        selectedItemId: null,
-        confidenceThreshold: 0.5,
-        cameraPermissionDenied: false,
-        manualModeEnabled: false,
-        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
-        activeSimulatorType: null,
-        hazardWarnings: [],
-        simulationResult: null,
-        recommendations: [],
-        setPolicyType: vi.fn(),
-        completeOnboarding: vi.fn(),
-        setActiveTab: vi.fn(),
-        addManualItem: vi.fn(),
-        removeManualItem: vi.fn(),
-        updateManualItem: vi.fn(),
-        setSelectedItem: vi.fn(),
-        setConfidenceThreshold: vi.fn(),
-        setCameraPermissionDenied: vi.fn(),
-        enableManualMode: vi.fn(),
-        disableManualMode: vi.fn(),
-        resetCameraPermission: vi.fn(),
-        setPrivacyMode: vi.fn(),
-        setActiveSimulatorType: vi.fn(),
-        setHazardWarnings: vi.fn(),
-        setSimulationResult: vi.fn(),
-        setRecommendations: vi.fn(),
       });
 
       render(<CameraView />);
@@ -644,6 +537,7 @@ describe("CameraView", () => {
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
+        ...baseContextValue,
         updateDetectedItems: mockUpdateDetectedItems,
       });
 
@@ -732,38 +626,9 @@ describe("CameraView", () => {
       const mockUpdateDetectedItems = vi.fn();
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
         policyType: "renters",
         updateDetectedItems: mockUpdateDetectedItems,
-        onboardingComplete: false,
-        activeTab: "camera",
-        detectedItems: new Map(),
-        manualItems: [],
-        selectedItemId: null,
-        confidenceThreshold: 0.5,
-        cameraPermissionDenied: false,
-        manualModeEnabled: false,
-        privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
-        activeSimulatorType: null,
-        hazardWarnings: [],
-        simulationResult: null,
-        recommendations: [],
-        setPolicyType: vi.fn(),
-        completeOnboarding: vi.fn(),
-        setActiveTab: vi.fn(),
-        addManualItem: vi.fn(),
-        removeManualItem: vi.fn(),
-        updateManualItem: vi.fn(),
-        setSelectedItem: vi.fn(),
-        setConfidenceThreshold: vi.fn(),
-        setCameraPermissionDenied: vi.fn(),
-        enableManualMode: vi.fn(),
-        disableManualMode: vi.fn(),
-        resetCameraPermission: vi.fn(),
-        setPrivacyMode: vi.fn(),
-        setActiveSimulatorType: vi.fn(),
-        setHazardWarnings: vi.fn(),
-        setSimulationResult: vi.fn(),
-        setRecommendations: vi.fn(),
       });
 
       const mockDetections: { detections: Detection[] } = {

@@ -9,6 +9,7 @@ import {
 } from "react";
 import { simulateDisaster } from "@/utils/disasterSimulator";
 import { getHazardWarnings } from "@/utils/hazardRules";
+import { normalizeLanguage } from "@/utils/language";
 import { getCoverageRecommendations } from "@/utils/recommendationEngine";
 import type {
   AppContextValue,
@@ -22,6 +23,7 @@ import type {
   ManualItem,
   PolicyType,
   PrivacyModeState,
+  SupportedLanguage,
 } from "../types";
 import { VALID_POLICY_TYPES } from "../types";
 import { DEFAULT_STATE, STORAGE_KEYS } from "./appState";
@@ -133,16 +135,6 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     loadFromStorage<boolean>(STORAGE_KEYS.manualModeEnabled, false, (v) => v === "true"),
   );
 
-  // Non-persisted state
-  const [activeTab, setActiveTabState] = useState<AppTab>(DEFAULT_STATE.activeTab);
-  const [detectedItems, setDetectedItemsState] = useState<Map<string, DetectedItem>>(
-    () => new Map(),
-  );
-  const [selectedItemId, setSelectedItemIdState] = useState<string | null>(
-    DEFAULT_STATE.selectedItemId,
-  );
-
-  // Load persisted privacy mode
   const [privacyMode, setPrivacyModeState] = useState<PrivacyModeState>(() =>
     loadFromStorage<PrivacyModeState>(
       STORAGE_KEYS.privacyMode,
@@ -151,7 +143,6 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     ),
   );
 
-  // Load persisted simulator type
   const [activeSimulatorType, setActiveSimulatorTypeState] = useState<DisasterType | null>(() =>
     loadFromStorage<DisasterType | null>(
       STORAGE_KEYS.activeSimulatorType,
@@ -160,14 +151,42 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     ),
   );
 
-  // Transient state (not persisted) - COMPUTED from detections and items
+  const [language, setLanguageState] = useState<SupportedLanguage>(() =>
+    loadFromStorage<SupportedLanguage>(STORAGE_KEYS.language, DEFAULT_STATE.language, (value) =>
+      normalizeLanguage(value),
+    ),
+  );
+
+  const [voiceEnabled, setVoiceEnabledState] = useState<boolean>(() =>
+    loadFromStorage<boolean>(
+      STORAGE_KEYS.voiceEnabled,
+      DEFAULT_STATE.voiceEnabled,
+      (v) => v === "true",
+    ),
+  );
+
+  const [ttsEnabled, setTtsEnabledState] = useState<boolean>(() =>
+    loadFromStorage<boolean>(
+      STORAGE_KEYS.ttsEnabled,
+      DEFAULT_STATE.ttsEnabled,
+      (v) => v === "true",
+    ),
+  );
+
+  // Non-persisted state
+  const [activeTab, setActiveTabState] = useState<AppTab>(DEFAULT_STATE.activeTab);
+  const [detectedItems, setDetectedItemsState] = useState<Map<string, DetectedItem>>(
+    () => new Map(),
+  );
+  const [selectedItemId, setSelectedItemIdState] = useState<string | null>(
+    DEFAULT_STATE.selectedItemId,
+  );
   const detectedItemsList = useMemo(() => Array.from(detectedItems.values()), [detectedItems]);
-
-  // Compute hazard warnings from detected items
-  const hazardWarnings = useMemo(() => getHazardWarnings(detectedItemsList), [detectedItemsList]);
-
-  // Compute recommendations from items and policy
-  const recommendations = useMemo(
+  const hazardWarnings = useMemo<HazardWarning[]>(
+    () => getHazardWarnings(detectedItemsList),
+    [detectedItemsList],
+  );
+  const recommendations = useMemo<CoverageRecommendation[]>(
     () =>
       getCoverageRecommendations({
         detectedItems: detectedItemsList,
@@ -177,17 +196,18 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       }),
     [detectedItemsList, manualItems, policyType, hazardWarnings],
   );
-
-  // Compute simulation result when simulator type changes
-  const simulationResult = useMemo(() => {
-    if (!activeSimulatorType) return null;
-    return simulateDisaster({
-      disasterType: activeSimulatorType,
-      detectedItems: detectedItemsList,
-      manualItems,
-      policyType,
-    });
-  }, [activeSimulatorType, detectedItemsList, manualItems, policyType]);
+  const simulationResult = useMemo<DisasterSimulationResult | null>(
+    () =>
+      activeSimulatorType
+        ? simulateDisaster({
+            disasterType: activeSimulatorType,
+            detectedItems: detectedItemsList,
+            manualItems,
+            policyType,
+          })
+        : null,
+    [activeSimulatorType, detectedItemsList, manualItems, policyType],
+  );
 
   /**
    * Action: setPolicyType
@@ -212,6 +232,22 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     const normalized = normalizeThreshold(newThreshold);
     setConfidenceThresholdState(normalized);
     saveToStorage(STORAGE_KEYS.confidenceThreshold, normalized.toString());
+  }, []);
+
+  const setLanguage = useCallback((nextLanguage: SupportedLanguage): void => {
+    const normalized = normalizeLanguage(nextLanguage);
+    setLanguageState(normalized);
+    saveToStorage(STORAGE_KEYS.language, normalized);
+  }, []);
+
+  const setVoiceEnabled = useCallback((enabled: boolean): void => {
+    setVoiceEnabledState(enabled);
+    saveToStorage(STORAGE_KEYS.voiceEnabled, enabled.toString());
+  }, []);
+
+  const setTtsEnabled = useCallback((enabled: boolean): void => {
+    setTtsEnabledState(enabled);
+    saveToStorage(STORAGE_KEYS.ttsEnabled, enabled.toString());
   }, []);
 
   /**
@@ -335,56 +371,33 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     saveToStorage(STORAGE_KEYS.cameraPermissionDenied, "false");
   }, []);
 
-  /**
-   * Action: setPrivacyMode
-   * Enables/disables privacy mode and persists to localStorage
-   */
   const setPrivacyMode = useCallback((enabled: boolean): void => {
     setPrivacyModeState((prevMode) => {
-      const newMode: PrivacyModeState = { ...prevMode, enabled };
+      const newMode = { ...prevMode, enabled };
       saveToStorage(STORAGE_KEYS.privacyMode, JSON.stringify(newMode));
       return newMode;
     });
   }, []);
 
-  /**
-   * Action: setActiveSimulatorType
-   * Sets the active disaster simulator type and persists to localStorage
-   */
   const setActiveSimulatorType = useCallback((type: DisasterType | null): void => {
     setActiveSimulatorTypeState(type);
     if (type) {
       saveToStorage(STORAGE_KEYS.activeSimulatorType, type);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.activeSimulatorType);
+      return;
     }
+    localStorage.removeItem(STORAGE_KEYS.activeSimulatorType);
   }, []);
 
-  /**
-   * Action: setHazardWarnings
-   * DEPRECATED: Hazard warnings are now computed automatically from detections.
-   * This setter is kept for API compatibility but has no effect.
-   */
   const setHazardWarnings = useCallback((_warnings: HazardWarning[]): void => {
-    // No-op: computed from detected items automatically
+    // Computed automatically from detected items.
   }, []);
 
-  /**
-   * Action: setSimulationResult
-   * DEPRECATED: Simulation result is now computed automatically when activeSimulatorType changes.
-   * This setter is kept for API compatibility but has no effect.
-   */
   const setSimulationResult = useCallback((_result: DisasterSimulationResult | null): void => {
-    // No-op: computed from activeSimulatorType, items, and policy automatically
+    // Computed automatically from simulator selection.
   }, []);
 
-  /**
-   * Action: setRecommendations
-   * DEPRECATED: Recommendations are now computed automatically from items and policy.
-   * This setter is kept for API compatibility but has no effect.
-   */
-  const setRecommendations = useCallback((_newRecommendations: CoverageRecommendation[]): void => {
-    // No-op: computed from detectedItems, manualItems, policyType, and hazards automatically
+  const setRecommendations = useCallback((_recommendations: CoverageRecommendation[]): void => {
+    // Computed automatically from items, hazards, and policy.
   }, []);
 
   // Memoize the context value to prevent unnecessary re-renders
@@ -400,12 +413,14 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       confidenceThreshold,
       cameraPermissionDenied,
       manualModeEnabled,
-      // New state
       privacyMode,
       activeSimulatorType,
       hazardWarnings,
       simulationResult,
       recommendations,
+      language,
+      voiceEnabled,
+      ttsEnabled,
       // Actions
       setPolicyType,
       completeOnboarding,
@@ -420,12 +435,14 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       enableManualMode,
       disableManualMode,
       resetCameraPermission,
-      // New actions
       setPrivacyMode,
       setActiveSimulatorType,
       setHazardWarnings,
       setSimulationResult,
       setRecommendations,
+      setLanguage,
+      setVoiceEnabled,
+      setTtsEnabled,
     }),
     [
       policyType,
@@ -442,6 +459,9 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       hazardWarnings,
       simulationResult,
       recommendations,
+      language,
+      voiceEnabled,
+      ttsEnabled,
       setPolicyType,
       completeOnboarding,
       setActiveTab,
@@ -460,6 +480,9 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       setHazardWarnings,
       setSimulationResult,
       setRecommendations,
+      setLanguage,
+      setVoiceEnabled,
+      setTtsEnabled,
     ],
   );
 

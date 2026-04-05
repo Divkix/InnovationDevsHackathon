@@ -138,13 +138,6 @@ vi.mock("framer-motion", () => ({
       children: React.ReactNode;
       [key: string]: unknown;
     }): ReactElement => <main {...props}>{children}</main>,
-    span: ({
-      children,
-      ...props
-    }: {
-      children: React.ReactNode;
-      [key: string]: unknown;
-    }): ReactElement => <span {...props}>{children}</span>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }): ReactElement => <>{children}</>,
 }));
@@ -152,6 +145,7 @@ vi.mock("framer-motion", () => ({
 // Mock lucide-react icons - factory-safe version with inline component definitions
 vi.mock("lucide-react", () => ({
   Camera: () => <svg data-testid="icon-camera" />,
+  Globe: () => <svg data-testid="icon-globe" />,
   LayoutDashboard: () => <svg data-testid="icon-dashboard" />,
   Shield: () => <svg data-testid="icon-shield" />,
   Plus: () => <svg data-testid="icon-plus" />,
@@ -187,15 +181,9 @@ vi.mock("lucide-react", () => ({
   Hand: () => <svg data-testid="icon-hand" />,
   Bug: () => <svg data-testid="icon-bug" />,
   ChevronRight: () => <svg data-testid="icon-chevron-right" />,
+  Volume2: () => <svg data-testid="icon-volume-2" />,
+  VolumeX: () => <svg data-testid="icon-volume-x" />,
   LucideIcon: () => <svg data-testid="icon-generic" />,
-  Flame: () => <svg data-testid="icon-flame" />,
-  Droplets: () => <svg data-testid="icon-droplets" />,
-  Zap: () => <svg data-testid="icon-zap" />,
-  TrendingDown: () => <svg data-testid="icon-trending-down" />,
-  Lock: () => <svg data-testid="icon-lock" />,
-  Unlock: () => <svg data-testid="icon-unlock" />,
-  EyeOff: () => <svg data-testid="icon-eye-off" />,
-  WifiOff: () => <svg data-testid="icon-wifi-off" />,
 }));
 
 // ============================================

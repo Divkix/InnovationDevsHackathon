@@ -1,37 +1,25 @@
 /// <reference types="vite/client" />
-import type { GeminiClient, PolicyType } from "../types";
+import type { GeminiClient } from "../types";
+import { requestCoverageExplanation, requestRoomScan } from "../utils/gemini";
 
 /**
- * useGemini hook - Gemini API integration placeholder
+ * useGemini hook - browser-side Gemini coverage helper.
  *
- * This hook provides a placeholder for Gemini AI integration.
- * When VITE_GEMINI_API_KEY is set, it returns a configured client.
- * When the key is empty/missing, it returns null.
- *
- * This allows the UI to conditionally show "Ask about coverage" features
- * only when the API key is configured.
- *
- * @returns Gemini client configuration or null if no API key
+ * Returns a configured client only when VITE_GEMINI_API_KEY is present.
+ * Callers can request compact multilingual explanations for an item and policy.
  */
 export function useGemini(): GeminiClient | null {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim() ?? "";
 
-  // Return null if no API key is configured
-  if (!apiKey || apiKey.trim() === "") {
+  if (!apiKey) {
     return null;
   }
 
-  // Return a minimal client configuration object
-  // In a real implementation, this would initialize the Gemini SDK
   return {
     apiKey,
     isConfigured: true,
-    // Placeholder for future chat functionality
-    askAboutCoverage: async (item: string, policyType: PolicyType): Promise<null> => {
-      // This would make an actual API call to Gemini
-      console.log(`[Gemini Placeholder] Asking about ${item} under ${policyType}`);
-      return null;
-    },
+    askAboutCoverage: (input) => requestCoverageExplanation(apiKey, input),
+    analyzeRoom: (input) => requestRoomScan(apiKey, input),
   };
 }
 

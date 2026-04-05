@@ -16,6 +16,9 @@ function TestConsumer(): ReactElement {
       <div data-testid="manualItemsCount">{context.manualItems.length}</div>
       <div data-testid="selectedItemId">{context.selectedItemId || "null"}</div>
       <div data-testid="confidenceThreshold">{context.confidenceThreshold}</div>
+      <div data-testid="language">{context.language}</div>
+      <div data-testid="voiceEnabled">{context.voiceEnabled ? "true" : "false"}</div>
+      <div data-testid="ttsEnabled">{context.ttsEnabled ? "true" : "false"}</div>
       <button data-testid="setPolicyType" onClick={() => context.setPolicyType("auto")}>
         Set Policy
       </button>
@@ -76,6 +79,18 @@ function TestConsumer(): ReactElement {
         onClick={() => context.setConfidenceThreshold(0.75)}
       >
         Set Threshold
+      </button>
+      <button data-testid="setLanguage" onClick={() => context.setLanguage("es")}>
+        Set Language
+      </button>
+      <button
+        data-testid="toggleVoice"
+        onClick={() => context.setVoiceEnabled(!context.voiceEnabled)}
+      >
+        Toggle Voice
+      </button>
+      <button data-testid="toggleTts" onClick={() => context.setTtsEnabled(!context.ttsEnabled)}>
+        Toggle TTS
       </button>
     </div>
   );
@@ -142,6 +157,9 @@ describe("AppContext", () => {
       expect(screen.getByTestId("detectedItemsCount").textContent).toBe("0");
       expect(screen.getByTestId("manualItemsCount").textContent).toBe("0");
       expect(screen.getByTestId("selectedItemId").textContent).toBe("null");
+      expect(screen.getByTestId("language").textContent).toBe("en");
+      expect(screen.getByTestId("voiceEnabled").textContent).toBe("true");
+      expect(screen.getByTestId("ttsEnabled").textContent).toBe("true");
     });
 
     it("loads policyType from localStorage if available", () => {
@@ -156,6 +174,17 @@ describe("AppContext", () => {
       renderWithProvider(<TestConsumer />);
 
       expect(screen.getByTestId("onboardingComplete").textContent).toBe("true");
+    });
+
+    it("loads language and voice preferences from localStorage if available", () => {
+      storage.data.insurescope_language = "hi";
+      storage.data.insurescope_voiceEnabled = "false";
+      storage.data.insurescope_ttsEnabled = "false";
+      renderWithProvider(<TestConsumer />);
+
+      expect(screen.getByTestId("language").textContent).toBe("hi");
+      expect(screen.getByTestId("voiceEnabled").textContent).toBe("false");
+      expect(screen.getByTestId("ttsEnabled").textContent).toBe("false");
     });
 
     it("loads manualItems from localStorage if available", () => {
@@ -442,6 +471,35 @@ describe("AppContext", () => {
         });
         expect(screen.getByTestId("threshold").textContent).toBe(expected);
       }
+    });
+  });
+
+  describe("language and voice preference actions", () => {
+    it("updates language in state and localStorage", () => {
+      renderWithProvider(<TestConsumer />);
+
+      act(() => {
+        screen.getByTestId("setLanguage").click();
+      });
+
+      expect(screen.getByTestId("language").textContent).toBe("es");
+      expect(storage.data.insurescope_language).toBe("es");
+    });
+
+    it("toggles voiceEnabled and ttsEnabled independently", () => {
+      renderWithProvider(<TestConsumer />);
+
+      act(() => {
+        screen.getByTestId("toggleVoice").click();
+      });
+      expect(screen.getByTestId("voiceEnabled").textContent).toBe("false");
+      expect(storage.data.insurescope_voiceEnabled).toBe("false");
+
+      act(() => {
+        screen.getByTestId("toggleTts").click();
+      });
+      expect(screen.getByTestId("ttsEnabled").textContent).toBe("false");
+      expect(storage.data.insurescope_ttsEnabled).toBe("false");
     });
   });
 
