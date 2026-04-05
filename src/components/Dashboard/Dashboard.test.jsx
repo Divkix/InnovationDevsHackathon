@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Dashboard } from './Dashboard'
 
@@ -146,7 +146,7 @@ describe('Dashboard', () => {
       formatCurrency.mockReturnValue('$15,000')
       formatPercentage.mockReturnValue('89.3%')
 
-      const { container } = render(
+      render(
         <Dashboard
           detectedItems={[{ id: '1', category: 'laptop' }, { id: '2', category: 'tv' }, { id: '3', category: 'car' }]}
           manualItems={[]}
@@ -281,7 +281,7 @@ describe('Dashboard', () => {
       formatCurrency.mockImplementation((val) => `$${val.toLocaleString()}`)
       formatPercentage.mockReturnValue('90.6%')
 
-      const { container } = render(
+      render(
         <Dashboard
           detectedItems={[
             { id: '1', category: 'laptop' },

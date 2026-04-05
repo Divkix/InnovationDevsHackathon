@@ -203,7 +203,7 @@ describe('PolicySelector', () => {
         { id: '2', category: 'car', estimatedValue: 15000 }
       ]
       
-      const { container } = renderWithProvider(
+      renderWithProvider(
         <PolicySelector detectedItems={mockItems} />
       )
       
@@ -254,8 +254,7 @@ describe('PolicySelector', () => {
         { id: '1', category: 'laptop', estimatedValue: 1200 },
         { id: '2', category: 'car', estimatedValue: 15000 }
       ]
-      const totalValue = 16200
-      
+
       renderWithProvider(<PolicySelector detectedItems={mockItems} />)
       
       const noInsuranceOption = screen.getByLabelText(/Select No Insurance/i)
@@ -383,7 +382,7 @@ describe('PolicySelector', () => {
         { id: '2', category: 'car', estimatedValue: 15000 }
       ]
       
-      const { rerender } = renderWithProvider(<PolicySelector detectedItems={mockItems} />)
+      renderWithProvider(<PolicySelector detectedItems={mockItems} />)
       
       const policies = [
         { label: /Select Renter's Insurance/i, name: 'renters', expectedGap: '92.6%' },
@@ -479,8 +478,7 @@ describe('PolicySelector', () => {
         { id: '1', category: 'laptop', estimatedValue: 1200 },
         { id: '2', category: 'car', estimatedValue: 15000 }
       ]
-      const expectedTotal = 16200
-      
+
       renderWithProvider(<PolicySelector detectedItems={mockItems} />)
       
       const noneOption = screen.getByLabelText(/Select No Insurance/i)

@@ -13,21 +13,14 @@ describe('App', () => {
     expect(screen.getByText('InsureScope')).toBeInTheDocument()
   })
 
-  it('renders the subtitle', () => {
+  it('renders the Camera and Dashboard tabs', () => {
     renderWithProvider(<App />)
-    expect(screen.getByText('AI-powered insurance coverage analysis')).toBeInTheDocument()
+    expect(screen.getByTestId('tab-camera')).toBeInTheDocument()
+    expect(screen.getByTestId('tab-dashboard')).toBeInTheDocument()
   })
 
-  it('has a working counter button', () => {
+  it('renders the Policy Selector in header', () => {
     renderWithProvider(<App />)
-    const button = screen.getByRole('button', { name: /count is 0/i })
-    expect(button).toBeInTheDocument()
-  })
-
-  it('displays all framework badges', () => {
-    renderWithProvider(<App />)
-    expect(screen.getByText('React ✓')).toBeInTheDocument()
-    expect(screen.getByText('Vite ✓')).toBeInTheDocument()
-    expect(screen.getByText('Tailwind ✓')).toBeInTheDocument()
+    expect(screen.getByTestId('policy-selector')).toBeInTheDocument()
   })
 })

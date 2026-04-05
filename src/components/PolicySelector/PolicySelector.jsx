@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useAppContext } from '@/context/AppContext.jsx'
-import { lookupCoverage, VALID_POLICY_TYPES } from '@/utils/coverageLookup.js'
+import { VALID_POLICY_TYPES } from '@/utils/coverageLookup.js'
 import { calculateValues, formatCurrency, formatPercentage } from '@/utils/valueCalculator.js'
 import { 
   Home, 
