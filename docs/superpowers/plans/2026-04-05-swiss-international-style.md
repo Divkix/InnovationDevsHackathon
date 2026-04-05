@@ -1055,7 +1055,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                     <ChevronLeft className="w-5 h-5" />
                     Back
                   </SwissButton>
-                  <SwissButton onClick={handleNext} disabled={isTransitioning} variant="primary" size="large" className="flex-[2]">
+                  <SwissButton onClick={handleNext} disabled={isTransitioning} variant="primary" size="large" className="flex-2">
                     <Camera className="w-5 h-5" />
                     {isTransitioning ? 'Starting...' : 'Start Camera'}
                   </SwissButton>

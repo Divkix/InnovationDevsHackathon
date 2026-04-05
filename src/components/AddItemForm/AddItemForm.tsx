@@ -565,7 +565,7 @@ export function AddItemForm({
             type="submit"
             onClick={(e) => handleSubmit(e as unknown as FormEvent<HTMLFormElement>)}
             disabled={isSubmitting}
-            className="flex-[2] py-2.5 px-4 rounded-lg font-semibold text-white
+            className="flex-2 py-2.5 px-4 rounded-lg font-semibold text-white
               bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
               flex items-center justify-center gap-2"

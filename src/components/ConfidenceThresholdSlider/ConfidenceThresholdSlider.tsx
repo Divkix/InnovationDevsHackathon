@@ -105,7 +105,7 @@ export function ConfidenceThresholdSlider({
         />
         <span
           data-testid="threshold-value"
-          className="text-white text-sm font-semibold min-w-[3rem] text-right"
+          className="text-white text-sm font-semibold min-w-12 text-right"
         >
           {formatThresholdPercentage(value)}
         </span>
