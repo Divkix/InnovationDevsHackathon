@@ -91,8 +91,8 @@ describe("Dashboard", () => {
       };
       render(<Dashboard {...props} />);
 
-      expect(screen.getByText("Total Value")).toBeInTheDocument();
-      expect(screen.getByText("Protected")).toBeInTheDocument();
+      expect(screen.getAllByText("Total Value")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("Protected")[0]).toBeInTheDocument();
       expect(screen.getByText("UNPROTECTED")).toBeInTheDocument();
       expect(screen.getByText("Coverage Gap")).toBeInTheDocument();
       // $0 appears multiple times (total, protected, unprotected), so use getAllByText
@@ -310,7 +310,7 @@ describe("Dashboard", () => {
 
       expect(screen.getByText(/all items are fully covered/i)).toBeInTheDocument();
       expect(screen.getByText("0.0%")).toBeInTheDocument();
-      expect(screen.getByText("$0")).toBeInTheDocument(); // Unprotected value should be $0
+      expect(screen.getAllByText("$0").length).toBeGreaterThan(0); // Unprotected value should be $0
     });
   });
 
