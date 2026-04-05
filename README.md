@@ -18,12 +18,48 @@ A dashboard summarizes the total value of unprotected items, helping you underst
 
 ---
 
+## Object Detection Model
+
+This application uses **YOLO26** (You Only Look Once v26) for real-time object detection, 
+running entirely in the browser via TensorFlow.js.
+
+### Why YOLO26?
+
+- **Better Accuracy**: 40.9 mAP on COCO vs ~34 mAP for MediaPipe EfficientDet
+- **Faster CPU Inference**: Up to 43% faster than YOLO11 on CPU-only devices
+- **No NMS Required**: End-to-end design eliminates post-processing bottlenecks
+- **Native TF.js Export**: Direct browser deployment without conversion headaches
+
+### Model Files
+
+The YOLO26n (nano) model files are stored in `public/models/yolo26n/`:
+- `model.json` - Model architecture (2.4MB)
+- `group1-shard1of4.bin` through `group1-shard4of4.bin` - Weights (~18MB total)
+
+### Regenerating Model Files
+
+If you need to regenerate the model (e.g., for custom training):
+
+```bash
+pip install ultralytics
+yolo export model=yolo26n.pt format=tfjs
+mkdir -p public/models/yolo26n
+cp yolo26n_web_model/* public/models/yolo26n/
+```
+
+### Filtering
+
+The app automatically filters out the "person" class from coverage analysis 
+(humans aren't insurable property). All other COCO classes (80 total) are supported.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | UI Framework | React 19 + Vite |
-| Object Detection | MediaPipe Object Detection (`@mediapipe/tasks-vision`) |
+| Object Detection | YOLO26 via TensorFlow.js (`@tensorflow/tfjs`) |
 | Styling | Tailwind CSS v4 + custom State Farm theme |
 | Overlays | HTML5 Canvas API |
 | Animations | Framer Motion |
@@ -35,7 +71,7 @@ A dashboard summarizes the total value of unprotected items, helping you underst
 
 ## Key Features
 
-- **Real-time object detection** — MediaPipe models identify furniture, electronics, appliances, and more via the live camera feed
+- **Real-time object detection** — YOLO26 identifies furniture, electronics, appliances, and more via the live camera feed
 - **Color-coded coverage overlays** — green/yellow/red overlays drawn on detected objects via Canvas
 - **Dashboard with unprotected value counter** — see the total dollar value of items not covered by your policy
 - **"No Insurance" red moment** — dramatic red highlighting for uninsured items to create urgency
@@ -103,7 +139,7 @@ src/
 │   ├── AppContext.jsx               # Global React context (policy, items, tabs)
 │   └── appState.js                  # Initial state factory
 ├── hooks/
-│   ├── useObjectDetection.js        # MediaPipe object detection hook
+│   ├── useObjectDetection.js        # YOLO26 object detection hook
 │   ├── useMockDetection.js          # Mock detection hook for testing
 │   ├── mockDetections.js            # Predefined mock detection results
 │   └── useGemini.js                 # Gemini AI integration hook
@@ -129,7 +165,7 @@ InsureScope uses State Farm's signature red (`#E31837`) as the primary brand col
 
 ## Privacy
 
-**Everything runs client-side.** No images, detection data, or personal information ever leave your device. Object detection runs directly in the browser via MediaPipe WebAssembly — no server-side processing, no cloud uploads, no data collection.
+**Everything runs client-side.** No images, detection data, or personal information ever leave your device. Object detection runs directly in the browser via TensorFlow.js — no server-side processing, no cloud uploads, no data collection.
 
 ---
 
