@@ -19,7 +19,7 @@ vi.mock("../hooks/useObjectDetection", () => ({
 }));
 
 // Import AFTER setting up mocks
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import App from "../App";
 import { AppProvider } from "../context/AppContext";
 
@@ -74,6 +74,14 @@ describe("App", () => {
     it("renders the Policy Selector in header", () => {
       renderWithProvider(<App />);
       expect(screen.getByTestId("policy-selector")).toBeInTheDocument();
+    });
+
+    it("renders the quote packet surface on the dashboard tab", () => {
+      renderWithProvider(<App />);
+      fireEvent.click(screen.getByTestId("tab-dashboard"));
+
+      expect(screen.getByTestId("quote-packet-card")).toBeInTheDocument();
+      expect(screen.getByText(/inventory packet ready for an agent review/i)).toBeInTheDocument();
     });
   });
 });
