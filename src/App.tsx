@@ -1,17 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Package, Plus, Shield } from "lucide-react";
-import { type ReactElement, useCallback, useState } from "react";
+import { type ReactElement, useState } from "react";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
 import { DetailModal } from "./components/DetailModal/DetailModal";
+import { DisasterSimulator } from "./components/DisasterSimulator";
 import { OnboardingFlow } from "./components/OnboardingFlow/OnboardingFlow";
 import { PolicySelector } from "./components/PolicySelector/PolicySelector";
+import { PrivacyModeBanner } from "./components/PrivacyModeBanner";
+import { RecommendationCards } from "./components/RecommendationCards";
+import { ReportCard } from "./components/ReportCard";
 import { SwissButton } from "./components/Swiss";
 import { TabNavigation } from "./components/TabNavigation/TabNavigation";
 import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
-import type { DisasterType, ManualItem } from "./types";
+import type { ManualItem } from "./types";
+import { createItemBreakdown } from "./utils/valueCalculator";
 
 /**
  * INTEGRATION NOTES FOR TEAMMATES
@@ -57,13 +62,6 @@ function App(): ReactElement {
   const handleManualMode = (): void => enableManualMode();
   const handleEnableCamera = (): void => disableManualMode();
 
-  const handleSimulatorChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>): void => {
-      setActiveSimulatorType((e.target.value as DisasterType) || null);
-    },
-    [setActiveSimulatorType],
-  );
-
   const selectedItem = selectedItemId
     ? detectedItems.get(selectedItemId) || manualItems.find((item) => item.id === selectedItemId)
     : null;
@@ -77,6 +75,17 @@ function App(): ReactElement {
             | "dashboard",
         }
       : null;
+
+  // Computed values for ReportCard
+  const detectedItemsList = Array.from(detectedItems.values());
+  const itemBreakdown = createItemBreakdown(detectedItemsList, manualItems, policyType);
+  const totalValue = itemBreakdown.reduce((sum, item) => sum + item.estimatedValue, 0);
+  const protectedValue = itemBreakdown.reduce(
+    (sum, item) => sum + (item.status === "covered" ? item.estimatedValue : 0),
+    0,
+  );
+  const coverageGapPercentage =
+    totalValue > 0 ? Math.round(((totalValue - protectedValue) / totalValue) * 100) : 0;
 
   const handleCloseDetailModal = (): void => setSelectedItem(null);
   const handleOpenAddItem = (): void => {
@@ -218,12 +227,8 @@ function App(): ReactElement {
                   onItemClick={(item) => setSelectedItem(item.id)}
                 />
 
-                {/* Hazard Warnings Section - owned by Matin */}
-                <section
-                  data-section="hazard-warnings"
-                  data-owner="matin"
-                  className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern"
-                >
+                {/* Hazard Warnings Section */}
+                <section className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern">
                   <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
                     <h3 className="font-black uppercase tracking-widest">Hazard Warnings</h3>
                   </div>
@@ -267,133 +272,31 @@ function App(): ReactElement {
                   </div>
                 </section>
 
-                {/* Disaster Simulator Section - owned by Matin */}
-                <section
-                  data-section="disaster-simulator"
-                  data-owner="matin"
-                  className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern"
-                >
-                  <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg flex items-center justify-between">
-                    <h3 className="font-black uppercase tracking-widest">Disaster Simulator</h3>
-                    <select
-                      value={activeSimulatorType || ""}
-                      onChange={handleSimulatorChange}
-                      className="bg-swiss-bg text-swiss-fg border-2 border-swiss-fg px-3 py-1 text-sm uppercase font-bold"
-                    >
-                      <option value="">Select disaster type...</option>
-                      <option value="fire">Fire</option>
-                      <option value="theft">Theft</option>
-                      <option value="flood">Flood</option>
-                      <option value="earthquake">Earthquake</option>
-                    </select>
-                  </div>
-                  <div className="p-6">
-                    {simulationResult ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-4 border-2 border-swiss-fg">
-                            <div className="text-sm uppercase text-swiss-fg/60">Total Loss</div>
-                            <div className="text-2xl font-black">
-                              ${simulationResult.totalLoss.toLocaleString()}
-                            </div>
-                          </div>
-                          <div className="p-4 border-2 border-swiss-fg">
-                            <div className="text-sm uppercase text-swiss-fg/60">
-                              Your Out-of-Pocket
-                            </div>
-                            <div className="text-2xl font-black text-red-600">
-                              ${simulationResult.currentPolicyOutOfPocket.toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm text-swiss-fg/80">{simulationResult.insight}</p>
-                      </div>
-                    ) : (
-                      <p className="text-swiss-fg/60 italic">
-                        {activeSimulatorType
-                          ? `Ready to simulate ${activeSimulatorType}. Integration pending Matin's implementation.`
-                          : "Select a disaster type to see potential impact on your coverage."}
-                      </p>
-                    )}
-                  </div>
-                </section>
+                {/* Disaster Simulator Section */}
+                <DisasterSimulator
+                  result={simulationResult}
+                  selectedType={activeSimulatorType}
+                  onSelectType={setActiveSimulatorType}
+                />
 
-                {/* Recommendations Section - owned by Maitreyee */}
-                <section
-                  data-section="recommendations"
-                  data-owner="maitreyee"
-                  className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern"
-                >
-                  <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
-                    <h3 className="font-black uppercase tracking-widest">Smart Recommendations</h3>
-                  </div>
-                  <div className="p-6">
-                    {recommendations.length > 0 ? (
-                      <ul className="space-y-4">
-                        {recommendations.map((rec) => (
-                          <li key={rec.id} className="p-4 border-2 border-swiss-fg bg-swiss">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h4 className="font-bold">{rec.title}</h4>
-                                <p className="text-sm text-swiss-fg/80 mt-1">{rec.description}</p>
-                              </div>
-                              <span
-                                className={`text-xs uppercase px-2 py-1 ${
-                                  rec.priority === "high"
-                                    ? "bg-swiss-accent text-swiss-bg"
-                                    : rec.priority === "medium"
-                                      ? "bg-swiss-fg text-swiss-bg"
-                                      : "bg-swiss-fg/30 text-swiss-fg"
-                                }`}
-                              >
-                                {rec.priority}
-                              </span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-swiss-fg/60 italic">
-                        No recommendations yet. Add more items or run disaster simulation to see
-                        personalized suggestions.
-                      </p>
-                    )}
-                  </div>
-                </section>
+                {/* Recommendations Section */}
+                <RecommendationCards recommendations={recommendations} />
 
-                {/* Privacy Mode Toggle - owned by Maitreyee */}
-                <section
-                  data-section="privacy-mode"
-                  data-owner="maitreyee"
-                  className="border-2 border-swiss-accent bg-swiss-muted"
-                >
-                  <div className="px-6 py-4 border-b-2 border-swiss-accent bg-swiss-accent text-swiss-bg flex items-center justify-between">
-                    <h3 className="font-black uppercase tracking-widest flex items-center gap-2">
-                      <Shield className="w-5 h-5" />
-                      Zero Documentation Mode
-                    </h3>
-                    <button
-                      onClick={() => setPrivacyMode(!privacyMode.enabled)}
-                      className={`px-4 py-2 uppercase font-bold text-sm border-2 ${
-                        privacyMode.enabled
-                          ? "bg-swiss-bg text-swiss-accent border-swiss-bg"
-                          : "bg-swiss-accent text-swiss-bg border-swiss-bg"
-                      }`}
-                    >
-                      {privacyMode.enabled ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-swiss-fg/80">{privacyMode.localOnlyMessage}</p>
-                    {privacyMode.enabled && (
-                      <div className="mt-4 p-3 bg-swiss-accent/10 border border-swiss-accent">
-                        <p className="text-sm text-swiss-accent font-bold uppercase">
-                          Privacy mode active — all AI processing runs locally in your browser
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </section>
+                {/* Report Card Section */}
+                <ReportCard
+                  totalValue={totalValue}
+                  protectedValue={protectedValue}
+                  coverageGapPercentage={coverageGapPercentage}
+                  items={itemBreakdown}
+                  policyType={policyType}
+                />
+
+                {/* Privacy Mode Section */}
+                <PrivacyModeBanner
+                  enabled={privacyMode.enabled}
+                  onToggle={() => setPrivacyMode(!privacyMode.enabled)}
+                  localOnlyMessage={privacyMode.localOnlyMessage}
+                />
 
                 <AnimatePresence>
                   {manualItems.length > 0 && (

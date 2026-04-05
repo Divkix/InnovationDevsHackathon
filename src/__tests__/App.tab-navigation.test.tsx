@@ -138,6 +138,13 @@ vi.mock("framer-motion", () => ({
       children: React.ReactNode;
       [key: string]: unknown;
     }): ReactElement => <main {...props}>{children}</main>,
+    span: ({
+      children,
+      ...props
+    }: {
+      children: React.ReactNode;
+      [key: string]: unknown;
+    }): ReactElement => <span {...props}>{children}</span>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }): ReactElement => <>{children}</>,
 }));
@@ -181,6 +188,14 @@ vi.mock("lucide-react", () => ({
   Bug: () => <svg data-testid="icon-bug" />,
   ChevronRight: () => <svg data-testid="icon-chevron-right" />,
   LucideIcon: () => <svg data-testid="icon-generic" />,
+  Flame: () => <svg data-testid="icon-flame" />,
+  Droplets: () => <svg data-testid="icon-droplets" />,
+  Zap: () => <svg data-testid="icon-zap" />,
+  TrendingDown: () => <svg data-testid="icon-trending-down" />,
+  Lock: () => <svg data-testid="icon-lock" />,
+  Unlock: () => <svg data-testid="icon-unlock" />,
+  EyeOff: () => <svg data-testid="icon-eye-off" />,
+  WifiOff: () => <svg data-testid="icon-wifi-off" />,
 }));
 
 // ============================================
