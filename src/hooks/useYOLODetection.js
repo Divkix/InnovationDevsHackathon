@@ -126,15 +126,34 @@ export function useYOLODetection() {
 
 		async function initializeModel() {
 			try {
+				console.log("[useYOLODetection] Starting ONNX initialization...");
+				
 				// Configure ONNX Runtime Web
-				ort.env.wasm.numThreads = 1; // Single thread for compatibility
-				ort.env.wasm.simd = true; // Enable SIMD if available
-
-				// Create inference session
-				const session = await ort.InferenceSession.create(MODEL_PATH, {
-					executionProviders: ["wasm"], // Use WebAssembly backend
+				ort.env.wasm.numThreads = 1;
+				ort.env.wasm.simd = true;
+				
+				// Set WASM path (required for dev server)
+				ort.env.wasm.wasmPaths = {
+					'ort-wasm-simd-threaded.wasm': '/assets/ort-wasm-simd-threaded.wasm',
+					'ort-wasm-simd-threaded.jsep.wasm': '/assets/ort-wasm-simd-threaded.jsep.wasm'
+				};
+				
+				console.log("[useYOLODetection] WASM paths configured");
+				
+				// Create timeout promise to prevent hanging
+				const timeoutPromise = new Promise((_, reject) => {
+					setTimeout(() => reject(new Error("Model loading timeout after 30s")), 30000);
+				});
+				
+				// Create inference session with race against timeout
+				const sessionPromise = ort.InferenceSession.create(MODEL_PATH, {
+					executionProviders: ["wasm"],
 					graphOptimizationLevel: "all",
 				});
+				
+				console.log("[useYOLODetection] Loading model from:", MODEL_PATH);
+				const session = await Promise.race([sessionPromise, timeoutPromise]);
+				console.log("[useYOLODetection] Model loaded successfully");
 
 				if (isCancelled || !isMountedRef.current) {
 					session.release();
@@ -144,14 +163,18 @@ export function useYOLODetection() {
 				sessionRef.current = session;
 				setIsLoaded(true);
 				setError(null);
+				console.log("[useYOLODetection] Initialization complete");
 			} catch (err) {
 				if (isCancelled || !isMountedRef.current) return;
 
+				console.error("[useYOLODetection] Initialization error:", err);
 				let errorMessage = "Failed to initialize YOLO detection";
 				if (err.message?.includes("fetch") || err.message?.includes("network")) {
 					errorMessage = `Model loading failed: ${err.message}`;
 				} else if (err.message?.includes("wasm")) {
 					errorMessage = `WebAssembly error: ${err.message}. Check that your browser supports WASM.`;
+				} else if (err.message?.includes("timeout")) {
+					errorMessage = err.message;
 				} else {
 					errorMessage = err.message || "Unknown error during initialization";
 				}
