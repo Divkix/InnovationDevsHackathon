@@ -20,6 +20,7 @@ import { type ReactElement, useCallback, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import type { CoverageResult, ManualItem, PolicyType } from "@/types";
 import { lookupCoverage } from "@/utils/coverageLookup";
+import { buildDefaultOwnershipRecord, buildValuationRecord } from "@/utils/ownershipHelpers";
 
 // ============================================================================
 // Types
@@ -239,6 +240,8 @@ export function AddItemForm({
         upgrade: coverageInfo.upgrade,
         source: "manual",
         createdAt: editItem?.createdAt || new Date().toISOString(),
+        ownership: editItem?.ownership ?? buildDefaultOwnershipRecord(category),
+        valuation: buildValuationRecord(parseFloat(value), "user"),
       };
 
       // Call the appropriate action
@@ -565,7 +568,7 @@ export function AddItemForm({
             type="submit"
             onClick={(e) => handleSubmit(e as unknown as FormEvent<HTMLFormElement>)}
             disabled={isSubmitting}
-            className="flex-2 py-2.5 px-4 rounded-lg font-semibold text-white
+            className="flex-[2] py-2.5 px-4 rounded-lg font-semibold text-white
               bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
               flex items-center justify-center gap-2"
@@ -634,6 +637,11 @@ export function ManualItemsList({
             <div className="flex-1 min-w-0">
               <p className="font-medium text-gray-900 truncate">{item.name}</p>
               <p className="text-xs text-gray-500">{item.displayCategory || item.category}</p>
+              {item.ownership?.status && (
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                  Ownership: {item.ownership.status.replace(/_/g, " ")}
+                </p>
+              )}
             </div>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[item.status ?? "not_covered"] || statusColors.not_covered}`}
