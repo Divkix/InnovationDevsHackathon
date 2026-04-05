@@ -11,7 +11,7 @@ export default defineConfig([
   // JavaScript and TypeScript files (non-test)
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**/*', '*.config.js', '*.config.ts'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**/*', '*.config.js'],
     extends: [
       js.configs.recommended,
       ...tsEslint.configs.recommended,
