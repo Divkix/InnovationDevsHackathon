@@ -296,7 +296,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         data-testid="camera-loading"
-        className="flex flex-col items-center justify-center h-full min-h-[300px] sm:min-h-[400px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl"
+        className="flex flex-col items-center justify-center h-full min-h-[300px] sm:min-h-[400px] bg-linear-to-br from-gray-900 to-gray-800 rounded-xl"
       >
         <motion.div
           animate={{ rotate: 360 }}
@@ -323,7 +323,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         data-testid="camera-error"
-        className="flex flex-col items-center justify-center h-full min-h-[350px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 sm:p-6 text-center"
+        className="flex flex-col items-center justify-center h-full min-h-[350px] bg-linear-to-br from-gray-900 to-gray-800 rounded-xl p-4 sm:p-6 text-center"
       >
         {/* State Farm Shield Icon */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E31837] rounded-full flex items-center justify-center mb-4 shadow-lg">
@@ -440,7 +440,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
       {isMockMode && (
         <div
           data-testid="mock-background"
-          className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center"
+          className="w-full h-full bg-linear-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center"
         >
           <div className="text-center">
             <Bug className="w-16 h-16 text-yellow-500 mx-auto mb-4 opacity-50" />

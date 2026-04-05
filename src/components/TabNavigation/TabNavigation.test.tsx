@@ -68,9 +68,9 @@ describe("TabNavigation", () => {
       render(<TabNavigation activeTab="camera" onTabChange={vi.fn()} />);
 
       const cameraTab = screen.getByTestId("tab-camera");
-      // Check for active styling classes - State Farm red
-      expect(cameraTab.className).toContain("bg-red-50");
-      expect(cameraTab.className).toContain("text-[#E31837]");
+      // Check for active styling classes - Swiss accent border
+      expect(cameraTab.className).toContain("border-swiss-accent");
+      expect(cameraTab.className).toContain("text-swiss-fg");
     });
 
     it("applies inactive styling to inactive tab", () => {
@@ -78,8 +78,8 @@ describe("TabNavigation", () => {
 
       const dashboardTab = screen.getByTestId("tab-dashboard");
       // Check for inactive styling
-      expect(dashboardTab.className).toContain("text-gray-600");
-      expect(dashboardTab.className).toContain("hover:bg-gray-100");
+      expect(dashboardTab.className).toContain("border-transparent");
+      expect(dashboardTab.className).toContain("text-swiss-fg/50");
     });
   });
 
@@ -179,9 +179,9 @@ describe("TabNavigation", () => {
       render(<TabNavigation activeTab="camera" onTabChange={vi.fn()} />);
 
       const cameraTab = screen.getByTestId("tab-camera");
-      // Check for focus-visible ring classes - State Farm red
+      // Check for focus-visible ring classes - Swiss accent
       expect(cameraTab.className).toContain("focus-visible:ring-2");
-      expect(cameraTab.className).toContain("focus-visible:ring-[#E31837]");
+      expect(cameraTab.className).toContain("focus-visible:ring-swiss-accent");
     });
 
     it("is focusable via tabIndex", () => {
