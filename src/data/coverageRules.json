@@ -1,0 +1,842 @@
+{
+  "renters": {
+    "laptop": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Personal electronics are covered under renter's personal property coverage",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage for full value reimbursement"
+    },
+    "cell phone": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Covered under personal property coverage up to policy limits",
+      "conditions": [],
+      "upgrade": "Consider scheduled personal property for high-end devices"
+    },
+    "tv": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 600,
+      "note": "Televisions and electronics covered under personal property",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage"
+    },
+    "car": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 15000,
+      "note": "Vehicles are NOT covered under renter's insurance — requires auto insurance",
+      "conditions": [],
+      "upgrade": "Purchase auto insurance with comprehensive coverage"
+    },
+    "motorcycle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 8000,
+      "note": "Motorcycles require separate motorcycle insurance policy",
+      "conditions": [],
+      "upgrade": "Purchase motorcycle insurance policy"
+    },
+    "bicycle": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 500,
+      "note": "Bicycles may have limited coverage — typically $1,000-$2,500 limit",
+      "conditions": ["Bike value may exceed policy sub-limits", "High-end bikes need scheduled coverage"],
+      "upgrade": "Add scheduled personal property endorsement for expensive bikes"
+    },
+    "couch": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Furniture is covered under personal property coverage",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage for full reimbursement"
+    },
+    "bed": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Bedroom furniture covered under personal property",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage"
+    },
+    "dining table": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 600,
+      "note": "Furniture covered under personal property coverage",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage"
+    },
+    "chair": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 150,
+      "note": "Furniture covered under personal property coverage",
+      "conditions": [],
+      "upgrade": "Consider replacement cost coverage"
+    },
+    "refrigerator": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "Landlord appliances are NOT covered — landlord is responsible",
+      "conditions": [],
+      "upgrade": "Your landlord's insurance covers this, but consider renter's coverage if you own the fridge"
+    },
+    "microwave": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 150,
+      "note": "Landlord-provided appliances are NOT covered",
+      "conditions": [],
+      "upgrade": "If you own the microwave, it would be covered — verify ownership"
+    },
+    "oven": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "Landlord fixtures and appliances are NOT covered",
+      "conditions": [],
+      "upgrade": "Landlord's insurance covers this appliance"
+    },
+    "book": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 20,
+      "note": "Personal belongings including books are covered",
+      "conditions": [],
+      "upgrade": "Rare or valuable books may need scheduled coverage"
+    },
+    "clock": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Personal items covered under personal property",
+      "conditions": [],
+      "upgrade": "Antique or valuable clocks need scheduled coverage"
+    },
+    "backpack": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 80,
+      "note": "Personal belongings covered on and off premises",
+      "conditions": [],
+      "upgrade": "Expensive designer bags may need additional coverage"
+    },
+    "sports ball": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 25,
+      "note": "Sports equipment covered under personal property",
+      "conditions": [],
+      "upgrade": "High-end equipment may need scheduled coverage"
+    },
+    "potted plant": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 40,
+      "note": "Plants covered up to policy limits (typically $500)",
+      "conditions": ["Coverage limit may apply"],
+      "upgrade": "Expensive landscaping requires additional coverage"
+    },
+    "dog": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets are NOT covered property — but liability for bites may be",
+      "conditions": [],
+      "upgrade": "Consider pet insurance or animal liability coverage"
+    },
+    "cat": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets are NOT covered as property items",
+      "conditions": [],
+      "upgrade": "Consider pet insurance for veterinary coverage"
+    },
+    "bottle": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 15,
+      "note": "Household items covered under personal property",
+      "conditions": [],
+      "upgrade": "Collectible bottles may need scheduled coverage"
+    },
+    "mouse": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 30,
+      "note": "Computer accessories covered under personal property",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "keyboard": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Computer accessories covered under personal property",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "remote": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 25,
+      "note": "Electronics accessories covered under personal property",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "toaster": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Small appliances you own are covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "umbrella": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 20,
+      "note": "Personal items covered under personal property",
+      "conditions": [],
+      "upgrade": "None needed"
+    }
+  },
+  "homeowners": {
+    "laptop": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Personal electronics fully covered with higher limits than renter's",
+      "conditions": [],
+      "upgrade": "Consider replacement cost endorsement for newer items"
+    },
+    "cell phone": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Covered with higher personal property limits",
+      "conditions": [],
+      "upgrade": "Consider scheduled personal property for devices over $1,000"
+    },
+    "tv": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 600,
+      "note": "Electronics fully covered under personal property",
+      "conditions": [],
+      "upgrade": "Consider replacement cost endorsement"
+    },
+    "car": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 15000,
+      "note": "Vehicles NOT covered — requires separate auto insurance",
+      "conditions": [],
+      "upgrade": "Purchase auto insurance with comprehensive coverage"
+    },
+    "motorcycle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 8000,
+      "note": "Motorcycles require separate motorcycle insurance policy",
+      "conditions": [],
+      "upgrade": "Purchase motorcycle insurance policy"
+    },
+    "bicycle": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 500,
+      "note": "Bicycles covered under personal property — higher limits than renter's",
+      "conditions": [],
+      "upgrade": "High-end bikes ($2,000+) may need scheduled coverage"
+    },
+    "couch": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Furniture fully covered under personal property",
+      "conditions": [],
+      "upgrade": "Consider replacement cost endorsement"
+    },
+    "bed": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Furniture fully covered",
+      "conditions": [],
+      "upgrade": "Consider replacement cost endorsement"
+    },
+    "dining table": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 600,
+      "note": "Furniture fully covered",
+      "conditions": [],
+      "upgrade": "Consider replacement cost endorsement"
+    },
+    "chair": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 150,
+      "note": "Furniture fully covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "refrigerator": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Home appliances covered as personal property in owned home",
+      "conditions": [],
+      "upgrade": "Consider equipment breakdown coverage for appliances"
+    },
+    "microwave": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 150,
+      "note": "Kitchen appliances covered as personal property",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "oven": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Built-in and freestanding appliances covered",
+      "conditions": [],
+      "upgrade": "Consider equipment breakdown coverage"
+    },
+    "book": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 20,
+      "note": "Personal library covered under personal property",
+      "conditions": [],
+      "upgrade": "Rare book collections may need additional coverage"
+    },
+    "clock": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Personal items covered",
+      "conditions": [],
+      "upgrade": "Antique clocks may need scheduled coverage"
+    },
+    "backpack": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 80,
+      "note": "Personal belongings covered on and off premises",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "sports ball": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 25,
+      "note": "Sports equipment covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "potted plant": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 40,
+      "note": "Plants and landscaping covered (higher limits than renter's)",
+      "conditions": [],
+      "upgrade": "Extensive landscaping may need additional coverage"
+    },
+    "dog": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets are NOT covered as property — but liability coverage may apply for incidents",
+      "conditions": [],
+      "upgrade": "Consider pet insurance or animal liability coverage"
+    },
+    "cat": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets are NOT covered as property",
+      "conditions": [],
+      "upgrade": "Consider pet insurance"
+    },
+    "bottle": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 15,
+      "note": "Household items covered",
+      "conditions": [],
+      "upgrade": "Collectible bottles may need scheduled coverage"
+    },
+    "mouse": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 30,
+      "note": "Computer accessories covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "keyboard": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Computer accessories covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "remote": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 25,
+      "note": "Electronics accessories covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "toaster": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 50,
+      "note": "Small appliances covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    },
+    "umbrella": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 20,
+      "note": "Personal items covered",
+      "conditions": [],
+      "upgrade": "None needed"
+    }
+  },
+  "auto": {
+    "laptop": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "Household electronics NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance for personal property"
+    },
+    "cell phone": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "Personal devices NOT covered unless permanently installed in vehicle",
+      "conditions": [],
+      "upgrade": "Consider renter's insurance or scheduled property coverage"
+    },
+    "tv": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 600,
+      "note": "Household electronics NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "car": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 15000,
+      "note": "Vehicle covered under auto insurance (with comprehensive/collision)",
+      "conditions": ["Comprehensive and collision coverage required for full protection"],
+      "upgrade": "Consider gap insurance if you have a loan/lease"
+    },
+    "motorcycle": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 8000,
+      "note": "Motorcycle covered under motorcycle insurance policy",
+      "conditions": [],
+      "upgrade": "Consider comprehensive coverage and roadside assistance"
+    },
+    "bicycle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 500,
+      "note": "Bicycles NOT covered unless specifically attached to insured vehicle",
+      "conditions": [],
+      "upgrade": "Consider homeowner's or renter's insurance for bike coverage"
+    },
+    "couch": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "Household furniture NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance for personal property"
+    },
+    "bed": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "Household furniture NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "dining table": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 600,
+      "note": "Household furniture NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "chair": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 150,
+      "note": "Household furniture NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "refrigerator": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "Household appliances NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "microwave": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 150,
+      "note": "Household appliances NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "oven": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "Household appliances NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "book": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 20,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance for personal belongings"
+    },
+    "clock": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "backpack": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 80,
+      "note": "Personal property in vehicle has very limited coverage (typically $200-500)",
+      "conditions": ["Only covered if stolen from locked vehicle", "Very low coverage limits apply"],
+      "upgrade": "Consider comprehensive coverage or renter's insurance for better protection"
+    },
+    "sports ball": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 25,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "potted plant": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 40,
+      "note": "Plants NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "dog": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets NOT covered as property — but animal liability may be available",
+      "conditions": [],
+      "upgrade": "Consider pet insurance or add animal liability to auto policy"
+    },
+    "cat": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "Pets NOT covered as property",
+      "conditions": [],
+      "upgrade": "Consider pet insurance"
+    },
+    "bottle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 15,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "mouse": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 30,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "keyboard": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "remote": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 25,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "toaster": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "umbrella": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 20,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    }
+  },
+  "none": {
+    "laptop": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance to protect your belongings"
+    },
+    "cell phone": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "tv": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 600,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "car": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 15000,
+      "note": "NO INSURANCE — Vehicle is completely unprotected (also illegal in most states)",
+      "conditions": [],
+      "upgrade": "Auto insurance is legally required — get coverage immediately"
+    },
+    "motorcycle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 8000,
+      "note": "NO INSURANCE — Motorcycle is completely unprotected",
+      "conditions": [],
+      "upgrade": "Motorcycle insurance is highly recommended"
+    },
+    "bicycle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 500,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "couch": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "bed": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "dining table": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 600,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "chair": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 150,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "refrigerator": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance (if you own it)"
+    },
+    "microwave": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 150,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance (if you own it)"
+    },
+    "oven": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance (if you own it)"
+    },
+    "book": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 20,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "clock": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "backpack": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 80,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "sports ball": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 25,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "potted plant": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 40,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "dog": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "NO INSURANCE — Pet has no coverage",
+      "conditions": [],
+      "upgrade": "Consider pet insurance for veterinary coverage"
+    },
+    "cat": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 0,
+      "note": "NO INSURANCE — Pet has no coverage",
+      "conditions": [],
+      "upgrade": "Consider pet insurance for veterinary coverage"
+    },
+    "bottle": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 15,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "mouse": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 30,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "keyboard": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "remote": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 25,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "toaster": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 50,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "umbrella": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 20,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    }
+  }
+}
