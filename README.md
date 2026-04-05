@@ -654,7 +654,7 @@ When Gemini API is enabled:
 
 ## License
 
-Hackathon project — all rights reserved.
+MIT License — see [LICENSE](./LICENSE) file for details.
 
 Built with ❤️ for the State Farm track at Innovation Hacks 2.0.
 
