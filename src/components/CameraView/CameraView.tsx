@@ -170,7 +170,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
             category: category
           })
         })
-        updateDetectedItems({ type: 'map', data: itemsMap })
+        updateDetectedItems(itemsMap)
       }
 
       // Schedule next frame
@@ -201,7 +201,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
             category: category
           })
         })
-        updateDetectedItems({ type: 'map', data: itemsMap })
+        updateDetectedItems(itemsMap)
       }
     }
 

@@ -1,36 +1,9 @@
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode, type ReactElement } from 'react';
-import type { PolicyType, AppTab, ManualItem, DetectedItem } from '../types';
+import type { PolicyType, AppTab, ManualItem, DetectedItem, DetectedItemsInput, AppContextValue } from '../types';
 import { VALID_POLICY_TYPES, DEFAULT_STATE, STORAGE_KEYS } from './appState';
 
-/**
- * Shape of the AppContext value
- */
-export interface AppContextValue {
-  // State
-  policyType: PolicyType;
-  onboardingComplete: boolean;
-  activeTab: AppTab;
-  detectedItems: Map<string, DetectedItem>;
-  manualItems: ManualItem[];
-  selectedItemId: string | null;
-  confidenceThreshold: number;
-  cameraPermissionDenied: boolean;
-  manualModeEnabled: boolean;
-  // Actions
-  setPolicyType: (policy: string) => void;
-  completeOnboarding: () => void;
-  setActiveTab: (tab: AppTab) => void;
-  updateDetectedItems: (items: Map<string, DetectedItem> | Record<string, DetectedItem> | unknown) => void;
-  addManualItem: (item: ManualItem) => void;
-  removeManualItem: (itemId: string) => void;
-  updateManualItem: (itemId: string, updates: Partial<ManualItem>) => void;
-  setSelectedItem: (itemId: string | null) => void;
-  setConfidenceThreshold: (threshold: number) => void;
-  setCameraPermissionDenied: (denied: boolean) => void;
-  enableManualMode: () => void;
-  disableManualMode: () => void;
-  resetCameraPermission: () => void;
-}
+// Re-export AppContextValue for backward compatibility
+export type { AppContextValue };
 
 /**
  * Create the context with undefined initial value
@@ -153,16 +126,15 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    * Action: setPolicyType
    * Updates policy type and persists to localStorage
    */
-  const setPolicyType = useCallback((newPolicyType: string): void => {
+  const setPolicyType = useCallback((newPolicyType: PolicyType): void => {
     // Validate policy type
-    const normalizedPolicy = newPolicyType?.toLowerCase() as PolicyType;
-    if (!VALID_POLICY_TYPES.includes(normalizedPolicy)) {
+    if (!VALID_POLICY_TYPES.includes(newPolicyType)) {
       console.warn(`Invalid policy type: ${newPolicyType}. Using default.`);
       return;
     }
 
-    setPolicyTypeState(normalizedPolicy);
-    saveToStorage(STORAGE_KEYS.policyType, normalizedPolicy);
+    setPolicyTypeState(newPolicyType);
+    saveToStorage(STORAGE_KEYS.policyType, newPolicyType);
   }, []);
 
   /**
@@ -197,15 +169,13 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    * Updates the Map of detected items from camera detection
    * Note: This is NOT persisted to localStorage as detections are transient
    */
-  const updateDetectedItems = useCallback((newDetectedItems: Map<string, DetectedItem> | Record<string, DetectedItem> | unknown): void => {
-    // Accept either a Map or an object to convert
-    if (newDetectedItems instanceof Map) {
-      setDetectedItemsState(new Map(newDetectedItems as Map<string, DetectedItem>));
-    } else if (typeof newDetectedItems === 'object' && newDetectedItems !== null) {
-      setDetectedItemsState(new Map(Object.entries(newDetectedItems as Record<string, DetectedItem>)));
-    } else {
-      setDetectedItemsState(new Map());
+  const updateDetectedItems = useCallback((nextItems: DetectedItemsInput): void => {
+    if (nextItems instanceof Map) {
+      setDetectedItemsState(new Map(nextItems))
+      return
     }
+
+    setDetectedItemsState(new Map(Object.entries(nextItems)))
   }, []);
 
   /**

@@ -17,6 +17,32 @@ vi.mock('../../hooks/useObjectDetection.js', () => ({
 }))
 
 describe('CameraView', () => {
+  // Base context value for reuse across tests
+  const baseContextValue: AppContextValue = {
+    policyType: 'renters',
+    updateDetectedItems: vi.fn(),
+    onboardingComplete: false,
+    activeTab: 'camera',
+    detectedItems: new Map(),
+    manualItems: [],
+    selectedItemId: null,
+    confidenceThreshold: 0.5,
+    cameraPermissionDenied: false,
+    manualModeEnabled: false,
+    setPolicyType: vi.fn(),
+    completeOnboarding: vi.fn(),
+    setActiveTab: vi.fn(),
+    addManualItem: vi.fn(),
+    removeManualItem: vi.fn(),
+    updateManualItem: vi.fn(),
+    setSelectedItem: vi.fn(),
+    setConfidenceThreshold: vi.fn(),
+    setCameraPermissionDenied: vi.fn(),
+    enableManualMode: vi.fn(),
+    disableManualMode: vi.fn(),
+    resetCameraPermission: vi.fn(),
+  }
+
   // Mock getUserMedia
   const mockGetUserMedia = vi.fn() as Mock<(constraints?: MediaStreamConstraints) => Promise<MediaStream>>
   const mockVideoStream = {
@@ -547,6 +573,54 @@ describe('CameraView', () => {
       
       await waitFor(() => {
         expect(mockRequestAnimationFrame).toHaveBeenCalled()
+      })
+    })
+
+    it('passes a real detected-items map into context when detections are found', async () => {
+      const mockUpdateDetectedItems = vi.fn()
+      
+      const mockUseAppContext = useAppContext as Mock<() => AppContextValue>
+      mockUseAppContext.mockReturnValue({
+        ...baseContextValue,
+        updateDetectedItems: mockUpdateDetectedItems,
+      })
+
+      const mockDetections: { detections: Detection[] } = {
+        detections: [
+          {
+            boundingBox: { originX: 10, originY: 20, width: 100, height: 100 },
+            categories: [{ categoryName: 'laptop', score: 0.9, displayName: 'Laptop' }],
+          },
+        ],
+      }
+
+      const mockUseObjectDetection = useObjectDetection as Mock<() => UseYOLODetectionReturn>
+      mockUseObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue(mockDetections),
+        isLoaded: true,
+        error: null,
+        isMockMode: false,
+      })
+
+      render(<CameraView />)
+
+      await waitFor(() => {
+        const video = screen.getByTestId('camera-video')
+        Object.defineProperty(video, 'readyState', { value: 2, writable: true })
+      })
+
+      await act(async () => {
+        await rafCallbacks[rafCallbacks.length - 1](performance.now())
+      })
+
+      await waitFor(() => {
+        expect(mockUpdateDetectedItems).toHaveBeenCalledWith(expect.any(Map))
+      })
+
+      const payload = mockUpdateDetectedItems.mock.calls[0]?.[0] as Map<string, DetectedItem>
+      expect(payload.get('detection-0')).toMatchObject({
+        id: 'detection-0',
+        category: 'laptop',
       })
     })
     

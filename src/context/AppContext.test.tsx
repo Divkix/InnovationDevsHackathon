@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi, type MockInstance } fr
 import { render, screen, act } from '@testing-library/react'
 import type { ReactNode, ReactElement } from 'react'
 import { AppProvider, useAppContext } from './AppContext'
-import type { PolicyType, ManualItem } from '../types'
+import type { PolicyType, ManualItem, DetectedItem } from '../types'
 
 // Helper component to access context values for testing
 function TestConsumer(): ReactElement {
@@ -22,8 +22,14 @@ function TestConsumer(): ReactElement {
       <button data-testid="setSelectedItem" onClick={() => context.setSelectedItem('item-1')}>Select Item</button>
       <button data-testid="clearSelectedItem" onClick={() => context.setSelectedItem(null)}>Clear Item</button>
       <button data-testid="updateDetectedItems" onClick={() => {
-        const newMap = new Map<string, ManualItem>()
-        newMap.set('obj-1', { id: 'obj-1', name: 'laptop', category: 'Electronics', estimatedValue: 500 })
+        const newMap = new Map<string, DetectedItem>()
+        newMap.set('obj-1', {
+          id: 'obj-1',
+          category: 'laptop',
+          confidence: 0.9,
+          boundingBox: { originX: 0, originY: 0, width: 10, height: 10 },
+          categories: [{ categoryName: 'laptop', score: 0.9, displayName: 'Laptop' }],
+        })
         context.updateDetectedItems(newMap)
       }}>Update Detected</button>
       <button data-testid="addManualItem" onClick={() => context.addManualItem({ id: 'manual-1', name: 'Watch', category: 'Jewelry', estimatedValue: 500 })}>Add Manual</button>

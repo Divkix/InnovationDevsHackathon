@@ -134,9 +134,9 @@ export interface AppState {
 }
 
 /** Input type for updating detected items */
-export type DetectedItemsInput = 
-  | { type: 'map'; data: Map<string, DetectedItem> }
-  | { type: 'record'; data: Record<string, DetectedItem> };
+export type DetectedItemsInput =
+  | Map<string, DetectedItem>
+  | Record<string, DetectedItem>
 
 /** Gemini API coverage response */
 export interface GeminiCoverageResponse {
