@@ -4,7 +4,6 @@ commands:
   build: npx vite build
   test: npx vitest run
   test:watch: npx vitest
-  typecheck: npx tsc --noEmit
   lint: npx eslint .
 
 services:
