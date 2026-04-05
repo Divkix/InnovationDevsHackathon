@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/components/ConfidenceThresholdSlider/thresholdUtils";
 import type { CoverageResult, CoverageStatus, Detection, PolicyType } from "@/types";
 import { lookupCoverage } from "@/utils/coverageLookup";
+import { getHazardCategories, getHazardWarnings } from "@/utils/hazardRules";
 import type { CanvasCoordinates, ObjectCoverLayout } from "./layout";
 import { getObjectCoverLayout, projectBoundingBoxToCanvas } from "./layout";
 
@@ -94,6 +95,7 @@ interface TrackedItem {
   coverage: CoverageResult;
   lastSeen: number;
   score: number;
+  hazard: boolean;
 }
 
 /**
@@ -312,6 +314,24 @@ export function CoverageOverlay({
       // Second line (value + status)
       ctx.font = "12px system-ui, -apple-system, sans-serif";
       ctx.fillText(line2, labelX + 8, labelY + 6 + lineHeight);
+
+      if (item.hazard) {
+        const badgeSize = 22;
+        const badgeX = x + width - badgeSize - 6;
+        const badgeY = y + 6;
+
+        ctx.fillStyle = "#f97316";
+        drawRoundedRect(ctx, badgeX, badgeY, badgeSize, badgeSize, 6);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("!", badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 1);
+        ctx.textAlign = "start";
+        ctx.textBaseline = "top";
+      }
     },
     [drawRoundedRect],
   );
@@ -334,6 +354,8 @@ export function CoverageOverlay({
 
         return score >= confidenceThreshold;
       });
+
+      const hazardCategories = getHazardCategories(getHazardWarnings(validDetections));
 
       // Process current detections
       validDetections.forEach((detection) => {
@@ -358,6 +380,7 @@ export function CoverageOverlay({
           coverage,
           lastSeen: now,
           score: detection.categories?.[0]?.score || 0,
+          hazard: hazardCategories.has(category.toLowerCase()),
         });
       });
 
