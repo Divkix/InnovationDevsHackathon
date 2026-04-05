@@ -1,12 +1,11 @@
-import * as tf from "@tensorflow/tfjs";
+import * as ort from "onnxruntime-web";
 import { useCallback, useEffect, useRef, useState } from "react";
-import "@tensorflow/tfjs-backend-webgl";
 import { COCO_CLASS_NAMES, processYOLOOutput } from "../utils/yoloProcessor.js";
 import { getMockDetections } from "./mockDetections.js";
 import { MOCK_STORAGE_KEY } from "./useMockDetection.js";
 
 // Model configuration
-const MODEL_PATH = "/models/yolo26n/model.json";
+const MODEL_PATH = "/models/yolo26n/yolo26n.onnx";
 const MODEL_INPUT_SIZE = 640;
 const CONFIDENCE_THRESHOLD = 0.5;
 
@@ -32,7 +31,65 @@ function checkMockMode() {
 }
 
 /**
- * Custom hook for YOLO26 object detection using TensorFlow.js
+ * Preprocess video frame for YOLO inference
+ * - Resizes to MODEL_INPUT_SIZE (640x640)
+ * - Normalizes pixel values to [0, 1]
+ * - Creates Float32Array in NCHW format for ONNX
+ *
+ * @param {HTMLVideoElement} video - Video element to process
+ * @returns {ort.Tensor} Preprocessed tensor [1, 3, 640, 640]
+ */
+function preprocessFrame(video) {
+	if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+		return null;
+	}
+
+	// Create canvas for resizing
+	const canvas = document.createElement("canvas");
+	canvas.width = MODEL_INPUT_SIZE;
+	canvas.height = MODEL_INPUT_SIZE;
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+	if (!ctx) {
+		throw new Error("Failed to get canvas context");
+	}
+
+	// Draw video frame to canvas (resizes automatically)
+	ctx.drawImage(video, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
+
+	// Get pixel data
+	const imageData = ctx.getImageData(0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
+	const pixels = imageData.data; // RGBA format
+
+	// Create Float32Array for ONNX (NCHW format: [batch, channels, height, width])
+	const inputData = new Float32Array(1 * 3 * MODEL_INPUT_SIZE * MODEL_INPUT_SIZE);
+
+	// Convert RGBA to RGB and normalize to [0, 1]
+	for (let y = 0; y < MODEL_INPUT_SIZE; y++) {
+		for (let x = 0; x < MODEL_INPUT_SIZE; x++) {
+			const srcIdx = (y * MODEL_INPUT_SIZE + x) * 4; // RGBA
+			const dstIdx = y * MODEL_INPUT_SIZE + x;
+
+			// NCHW layout: channel first
+			inputData[dstIdx] = pixels[srcIdx] / 255.0; // R
+			inputData[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE + dstIdx] =
+				pixels[srcIdx + 1] / 255.0; // G
+			inputData[2 * MODEL_INPUT_SIZE * MODEL_INPUT_SIZE + dstIdx] =
+				pixels[srcIdx + 2] / 255.0; // B
+		}
+	}
+
+	// Create ONNX tensor [1, 3, 640, 640]
+	return new ort.Tensor("float32", inputData, [
+		1,
+		3,
+		MODEL_INPUT_SIZE,
+		MODEL_INPUT_SIZE,
+	]);
+}
+
+/**
+ * Custom hook for YOLO26 object detection using ONNX Runtime Web
  *
  * Mirrors the API of useObjectDetection for easy swapping:
  * - detect: Function to run detection on video frame
@@ -49,9 +106,7 @@ function checkMockMode() {
  * @returns {boolean} isMockMode - Whether mock mode is active
  */
 export function useYOLODetection() {
-	const modelRef = useRef(null);
-	// Track tensors per detection scope instead of global accumulation
-	const tensorsRef = useRef([]);
+	const sessionRef = useRef(null);
 	// Lock to prevent detection during unmount
 	const isDetectingRef = useRef(false);
 
@@ -64,47 +119,39 @@ export function useYOLODetection() {
 	const isMountedRef = useRef(true);
 
 	useEffect(() => {
-		// Skip TensorFlow initialization in mock mode
+		// Skip ONNX initialization in mock mode
 		if (isMockMode) return;
 
 		let isCancelled = false;
 
 		async function initializeModel() {
 			try {
-				// Set WebGL backend only if not already set (avoid conflicts)
-				const currentBackend = tf.getBackend();
-				if (currentBackend !== "webgl") {
-					await tf.setBackend("webgl");
-				}
-				await tf.ready();
+				// Configure ONNX Runtime Web
+				ort.env.wasm.numThreads = 1; // Single thread for compatibility
+				ort.env.wasm.simd = true; // Enable SIMD if available
 
-				if (isCancelled || !isMountedRef.current) return;
-
-				// Load YOLO26 model
-				const model = await tf.loadGraphModel(MODEL_PATH);
+				// Create inference session
+				const session = await ort.InferenceSession.create(MODEL_PATH, {
+					executionProviders: ["wasm"], // Use WebAssembly backend
+					graphOptimizationLevel: "all",
+				});
 
 				if (isCancelled || !isMountedRef.current) {
-					model.dispose();
+					session.release();
 					return;
 				}
 
-				modelRef.current = model;
+				sessionRef.current = session;
 				setIsLoaded(true);
 				setError(null);
 			} catch (err) {
 				if (isCancelled || !isMountedRef.current) return;
 
 				let errorMessage = "Failed to initialize YOLO detection";
-				if (
-					err.message?.includes("backend") ||
-					err.message?.includes("webgl")
-				) {
-					errorMessage = `Backend initialization failed: ${err.message}`;
-				} else if (
-					err.message?.includes("model") ||
-					err.message?.includes("fetch")
-				) {
+				if (err.message?.includes("fetch") || err.message?.includes("network")) {
 					errorMessage = `Model loading failed: ${err.message}`;
+				} else if (err.message?.includes("wasm")) {
+					errorMessage = `WebAssembly error: ${err.message}. Check that your browser supports WASM.`;
 				} else {
 					errorMessage = err.message || "Unknown error during initialization";
 				}
@@ -120,71 +167,22 @@ export function useYOLODetection() {
 			isCancelled = true;
 			isMountedRef.current = false;
 
-			// Wait for any ongoing detection to complete before disposing
-			const disposeModel = () => {
-				// Dispose model
-				if (modelRef.current) {
-					modelRef.current.dispose();
-					modelRef.current = null;
+			// Release session
+			const disposeSession = () => {
+				if (sessionRef.current) {
+					sessionRef.current.release();
+					sessionRef.current = null;
 				}
-
-				// Dispose any leftover tensors
-				tensorsRef.current.forEach((tensor) => {
-					if (tensor && tensor.dispose) {
-						tensor.dispose();
-					}
-				});
-				tensorsRef.current = [];
 			};
 
 			// If detecting, wait a bit before disposing
 			if (isDetectingRef.current) {
-				setTimeout(disposeModel, 100);
+				setTimeout(disposeSession, 100);
 			} else {
-				disposeModel();
+				disposeSession();
 			}
 		};
 	}, [isMockMode]);
-
-	/**
-	 * Preprocess video frame for YOLO inference
-	 * - Resizes to MODEL_INPUT_SIZE (640x640)
-	 * - Normalizes pixel values to [0, 1]
-	 * - Adds batch dimension
-	 *
-	 * @param {HTMLVideoElement} video - Video element to process
-	 * @returns {tf.Tensor} Preprocessed tensor [1, 640, 640, 3]
-	 */
-	const preprocessFrame = useCallback((video) => {
-		if (!video) return null;
-
-		let frameTensor = null;
-		let resized = null;
-
-		try {
-			// Create tensor from video frame
-			frameTensor = tf.browser.fromPixels(video);
-
-			// Resize to model input size (640x640)
-			resized = tf.image.resizeBilinear(frameTensor, [
-				MODEL_INPUT_SIZE,
-				MODEL_INPUT_SIZE,
-			]);
-
-			// Normalize to [0, 1] and add batch dimension
-			const normalized = resized.expandDims(0).div(255.0);
-
-			return normalized;
-		} catch (err) {
-			console.error("Preprocessing error:", err);
-			// Re-throw so caller can handle it properly
-			throw new Error(`Frame preprocessing failed: ${err.message}`);
-		} finally {
-			// Always dispose intermediate tensors
-			if (frameTensor) frameTensor.dispose();
-			if (resized) resized.dispose();
-		}
-	}, []);
 
 	/**
 	 * Run object detection on video frame
@@ -214,12 +212,11 @@ export function useYOLODetection() {
 					return { detections: getMockDetections() };
 				}
 
-				const model = modelRef.current;
-				if (!model || !isLoaded) return { detections: [] };
+				const session = sessionRef.current;
+				if (!session || !isLoaded) return { detections: [] };
 				if (!video) return { detections: [] };
 
 				let inputTensor = null;
-				let outputTensor = null;
 
 				try {
 					// Preprocess video frame
@@ -228,32 +225,70 @@ export function useYOLODetection() {
 						return { detections: [] };
 					}
 
-					// Run inference
-					outputTensor = model.predict(inputTensor);
+					// Create feeds object (input name from model is usually "images" or "input")
+					const feeds = {};
+					// Try common input names
+					if (session.inputNames.includes("images")) {
+						feeds.images = inputTensor;
+					} else if (session.inputNames.includes("input")) {
+						feeds.input = inputTensor;
+					} else if (session.inputNames.length > 0) {
+						feeds[session.inputNames[0]] = inputTensor;
+					} else {
+						throw new Error("Could not determine model input name");
+					}
 
-					// Process output - YOLO26 end-to-end output
-					const outputData = await outputTensor.array();
+					// Run inference
+					const results = await session.run(feeds);
+
+					// Get output (usually "output0" or first output)
+					const outputTensor =
+						results.output0 ||
+						results[Object.keys(results)[0]];
+
+					if (!outputTensor) {
+						throw new Error("No output tensor found");
+					}
 
 					// Convert to MediaPipe format
-					const detections = processYOLOOutput(
-						outputData[0],
+					// ONNX output is [batch, num_detections, 6] same as YOLO
+					const outputData = outputTensor.data;
+					const dims = outputTensor.dims;
+
+					// Reshape output data into array of detections
+					const numDetections = dims[1]; // 300 for YOLO26
+					const detections = [];
+
+					for (let i = 0; i < numDetections; i++) {
+						const offset = i * 6;
+						const detection = [
+							outputData[offset], // x_center
+							outputData[offset + 1], // y_center
+							outputData[offset + 2], // width
+							outputData[offset + 3], // height
+							outputData[offset + 4], // confidence
+							outputData[offset + 5], // class_id
+						];
+						detections.push(detection);
+					}
+
+					// Process into MediaPipe format
+					const processedDetections = processYOLOOutput(
+						detections,
 						COCO_CLASS_NAMES,
 						CONFIDENCE_THRESHOLD,
 					);
 
-					return { detections };
+					return { detections: processedDetections };
 				} catch (err) {
 					console.error("Detection error:", err);
 					// Set error state so caller knows detection failed
 					setError(new Error(`Detection failed: ${err.message}`));
 					return { detections: [] };
 				} finally {
-					// Clean up tensors
+					// Clean up input tensor
 					if (inputTensor) {
 						inputTensor.dispose();
-					}
-					if (outputTensor) {
-						outputTensor.dispose();
 					}
 				}
 			} finally {
@@ -261,7 +296,7 @@ export function useYOLODetection() {
 				isDetectingRef.current = false;
 			}
 		},
-		[isMockMode, isLoaded, preprocessFrame],
+		[isMockMode, isLoaded],
 	);
 
 	return { detect, isLoaded, error, isMockMode };

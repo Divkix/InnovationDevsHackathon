@@ -21,33 +21,32 @@ A dashboard summarizes the total value of unprotected items, helping you underst
 ## Object Detection Model
 
 This application uses **YOLO26** (You Only Look Once v26) for real-time object detection, 
-running entirely in the browser via TensorFlow.js.
+running entirely in the browser via **ONNX Runtime Web**.
 
 ### Why YOLO26?
 
 - **Better Accuracy**: 40.9 mAP on COCO vs ~34 mAP for MediaPipe EfficientDet
 - **Faster CPU Inference**: Up to 43% faster than YOLO11 on CPU-only devices
 - **No NMS Required**: End-to-end design eliminates post-processing bottlenecks
-- **Native TF.js Export**: Direct browser deployment without conversion headaches
+- **Lightweight**: ONNX Runtime Web (~2MB) vs TensorFlow.js (~18MB)
 
 ### Model Files
 
-The YOLO26n (nano) model files are stored in `public/models/yolo26n/`:
-- `model.json` - Model architecture (2.4MB)
-- `group1-shard1of4.bin` through `group1-shard4of4.bin` - Weights (~18MB total)
+The YOLO26n (nano) model file is stored in `public/models/yolo26n/`:
+- `yolo26n.onnx` - ONNX model (~9.5MB)
 
 ### Regenerating Model Files
 
 If you need to regenerate the model (e.g., for custom training):
 
 ```bash
-pip install ultralytics
-yolo export model=yolo26n.pt format=tfjs
+pip install ultralytics onnx onnxslim
+yolo export model=yolo26n.pt format=onnx
 mkdir -p public/models/yolo26n
-cp yolo26n_web_model/* public/models/yolo26n/
+cp yolo26n.onnx public/models/yolo26n/
 ```
 
-### Filtering
+Note: Requires Python 3.12 or earlier. TensorFlow export is not supported on Python 3.13.
 
 The app automatically filters out the "person" class from coverage analysis 
 (humans aren't insurable property). All other COCO classes (80 total) are supported.
@@ -59,7 +58,7 @@ The app automatically filters out the "person" class from coverage analysis
 | Layer | Technology |
 |-------|-----------|
 | UI Framework | React 19 + Vite |
-| Object Detection | YOLO26 via TensorFlow.js (`@tensorflow/tfjs`) |
+| Object Detection | YOLO26 via ONNX Runtime Web (`onnxruntime-web`) |
 | Styling | Tailwind CSS v4 + custom State Farm theme |
 | Overlays | HTML5 Canvas API |
 | Animations | Framer Motion |
@@ -71,7 +70,7 @@ The app automatically filters out the "person" class from coverage analysis
 
 ## Key Features
 
-- **Real-time object detection** — YOLO26 identifies furniture, electronics, appliances, and more via the live camera feed
+- **Real-time object detection** — YOLO26 identifies furniture, electronics, appliances, and more via the live camera feed using ONNX Runtime Web
 - **Color-coded coverage overlays** — green/yellow/red overlays drawn on detected objects via Canvas
 - **Dashboard with unprotected value counter** — see the total dollar value of items not covered by your policy
 - **"No Insurance" red moment** — dramatic red highlighting for uninsured items to create urgency

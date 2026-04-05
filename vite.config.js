@@ -18,20 +18,22 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
   },
-  // TensorFlow.js optimizations
+  // ONNX Runtime Web optimizations
   optimizeDeps: {
-    include: ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-webgl'],
-    exclude: ['@tensorflow/tfjs-backend-wasm'] // Let TF.js lazy-load WASM
+    include: ['onnxruntime-web'],
+    esbuildOptions: {
+      target: 'es2020'
+    }
   },
   build: {
     commonjsOptions: {
-      transformMixedEsModules: true, // Required for TF.js CommonJS modules
+      transformMixedEsModules: true, // Required for ONNX CommonJS modules
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          // Separate TF.js into its own chunk for better caching
-          'tensorflow': ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-webgl']
+          // Separate ONNX into its own chunk for better caching
+          'onnx': ['onnxruntime-web']
         }
       }
     }
