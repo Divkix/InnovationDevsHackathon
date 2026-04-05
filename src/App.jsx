@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAppContext } from './context/AppContext.jsx'
+import { Dashboard } from './components/Dashboard/Dashboard.jsx'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -14,6 +15,17 @@ function App() {
     addManualItem,
     removeManualItem
   } = useAppContext()
+
+  // Render Dashboard when active tab is 'dashboard'
+  if (activeTab === 'dashboard') {
+    return (
+      <Dashboard 
+        detectedItems={[]}
+        manualItems={manualItems}
+        policyType={policyType}
+      />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
