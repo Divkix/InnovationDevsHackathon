@@ -13,6 +13,19 @@ import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
 import type { DisasterType, ManualItem } from "./types";
 
+/**
+ * INTEGRATION NOTES FOR TEAMMATES
+ *
+ * This file contains placeholder sections for new features being built
+ * by Matin (hazard warnings, disaster simulator) and Maitreyee (recommendations, privacy mode).
+ *
+ * Placeholder sections are marked with data-owner and data-section attributes.
+ * When implementing your feature, replace the placeholder content inside these sections.
+ *
+ * DO NOT modify section containers (they're owned by Divanshu/Integrator).
+ * DO modify content inside sections (that's your feature code).
+ */
+
 function App(): ReactElement {
   const {
     policyType,
@@ -221,25 +234,35 @@ function App(): ReactElement {
                           <li
                             key={warning.id}
                             className={`p-4 border-2 ${
-                              warning.severity === 'high' ? 'border-red-500 bg-red-50' :
-                              warning.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-                              'border-green-500 bg-green-50'
+                              warning.severity === "high"
+                                ? "border-red-500 bg-red-50"
+                                : warning.severity === "medium"
+                                  ? "border-yellow-500 bg-yellow-50"
+                                  : "border-green-500 bg-green-50"
                             }`}
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-bold">{warning.title}</span>
-                              <span className={`text-xs uppercase px-2 py-1 ${
-                                warning.severity === 'high' ? 'bg-red-500 text-white' :
-                                warning.severity === 'medium' ? 'bg-yellow-500 text-black' :
-                                'bg-green-500 text-white'
-                              }`}>{warning.severity}</span>
+                              <span
+                                className={`text-xs uppercase px-2 py-1 ${
+                                  warning.severity === "high"
+                                    ? "bg-red-500 text-white"
+                                    : warning.severity === "medium"
+                                      ? "bg-yellow-500 text-black"
+                                      : "bg-green-500 text-white"
+                                }`}
+                              >
+                                {warning.severity}
+                              </span>
                             </div>
                             <p className="text-sm mt-2 text-swiss-fg/80">{warning.message}</p>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-swiss-fg/60 italic">No hazards detected. Scan items to see warnings.</p>
+                      <p className="text-swiss-fg/60 italic">
+                        No hazards detected. Scan items to see warnings.
+                      </p>
                     )}
                   </div>
                 </section>
@@ -253,7 +276,7 @@ function App(): ReactElement {
                   <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg flex items-center justify-between">
                     <h3 className="font-black uppercase tracking-widest">Disaster Simulator</h3>
                     <select
-                      value={activeSimulatorType || ''}
+                      value={activeSimulatorType || ""}
                       onChange={handleSimulatorChange}
                       className="bg-swiss-bg text-swiss-fg border-2 border-swiss-fg px-3 py-1 text-sm uppercase font-bold"
                     >
@@ -270,10 +293,14 @@ function App(): ReactElement {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="p-4 border-2 border-swiss-fg">
                             <div className="text-sm uppercase text-swiss-fg/60">Total Loss</div>
-                            <div className="text-2xl font-black">${simulationResult.totalLoss.toLocaleString()}</div>
+                            <div className="text-2xl font-black">
+                              ${simulationResult.totalLoss.toLocaleString()}
+                            </div>
                           </div>
                           <div className="p-4 border-2 border-swiss-fg">
-                            <div className="text-sm uppercase text-swiss-fg/60">Your Out-of-Pocket</div>
+                            <div className="text-sm uppercase text-swiss-fg/60">
+                              Your Out-of-Pocket
+                            </div>
                             <div className="text-2xl font-black text-red-600">
                               ${simulationResult.currentPolicyOutOfPocket.toLocaleString()}
                             </div>
@@ -285,7 +312,7 @@ function App(): ReactElement {
                       <p className="text-swiss-fg/60 italic">
                         {activeSimulatorType
                           ? `Ready to simulate ${activeSimulatorType}. Integration pending Matin's implementation.`
-                          : 'Select a disaster type to see potential impact on your coverage.'}
+                          : "Select a disaster type to see potential impact on your coverage."}
                       </p>
                     )}
                   </div>
@@ -310,18 +337,25 @@ function App(): ReactElement {
                                 <h4 className="font-bold">{rec.title}</h4>
                                 <p className="text-sm text-swiss-fg/80 mt-1">{rec.description}</p>
                               </div>
-                              <span className={`text-xs uppercase px-2 py-1 ${
-                                rec.priority === 'high' ? 'bg-swiss-accent text-swiss-bg' :
-                                rec.priority === 'medium' ? 'bg-swiss-fg text-swiss-bg' :
-                                'bg-swiss-fg/30 text-swiss-fg'
-                              }`}>{rec.priority}</span>
+                              <span
+                                className={`text-xs uppercase px-2 py-1 ${
+                                  rec.priority === "high"
+                                    ? "bg-swiss-accent text-swiss-bg"
+                                    : rec.priority === "medium"
+                                      ? "bg-swiss-fg text-swiss-bg"
+                                      : "bg-swiss-fg/30 text-swiss-fg"
+                                }`}
+                              >
+                                {rec.priority}
+                              </span>
                             </div>
                           </li>
                         ))}
                       </ul>
                     ) : (
                       <p className="text-swiss-fg/60 italic">
-                        No recommendations yet. Add more items or run disaster simulation to see personalized suggestions.
+                        No recommendations yet. Add more items or run disaster simulation to see
+                        personalized suggestions.
                       </p>
                     )}
                   </div>
@@ -342,11 +376,11 @@ function App(): ReactElement {
                       onClick={() => setPrivacyMode(!privacyMode.enabled)}
                       className={`px-4 py-2 uppercase font-bold text-sm border-2 ${
                         privacyMode.enabled
-                          ? 'bg-swiss-bg text-swiss-accent border-swiss-bg'
-                          : 'bg-swiss-accent text-swiss-bg border-swiss-bg'
+                          ? "bg-swiss-bg text-swiss-accent border-swiss-bg"
+                          : "bg-swiss-accent text-swiss-bg border-swiss-bg"
                       }`}
                     >
-                      {privacyMode.enabled ? 'Enabled' : 'Disabled'}
+                      {privacyMode.enabled ? "Enabled" : "Disabled"}
                     </button>
                   </div>
                   <div className="p-6">
