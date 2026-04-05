@@ -1,0 +1,186 @@
+/**
+ * Swiss International Style Design System
+ * Pure black/white with Swiss Red (#FF3000)
+ * Zero rounded corners, visible grid structure
+ */
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+  /* Swiss Color System */
+  --swiss-bg: #FFFFFF;
+  --swiss-fg: #000000;
+  --swiss-muted: #F2F2F2;
+  --swiss-accent: #FF3000;
+  --swiss-border: #000000;
+  
+  /* Semantic mappings */
+  --color-primary: var(--swiss-fg);
+  --color-accent: var(--swiss-accent);
+  --color-background: var(--swiss-bg);
+  --color-muted: var(--swiss-muted);
+}
+
+/* Base typography */
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* Strictly rectangular — override any rounded corners */
+* {
+  border-radius: 0 !important;
+}
+
+/* Exception: icon containers may be circular */
+.swiss-icon-circle {
+  border-radius: 9999px !important;
+}
+
+/* ============================================
+   PATTERN TEXTURES
+   ============================================ */
+
+/* Grid Pattern — 24×24px grid lines at 3% opacity */
+.swiss-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Dot Matrix — 16×16px dots at 4% opacity */
+.swiss-dots {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Diagonal Lines — 45° lines at 2% opacity */
+.swiss-diagonal {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0,0,0,0.02) 10px,
+    rgba(0,0,0,0.02) 11px
+  );
+}
+
+/* Noise Texture — fractal noise at 1.5% opacity */
+.swiss-noise {
+  position: relative;
+}
+
+.swiss-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.swiss-noise > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+/* Swiss uppercase with tracking */
+.swiss-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swiss-uppercase-wide {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.swiss-uppercase-tight {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================
+   BORDERS & STRUCTURE
+   ============================================ */
+
+/* Thick Swiss borders */
+.swiss-border {
+  border: 2px solid var(--swiss-border);
+}
+
+.swiss-border-thick {
+  border: 4px solid var(--swiss-border);
+}
+
+/* Section separators */
+.swiss-section-border {
+  border-top: 4px solid var(--swiss-border);
+}
+
+/* ============================================
+   COLOR UTILITIES
+   ============================================ */
+
+.bg-swiss { background-color: var(--swiss-bg); }
+.bg-swiss-muted { background-color: var(--swiss-muted); }
+.bg-swiss-accent { background-color: var(--swiss-accent); }
+.bg-swiss-fg { background-color: var(--swiss-fg); }
+
+.text-swiss { color: var(--swiss-fg); }
+.text-swiss-muted { color: #737373; }
+.text-swiss-accent { color: var(--swiss-accent); }
+.text-swiss-bg { color: var(--swiss-bg); }
+
+.border-swiss { border-color: var(--swiss-border); }
+.border-swiss-accent { border-color: var(--swiss-accent); }
+
+/* ============================================
+   SPACING UTILITIES (Swiss generous spacing)
+   ============================================ */
+
+.swiss-p-section { padding: 3rem 2rem; }
+.swiss-p-card { padding: 2rem; }
+
+@media (min-width: 768px) {
+  .swiss-p-section { padding: 4rem 3rem; }
+  .swiss-p-card { padding: 3rem; }
+}
+
+@media (min-width: 1024px) {
+  .swiss-p-section { padding: 6rem 4rem; }
+  .swiss-p-card { padding: 4rem; }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus visible — Swiss Red outline */
+:focus-visible {
+  outline: 2px solid var(--swiss-accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* High contrast touch targets */
+.swiss-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
