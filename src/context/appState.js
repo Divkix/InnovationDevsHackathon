@@ -12,7 +12,8 @@ export const DEFAULT_STATE = {
   activeTab: 'camera',
   detectedItems: new Map(),
   manualItems: [],
-  selectedItemId: null
+  selectedItemId: null,
+  confidenceThreshold: 0.5
 }
 
 /**
@@ -21,5 +22,6 @@ export const DEFAULT_STATE = {
 export const STORAGE_KEYS = {
   policyType: 'insurescope_policyType',
   onboardingComplete: 'insurescope_onboardingComplete',
-  manualItems: 'insurescope_manualItems'
+  manualItems: 'insurescope_manualItems',
+  confidenceThreshold: 'insurescope_confidenceThreshold'
 }

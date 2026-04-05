@@ -42,6 +42,17 @@ function saveToStorage(key, value) {
 }
 
 /**
+ * Validate and normalize confidence threshold value
+ * @param {number} value - The value to validate
+ * @returns {number} Normalized value between 0.1 and 0.9
+ */
+function normalizeThreshold(value) {
+  const num = parseFloat(value)
+  if (isNaN(num)) return 0.5
+  return Math.max(0.1, Math.min(0.9, num))
+}
+
+/**
  * AppProvider component - provides app-wide state and actions
  */
 export function AppProvider({ children }) {
@@ -65,6 +76,14 @@ export function AppProvider({ children }) {
       (v) => JSON.parse(v)
     )
   )
+
+  const [confidenceThreshold, setConfidenceThresholdState] = useState(() => {
+    const stored = loadFromStorage(
+      STORAGE_KEYS.confidenceThreshold,
+      DEFAULT_STATE.confidenceThreshold.toString()
+    )
+    return normalizeThreshold(stored)
+  })
   
   // Non-persisted state
   const [activeTab, setActiveTabState] = useState(DEFAULT_STATE.activeTab)
@@ -85,6 +104,16 @@ export function AppProvider({ children }) {
     
     setPolicyTypeState(normalizedPolicy)
     saveToStorage(STORAGE_KEYS.policyType, normalizedPolicy)
+  }, [])
+
+  /**
+   * Action: setConfidenceThreshold
+   * Updates confidence threshold and persists to localStorage
+   */
+  const setConfidenceThreshold = useCallback((newThreshold) => {
+    const normalized = normalizeThreshold(newThreshold)
+    setConfidenceThresholdState(normalized)
+    saveToStorage(STORAGE_KEYS.confidenceThreshold, normalized.toString())
   }, [])
 
   /**
@@ -181,6 +210,7 @@ export function AppProvider({ children }) {
     detectedItems,
     manualItems,
     selectedItemId,
+    confidenceThreshold,
     // Actions
     setPolicyType,
     completeOnboarding,
@@ -189,7 +219,8 @@ export function AppProvider({ children }) {
     addManualItem,
     removeManualItem,
     updateManualItem,
-    setSelectedItem
+    setSelectedItem,
+    setConfidenceThreshold
   }), [
     policyType,
     onboardingComplete,
@@ -197,6 +228,7 @@ export function AppProvider({ children }) {
     detectedItems,
     manualItems,
     selectedItemId,
+    confidenceThreshold,
     setPolicyType,
     completeOnboarding,
     setActiveTab,
@@ -204,7 +236,8 @@ export function AppProvider({ children }) {
     addManualItem,
     removeManualItem,
     updateManualItem,
-    setSelectedItem
+    setSelectedItem,
+    setConfidenceThreshold
   ])
 
   return (

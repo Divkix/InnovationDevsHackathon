@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAppContext } from '../../context/AppContext.jsx'
 import { useObjectDetection } from '../../hooks/useObjectDetection.js'
 import { CoverageOverlay } from '../CoverageOverlay/CoverageOverlay.jsx'
+import { ConfidenceThresholdSlider } from '../ConfidenceThresholdSlider/ConfidenceThresholdSlider.jsx'
 import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
 
 /**
@@ -25,7 +26,7 @@ import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
  * @returns {JSX.Element}
  */
 export function CameraView({ onError, onManualMode, onItemClick }) {
-  const { policyType, updateDetectedItems } = useAppContext()
+  const { policyType, updateDetectedItems, confidenceThreshold, setConfidenceThreshold } = useAppContext()
   const { detect, isLoaded, error: modelError } = useObjectDetection()
   
   // Refs for video and canvas elements
@@ -304,8 +305,18 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         videoRef={videoRef}
         detections={detections}
         policyType={policyType}
+        confidenceThreshold={confidenceThreshold}
         onItemClick={onItemClick}
       />
+      
+      {/* Confidence threshold slider - positioned to not obstruct view */}
+      <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-xs z-20">
+        <ConfidenceThresholdSlider
+          value={confidenceThreshold}
+          onChange={setConfidenceThreshold}
+          defaultCollapsed={false}
+        />
+      </div>
       
       {/* Camera requesting indicator */}
       {isRequestingCamera && (

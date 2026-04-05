@@ -13,6 +13,7 @@ function TestConsumer() {
       <div data-testid="detectedItemsCount">{context.detectedItems.size}</div>
       <div data-testid="manualItemsCount">{context.manualItems.length}</div>
       <div data-testid="selectedItemId">{context.selectedItemId || 'null'}</div>
+      <div data-testid="confidenceThreshold">{context.confidenceThreshold}</div>
       <button data-testid="setPolicyType" onClick={() => context.setPolicyType('auto')}>Set Policy</button>
       <button data-testid="completeOnboarding" onClick={() => context.completeOnboarding()}>Complete</button>
       <button data-testid="setActiveTab" onClick={() => context.setActiveTab('dashboard')}>Set Tab</button>
@@ -26,6 +27,7 @@ function TestConsumer() {
       <button data-testid="addManualItem" onClick={() => context.addManualItem({ id: 'manual-1', name: 'Watch', value: 500 })}>Add Manual</button>
       <button data-testid="removeManualItem" onClick={() => context.removeManualItem('manual-1')}>Remove Manual</button>
       <button data-testid="updateManualItem" onClick={() => context.updateManualItem('manual-1', { name: 'Updated Watch', value: 600 })}>Update Manual</button>
+      <button data-testid="setConfidenceThreshold" onClick={() => context.setConfidenceThreshold(0.75)}>Set Threshold</button>
     </div>
   )
 }
@@ -212,6 +214,137 @@ describe('AppContext', () => {
         screen.getByTestId('clearSelectedItem').click()
       })
       expect(screen.getByTestId('selectedItemId').textContent).toBe('null')
+    })
+  })
+
+  describe('setConfidenceThreshold action', () => {
+    it('provides default confidenceThreshold value', () => {
+      renderWithProvider(<TestConsumer />)
+      
+      expect(screen.getByTestId('confidenceThreshold').textContent).toBe('0.5')
+    })
+
+    it('loads confidenceThreshold from localStorage if available', () => {
+      localStorageMock['insurescope_confidenceThreshold'] = '0.75'
+      renderWithProvider(<TestConsumer />)
+      
+      expect(screen.getByTestId('confidenceThreshold').textContent).toBe('0.75')
+    })
+
+    it('updates confidenceThreshold in state', () => {
+      renderWithProvider(<TestConsumer />)
+      
+      expect(screen.getByTestId('confidenceThreshold').textContent).toBe('0.5')
+      
+      act(() => {
+        screen.getByTestId('setConfidenceThreshold').click()
+      })
+      
+      expect(screen.getByTestId('confidenceThreshold').textContent).toBe('0.75')
+    })
+
+    it('persists confidenceThreshold to localStorage', () => {
+      renderWithProvider(<TestConsumer />)
+      
+      act(() => {
+        screen.getByTestId('setConfidenceThreshold').click()
+      })
+      
+      expect(localStorageMock['insurescope_confidenceThreshold']).toBe('0.75')
+    })
+
+    it('normalizes values below minimum to 0.1', () => {
+      function ThresholdTest() {
+        const { confidenceThreshold, setConfidenceThreshold } = useAppContext()
+        return (
+          <div>
+            <div data-testid="threshold">{confidenceThreshold}</div>
+            <button data-testid="setLow" onClick={() => setConfidenceThreshold(0.05)}>Set Low</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<ThresholdTest />)
+      
+      act(() => {
+        screen.getByTestId('setLow').click()
+      })
+      
+      expect(screen.getByTestId('threshold').textContent).toBe('0.1')
+    })
+
+    it('normalizes values above maximum to 0.9', () => {
+      function ThresholdTest() {
+        const { confidenceThreshold, setConfidenceThreshold } = useAppContext()
+        return (
+          <div>
+            <div data-testid="threshold">{confidenceThreshold}</div>
+            <button data-testid="setHigh" onClick={() => setConfidenceThreshold(0.95)}>Set High</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<ThresholdTest />)
+      
+      act(() => {
+        screen.getByTestId('setHigh').click()
+      })
+      
+      expect(screen.getByTestId('threshold').textContent).toBe('0.9')
+    })
+
+    it('handles invalid string input gracefully', () => {
+      function ThresholdTest() {
+        const { confidenceThreshold, setConfidenceThreshold } = useAppContext()
+        return (
+          <div>
+            <div data-testid="threshold">{confidenceThreshold}</div>
+            <button data-testid="setInvalid" onClick={() => setConfidenceThreshold('invalid')}>Set Invalid</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<ThresholdTest />)
+      
+      act(() => {
+        screen.getByTestId('setInvalid').click()
+      })
+      
+      // Should fall back to default when input is invalid
+      expect(screen.getByTestId('threshold').textContent).toBe('0.5')
+    })
+
+    it('accepts all valid threshold values', () => {
+      function ThresholdTest() {
+        const { confidenceThreshold, setConfidenceThreshold } = useAppContext()
+        return (
+          <div>
+            <div data-testid="threshold">{confidenceThreshold}</div>
+            <button data-testid="set10" onClick={() => setConfidenceThreshold(0.1)}>Set 10%</button>
+            <button data-testid="set25" onClick={() => setConfidenceThreshold(0.25)}>Set 25%</button>
+            <button data-testid="set50" onClick={() => setConfidenceThreshold(0.5)}>Set 50%</button>
+            <button data-testid="set75" onClick={() => setConfidenceThreshold(0.75)}>Set 75%</button>
+            <button data-testid="set90" onClick={() => setConfidenceThreshold(0.9)}>Set 90%</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<ThresholdTest />)
+      
+      const testCases = [
+        { button: 'set10', expected: '0.1' },
+        { button: 'set25', expected: '0.25' },
+        { button: 'set50', expected: '0.5' },
+        { button: 'set75', expected: '0.75' },
+        { button: 'set90', expected: '0.9' }
+      ]
+      
+      for (const { button, expected } of testCases) {
+        act(() => {
+          screen.getByTestId(button).click()
+        })
+        expect(screen.getByTestId('threshold').textContent).toBe(expected)
+      }
     })
   })
 
