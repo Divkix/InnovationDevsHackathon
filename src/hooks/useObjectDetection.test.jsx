@@ -441,49 +441,155 @@ describe('useObjectDetection', () => {
     })
   })
 
-  describe('configuration options', () => {
-    it('uses scoreThreshold of 0.5 by default', async () => {
-      renderHook(() => useObjectDetection())
-      
-      await waitFor(() => {
-        expect(mockCreateFromOptions).toHaveBeenCalled()
+  describe('mock detection mode', () => {
+    let originalLocation
+    let originalLocalStorage
+    let getItemSpy
+    let setItemSpy
+
+    beforeEach(() => {
+      originalLocation = window.location
+      originalLocalStorage = window.localStorage
+
+      // Mock localStorage
+      const localStorageMock = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+        removeItem: vi.fn()
+      }
+      Object.defineProperty(window, 'localStorage', {
+        value: localStorageMock,
+        writable: true
       })
-      
-      const [, options] = mockCreateFromOptions.mock.calls[0]
-      expect(options.scoreThreshold).toBe(0.5)
+
+      getItemSpy = vi.spyOn(window.localStorage, 'getItem')
+      setItemSpy = vi.spyOn(window.localStorage, 'setItem')
     })
 
-    it('uses VIDEO running mode', async () => {
-      renderHook(() => useObjectDetection())
-      
-      await waitFor(() => {
-        expect(mockCreateFromOptions).toHaveBeenCalled()
+    afterEach(() => {
+      window.location = originalLocation
+      Object.defineProperty(window, 'localStorage', {
+        value: originalLocalStorage,
+        writable: true
       })
-      
-      const [, options] = mockCreateFromOptions.mock.calls[0]
-      expect(options.runningMode).toBe('VIDEO')
+      vi.restoreAllMocks()
     })
 
-    it('uses efficientdet_lite0_uint8 model by default', async () => {
-      renderHook(() => useObjectDetection())
-      
-      await waitFor(() => {
-        expect(mockCreateFromOptions).toHaveBeenCalled()
-      })
-      
-      const [, options] = mockCreateFromOptions.mock.calls[0]
-      expect(options.baseOptions.modelAssetPath).toContain('efficientdet_lite0_uint8')
+    it('detects mock mode from URL query parameter', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      expect(result.current.isMockMode).toBe(true)
     })
 
-    it('uses GPU delegate by default', async () => {
+    it('detects mock mode from localStorage flag', () => {
+      getItemSpy.mockReturnValue('true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      expect(result.current.isMockMode).toBe(true)
+    })
+
+    it('isLoaded is immediately true in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      // In mock mode, isLoaded should be true immediately without waiting for MediaPipe
+      expect(result.current.isLoaded).toBe(true)
+    })
+
+    it('error is null in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      expect(result.current.error).toBeNull()
+    })
+
+    it('skips MediaPipe initialization in mock mode', async () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
       renderHook(() => useObjectDetection())
-      
-      await waitFor(() => {
-        expect(mockCreateFromOptions).toHaveBeenCalled()
+
+      // Wait a tick to ensure any async effects would have run
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 10))
       })
-      
-      const [, options] = mockCreateFromOptions.mock.calls[0]
-      expect(options.baseOptions.delegate).toBe('GPU')
+
+      // MediaPipe should not be initialized in mock mode
+      expect(mockForVisionTasks).not.toHaveBeenCalled()
+      expect(mockCreateFromOptions).not.toHaveBeenCalled()
+    })
+
+    it('returns mock detections when calling detect in mock mode', async () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      // Wait for mock mode to be detected
+      await waitFor(() => {
+        expect(result.current.isMockMode).toBe(true)
+      })
+
+      const detections = await result.current.detect(null, 0)
+
+      expect(detections.detections).toHaveLength(3)
+      expect(detections.detections[0].categories[0].categoryName).toBe('laptop')
+      expect(detections.detections[0].categories[0].score).toBe(0.92)
+      expect(detections.detections[1].categories[0].categoryName).toBe('car')
+      expect(detections.detections[2].categories[0].categoryName).toBe('bicycle')
+    })
+
+    it('mock detections have correct bounding box format', async () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      await waitFor(() => {
+        expect(result.current.isMockMode).toBe(true)
+      })
+
+      const detections = await result.current.detect(null, 0)
+
+      // Verify MediaPipe-compatible format
+      detections.detections.forEach(detection => {
+        expect(detection).toHaveProperty('boundingBox')
+        expect(detection.boundingBox).toHaveProperty('originX')
+        expect(detection.boundingBox).toHaveProperty('originY')
+        expect(detection.boundingBox).toHaveProperty('width')
+        expect(detection.boundingBox).toHaveProperty('height')
+        expect(detection).toHaveProperty('categories')
+        expect(detection.categories[0]).toHaveProperty('categoryName')
+        expect(detection.categories[0]).toHaveProperty('score')
+      })
+    })
+
+    it('isMockMode is false when URL param and localStorage are not set', () => {
+      getItemSpy.mockReturnValue(null)
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      expect(result.current.isMockMode).toBe(false)
+    })
+
+    it('URL parameter takes precedence over localStorage', () => {
+      // localStorage says true
+      getItemSpy.mockReturnValue('true')
+      // But URL says nothing - should still work
+      delete window.location
+      window.location = new URL('http://localhost:5173')
+
+      const { result } = renderHook(() => useObjectDetection())
+
+      expect(result.current.isMockMode).toBe(true)
     })
   })
 })

@@ -1,23 +1,63 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { FilesetResolver, ObjectDetector } from '@mediapipe/tasks-vision'
+import { useMockDetection, MOCK_STORAGE_KEY } from './useMockDetection.js'
+import { getMockDetections } from './mockDetections.js'
 
 /**
  * Custom hook that manages MediaPipe ObjectDetector lifecycle.
  * Loads model from CDN on mount, provides detect(video, timestamp) function,
  * tracks isLoaded and error states, and handles cleanup on unmount.
  * 
+ * Supports mock detection mode for automated testing:
+ * - Set ?mock=true query parameter, OR
+ * - Set localStorage 'insurescope_mock_detection' to 'true'
+ * 
+ * In mock mode, bypasses MediaPipe and returns predefined mock detections.
+ * 
  * @returns {Object} Object containing detect function, isLoaded state, and error state
  * @returns {Function} detect - Function to run object detection on a video element
  * @returns {boolean} isLoaded - Whether the model has finished loading
  * @returns {Error|null} error - Error object if model loading failed, null otherwise
+ * @returns {boolean} isMockMode - Whether mock detection mode is active
  */
 export function useObjectDetection() {
+  // Use refs for detector and cancellation
   const detectorRef = useRef(null)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [error, setError] = useState(null)
   const cancelledRef = useRef(false)
 
+  // Check for mock mode synchronously during initial render
+  const checkMockMode = () => {
+    if (typeof window === 'undefined') return false
+
+    // Check URL query parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('mock') === 'true') {
+      return true
+    }
+
+    // Check localStorage
+    try {
+      const stored = localStorage.getItem(MOCK_STORAGE_KEY)
+      if (stored === 'true') {
+        return true
+      }
+    } catch (error) {
+      // localStorage not available
+    }
+
+    return false
+  }
+
+  const initialMockMode = checkMockMode()
+  const [isLoaded, setIsLoaded] = useState(initialMockMode)
+  const [error, setError] = useState(null)
+  const [isMockMode] = useState(initialMockMode)
+
+  // Only initialize MediaPipe if NOT in mock mode
   useEffect(() => {
+    // Skip MediaPipe initialization in mock mode
+    if (isMockMode) return
+
     let detectorInstance = null
 
     async function initializeDetector() {
@@ -82,16 +122,24 @@ export function useObjectDetection() {
         detectorInstance.close()
       }
     }
-  }, [])
+  }, [isMockMode])
 
   /**
    * Run object detection on a video element.
+   * In mock mode, returns predefined mock detections instead of running MediaPipe.
    * 
-   * @param {HTMLVideoElement|null} video - The video element to detect objects in
-   * @param {number} timestamp - The timestamp for the video frame
+   * @param {HTMLVideoElement|null} video - The video element to detect objects in (ignored in mock mode)
+   * @param {number} timestamp - The timestamp for the video frame (ignored in mock mode)
    * @returns {Promise<Object>} Detection results in MediaPipe format { detections: [...] }
    */
   const detect = useCallback(async (video, timestamp) => {
+    // Return mock detections if in mock mode
+    if (isMockMode) {
+      return {
+        detections: getMockDetections()
+      }
+    }
+
     const detector = detectorRef.current
 
     // Return empty detections if detector is not loaded
@@ -113,11 +161,12 @@ export function useObjectDetection() {
       console.error('Detection error:', err)
       return { detections: [] }
     }
-  }, [isLoaded])
+  }, [isMockMode, isLoaded])
 
   return {
     detect,
     isLoaded,
-    error
+    error,
+    isMockMode
   }
 }

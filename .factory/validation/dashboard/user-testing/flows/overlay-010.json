@@ -1,0 +1,76 @@
+{
+  "groupId": "overlay-010",
+  "testedAt": "2026-04-04T00:00:00.000Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "browserSessionId": "dashboard-overlay-010",
+    "localStorageCleared": true
+  },
+  "toolsUsed": ["agent-browser"],
+  "assertions": [
+    {
+      "id": "VAL-OVERLAY-010",
+      "title": "Tapping a bounding box opens detail modal",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Navigate to http://localhost:5173",
+          "expected": "App loads and shows policy selection or camera view",
+          "observed": "App loaded successfully, localStorage cleared for fresh state"
+        },
+        {
+          "action": "Wait for AI model loading",
+          "expected": "Model loads within 3-5 seconds, detection begins",
+          "observed": "Model stuck in 'Loading AI Model...' state indefinitely"
+        },
+        {
+          "action": "Attempt JavaScript mock injection",
+          "expected": "Mock detections render bounding boxes on canvas",
+          "observed": "Multiple injection attempts failed - React internals not accessible"
+        },
+        {
+          "action": "Check browser console for errors",
+          "expected": "Clean console or resolvable errors",
+          "observed": "net::ERR_FAILED errors when loading MediaPipe resources from CDN"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "dashboard/overlay-010/initial-state.png",
+          "dashboard/overlay-010/camera-view.png",
+          "dashboard/overlay-010/camera-view-loaded.png",
+          "dashboard/overlay-010/camera-view-after-wait.png",
+          "dashboard/overlay-010/reloaded.png",
+          "dashboard/overlay-010/overlay-test-green-box.png",
+          "dashboard/overlay-010/final-state.png"
+        ],
+        "consoleErrors": "Multiple net::ERR_FAILED errors for MediaPipe CDN resources (mediapipe-models/object_detector/efficientdet_lite0)",
+        "network": "Failed to load: https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0_uint8.tflite"
+      },
+      "issues": "MediaPipe AI model failed to load from CDN, preventing detection loop from running. Without detections, no bounding boxes are rendered, making it impossible to test the tap-to-open-modal functionality."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "MediaPipe model loading is unreliable in headless browser environment - requires network access to Google Cloud Storage CDN",
+      "resolved": false,
+      "resolution": null,
+      "affectedAssertions": ["VAL-OVERLAY-010"]
+    },
+    {
+      "description": "React state injection via browser console is complex and unreliable - the app doesn't expose mock detection APIs for testing",
+      "resolved": false,
+      "resolution": null,
+      "affectedAssertions": ["VAL-OVERLAY-010"]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "MediaPipe object detection model (efficientdet_lite0) fails to load from CDN with net::ERR_FAILED errors. The model is required for the detection loop that renders bounding boxes.",
+      "affectedAssertions": ["VAL-OVERLAY-010"],
+      "quickFixAttempted": "Attempted: (1) waiting 25+ seconds for model load, (2) network interception to mock model response, (3) JavaScript injection to bypass model loading, (4) localStorage flags for mock mode. All failed.",
+      "recommendation": "Add a mock detection mode to the app that can be enabled via localStorage or query parameter for automated testing. This would bypass the MediaPipe model and render predefined bounding boxes."
+    }
+  ],
+  "summary": "Test blocked: MediaPipe AI model failed to load (net::ERR_FAILED). Attempted multiple non-disruptive fixes including network interception and JS injection. All attempts unsuccessful. The assertion VAL-OVERLAY-010 (tapping bounding box opens detail modal) cannot be verified without functioning bounding boxes. Recommendation: Add mock detection mode for automated testing."
+}

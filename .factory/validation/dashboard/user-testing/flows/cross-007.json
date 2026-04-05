@@ -1,0 +1,98 @@
+{
+  "groupId": "cross-007",
+  "testedAt": "2026-04-05T00:00:00Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "browserSessionId": "dashboard-cross-007",
+    "localStorageCleared": true
+  },
+  "toolsUsed": ["agent-browser"],
+  "assertions": [
+    {
+      "id": "VAL-CROSS-007",
+      "title": "Detail modal consistency across entry points",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Clear localStorage and navigate to app",
+          "expected": "Fresh state with policy selection visible",
+          "observed": "Successfully cleared localStorage and loaded app at http://localhost:5173"
+        },
+        {
+          "action": "Wait for AI model loading to complete",
+          "expected": "Model loads within reasonable time, camera view becomes active",
+          "observed": "Model loading remained in 'Loading AI Model...' state after extended waits (30+ seconds)"
+        },
+        {
+          "action": "Inject mock detection data for testing",
+          "expected": "Mock detections appear in camera overlay",
+          "observed": "Browser automation session experienced technical difficulties - commands timed out or returned errors"
+        },
+        {
+          "action": "Attempt to open detail modal from camera overlay (bounding box tap)",
+          "expected": "Detail modal opens showing item information",
+          "observed": "Unable to complete - blocked by model loading timeout and browser automation issues"
+        },
+        {
+          "action": "Attempt to open detail modal from dashboard item list",
+          "expected": "Detail modal opens showing identical information",
+          "observed": "Unable to complete - blocked by model loading timeout and browser automation issues"
+        },
+        {
+          "action": "Compare modal information between entry points",
+          "expected": "Identical item name, value, coverage status, description, upgrade suggestions",
+          "observed": "Unable to complete - blocked by prior steps"
+        },
+        {
+          "action": "Close modals and verify return to correct views",
+          "expected": "Each modal returns to originating view (camera or dashboard)",
+          "observed": "Unable to complete - blocked by prior steps"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "dashboard/cross-007/VAL-CROSS-007-onboarding-initial.png",
+          "dashboard/cross-007/VAL-CROSS-007-camera-view.png",
+          "dashboard/cross-007/VAL-CROSS-007-overlay-test-page.png",
+          "dashboard/cross-007/VAL-CROSS-007-final-state.png"
+        ],
+        "consoleErrors": "Unable to retrieve - browser automation session experienced technical difficulties",
+        "network": "App server accessible at http://localhost:5173, static assets loading successfully"
+      },
+      "issues": "Browser automation session became unstable during testing. Multiple attempts to interact with the page (eval, click, screenshot) resulted in timeouts or errors. The AI model loading appears to take longer than expected (>30 seconds), preventing detection from starting. The overlay-test.html harness (which has mock detection capabilities) also failed to render properly in the browser session."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "AI model loading takes significantly longer than the expected 3-5 seconds mentioned in validation contract (VAL-CAM-004). Model remained in loading state for 30+ seconds.",
+      "resolved": false,
+      "resolution": null,
+      "affectedAssertions": ["VAL-CROSS-007"]
+    },
+    {
+      "description": "Browser automation session became unstable/unresponsive during testing, preventing completion of interactive test steps.",
+      "resolved": false,
+      "resolution": null,
+      "affectedAssertions": ["VAL-CROSS-007"]
+    },
+    {
+      "description": "overlay-test.html test harness page rendered blank/white in browser, preventing use of mock detection capabilities.",
+      "resolved": false,
+      "resolution": null,
+      "affectedAssertions": ["VAL-CROSS-007"]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "MediaPipe AI model loading timeout - model remained in 'Loading AI Model...' state for extended period (>30 seconds), preventing detection initialization",
+      "affectedAssertions": ["VAL-CROSS-007"],
+      "quickFixAttempted": "Waited 30+ seconds for model load, attempted to use overlay-test.html mock detection harness as alternative"
+    },
+    {
+      "description": "Browser automation session instability - agent-browser commands began timing out or returning errors during test execution",
+      "affectedAssertions": ["VAL-CROSS-007"],
+      "quickFixAttempted": "Attempted session restart and page reloads, issues persisted"
+    }
+  ],
+  "summary": "Test blocked: Detail modal consistency test (VAL-CROSS-007) could not be completed due to technical blockers. The AI model failed to load within a reasonable timeframe, and browser automation session became unstable. Evidence screenshots were captured showing the initial app state and model loading screen. The test requires a functional detection system to verify modal consistency across camera overlay and dashboard entry points."
+}

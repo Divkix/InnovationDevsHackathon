@@ -6,6 +6,14 @@ Testing surface, required testing skills/tools, and resource cost classification
 
 ---
 
+## Validation Concurrency
+
+**Browser Surface (http://localhost:5173):**
+- Max concurrent validators: 5
+- Each validator uses an independent browser session
+- Shared infrastructure: Vite dev server (minimal memory overhead)
+- Resource cost assessment: Browser sessions use ~50-100MB each, no GPU required for headless mode
+
 ## Validation Surface
 
 **Surface:** Browser application at http://localhost:5173
@@ -34,6 +42,28 @@ const mockDetections = [
 ];
 ```
 
+### Known Testing Limitations
+
+**MediaPipe AI Model Loading:**
+The MediaPipe object detection model (efficientdet_lite0) fails to initialize reliably in headless browser environments:
+- Model downloads WASM files from cdn.jsdelivr.net
+- Model file fetched from storage.googleapis.com
+- Loading timeout: >30 seconds in headless environment vs expected 3-5s
+- Error: net::ERR_FAILED when loading from CDN
+
+**Impact on Testing:**
+- Assertions requiring bounding boxes (VAL-OVERLAY-010, VAL-OVERLAY-014) cannot be tested
+- Assertions requiring camera view (VAL-DM-006, VAL-CROSS-007) are blocked
+- DetailModal can be tested via dashboard-triggered modals (manual items) instead of camera-overlay-triggered modals
+
+**Workarounds:**
+- Test DetailModal functionality via dashboard (add manual items, click to open modal)
+- Detail modal content and close behavior is identical regardless of entry point
+- Policy change updates (VAL-DM-007) can be tested through dashboard items
+
+**Recommendation:**
+Add a mock detection mode via localStorage flag or query parameter (`?mock=true`) that bypasses MediaPipe initialization and renders predefined bounding boxes for automated testing.
+
 ## Flow Validator Guidance: Browser
 
 ### Isolation Rules
@@ -58,7 +88,7 @@ const mockDetections = [
 4. **Tab switch test:** Click Camera tab, verify camera view; click Dashboard tab, verify dashboard
 
 ### Screenshots & Evidence
-- Save screenshots to: `{missionDir}/evidence/camera/{group-id}/`
+- Save screenshots to: `{missionDir}/evidence/{milestone}/{group-id}/`
 - Name format: `{assertion-id}-{description}.png`
 
 ### Session Management

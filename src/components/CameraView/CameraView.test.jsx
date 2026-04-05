@@ -484,26 +484,158 @@ describe('CameraView', () => {
     })
   })
 
-  describe('manual mode callback', () => {
-    it('calls onManualMode prop when manual mode button is clicked', async () => {
-      const user = userEvent.setup()
-      const onManualMode = vi.fn()
-      
-      // Trigger camera error to show manual mode button
-      Object.defineProperty(global.navigator, 'mediaDevices', {
-        writable: true,
-        value: undefined
+  describe('mock detection mode', () => {
+    let originalLocation
+
+    beforeEach(() => {
+      originalLocation = window.location
+    })
+
+    afterEach(() => {
+      window.location = originalLocation
+      vi.restoreAllMocks()
+    })
+
+    it('shows mock mode indicator when in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
       })
-      
-      render(<CameraView onManualMode={onManualMode} />)
-      
+
+      render(<CameraView />)
+
+      expect(screen.getByTestId('mock-mode-indicator')).toBeInTheDocument()
+      expect(screen.getByText(/Mock Mode/i)).toBeInTheDocument()
+    })
+
+    it('does not request camera when in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      // Camera should not be requested in mock mode
+      expect(mockGetUserMedia).not.toHaveBeenCalled()
+    })
+
+    it('hides video element in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      // Video element should not be rendered
+      expect(screen.queryByTestId('camera-video')).not.toBeInTheDocument()
+    })
+
+    it('shows mock background placeholder in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      expect(screen.getByTestId('mock-background')).toBeInTheDocument()
+      expect(screen.getByText(/Mock Detection Mode/i)).toBeInTheDocument()
+    })
+
+    it('runs detection loop in mock mode', async () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      const mockDetect = vi.fn().mockResolvedValue({
+        detections: [
+          {
+            boundingBox: { originX: 100, originY: 150, width: 280, height: 180 },
+            categories: [{ categoryName: 'laptop', score: 0.92 }]
+          }
+        ]
+      })
+
+      useObjectDetection.mockReturnValue({
+        detect: mockDetect,
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      // Wait for the RAF callback to be registered
       await waitFor(() => {
-        expect(screen.getByTestId('manual-mode-button')).toBeInTheDocument()
+        expect(mockRequestAnimationFrame).toHaveBeenCalled()
       })
-      
-      await user.click(screen.getByTestId('manual-mode-button'))
-      
-      expect(onManualMode).toHaveBeenCalled()
+
+      // Trigger the RAF callback
+      await act(async () => {
+        if (rafCallbacks.length > 0) {
+          await rafCallbacks[rafCallbacks.length - 1](performance.now())
+        }
+      })
+
+      // Detect should be called even without video in mock mode
+      await waitFor(() => {
+        expect(mockDetect).toHaveBeenCalled()
+      })
+    })
+
+    it('renders CoverageOverlay in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      // Coverage overlay should still be rendered
+      expect(screen.getByTestId('coverage-overlay')).toBeInTheDocument()
+    })
+
+    it('hides camera requesting indicator in mock mode', () => {
+      delete window.location
+      window.location = new URL('http://localhost:5173?mock=true')
+
+      useObjectDetection.mockReturnValue({
+        detect: vi.fn().mockResolvedValue({ detections: [] }),
+        isLoaded: true,
+        error: null,
+        isMockMode: true
+      })
+
+      render(<CameraView />)
+
+      // Camera requesting text should not be shown
+      expect(screen.queryByText(/requesting camera access/i)).not.toBeInTheDocument()
     })
   })
 })

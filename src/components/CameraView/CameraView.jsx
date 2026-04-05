@@ -3,11 +3,11 @@ import { useAppContext } from '../../context/AppContext.jsx'
 import { useObjectDetection } from '../../hooks/useObjectDetection.js'
 import { CoverageOverlay } from '../CoverageOverlay/CoverageOverlay.jsx'
 import { ConfidenceThresholdSlider } from '../ConfidenceThresholdSlider/ConfidenceThresholdSlider.jsx'
-import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
+import { Loader2, Camera, AlertCircle, RefreshCw, Hand, Bug } from 'lucide-react'
 
 /**
  * CameraView component - Main camera component for InsureScope
- * 
+ *
  * Features:
  * - Requests camera via getUserMedia with facingMode 'environment' (mobile) or 'user' (desktop)
  * - Displays video feed with CoverageOverlay for detection visualization
@@ -18,7 +18,8 @@ import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
  * - Runs detection loop via requestAnimationFrame
  * - Displays current policy type indicator badge
  * - Passes detections to CoverageOverlay for color-coded bounding box rendering
- * 
+ * - Supports mock detection mode for automated testing (?mock=true or localStorage)
+ *
  * @param {Object} props
  * @param {Function} props.onError - Callback when an error occurs
  * @param {Function} props.onManualMode - Callback when user selects manual mode
@@ -27,13 +28,13 @@ import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
  */
 export function CameraView({ onError, onManualMode, onItemClick }) {
   const { policyType, updateDetectedItems, confidenceThreshold, setConfidenceThreshold } = useAppContext()
-  const { detect, isLoaded, error: modelError } = useObjectDetection()
-  
+  const { detect, isLoaded, error: modelError, isMockMode } = useObjectDetection()
+
   // Refs for video and canvas elements
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const animationFrameRef = useRef(null)
-  
+
   // State for camera, errors, and detections
   const [cameraError, setCameraError] = useState(null)
   const [isRequestingCamera, setIsRequestingCamera] = useState(false)
@@ -49,20 +50,28 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
   
   /**
    * Request camera access with appropriate facing mode
+   * In mock mode, skips camera request and creates a simulated ready state
    */
   const requestCamera = useCallback(async () => {
+    // Skip camera request in mock mode
+    if (isMockMode) {
+      setIsRequestingCamera(false)
+      setCameraError(null)
+      return
+    }
+
     setIsRequestingCamera(true)
     setCameraError(null)
-    
+
     try {
       // Check if browser supports getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Browser not supported')
       }
-      
+
       // Determine facing mode based on device type
       const facingMode = isMobile() ? 'environment' : 'user'
-      
+
       // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -72,17 +81,17 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         },
         audio: false
       })
-      
+
       // Store stream reference for cleanup
       streamRef.current = stream
-      
+
       // Attach stream to video element
       if (videoRef.current) {
         videoRef.current.srcObject = stream
       }
     } catch (err) {
       let errorMessage = 'Camera access failed'
-      
+
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         errorMessage = 'Camera access denied'
       } else if (err.name === 'NotFoundError') {
@@ -92,14 +101,14 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
       } else {
         errorMessage = err.message || 'Camera error'
       }
-      
+
       const error = new Error(errorMessage)
       setCameraError(error)
       if (onError) onError(error)
     } finally {
       setIsRequestingCamera(false)
     }
-  }, [isMobile, onError])
+  }, [isMobile, onError, isMockMode])
   
   /**
    * Stop all camera tracks
@@ -136,17 +145,47 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
   
   /**
    * Detection loop using requestAnimationFrame
+   * In mock mode, runs detection without requiring video readyState
    */
   const detectionLoop = useCallback(async (timestamp) => {
+    // In mock mode, run detection directly without video element check
+    if (isMockMode && isLoaded) {
+      const results = await detect(null, timestamp)
+
+      // Update detections for CoverageOverlay
+      setDetections(results.detections || [])
+
+      // Update detected items in context
+      if (results.detections && results.detections.length > 0) {
+        const itemsMap = new Map()
+        results.detections.forEach((detection, index) => {
+          const category = detection.categories?.[0]?.categoryName || 'unknown'
+          itemsMap.set(`detection-${index}`, {
+            id: `detection-${index}`,
+            name: category,
+            boundingBox: detection.boundingBox,
+            score: detection.categories?.[0]?.score || 0,
+            category: category
+          })
+        })
+        updateDetectedItems(itemsMap)
+      }
+
+      // Schedule next frame
+      animationFrameRef.current = requestAnimationFrame(detectionLoop)
+      return
+    }
+
+    // Normal mode: require video element
     if (!videoRef.current) return
-    
+
     // Run detection if video is playing and model is loaded
     if (videoRef.current.readyState >= 2 && isLoaded) {
       const results = await detect(videoRef.current, timestamp)
-      
+
       // Update detections for CoverageOverlay
       setDetections(results.detections || [])
-      
+
       // Update detected items in context
       if (results.detections && results.detections.length > 0) {
         const itemsMap = new Map()
@@ -163,10 +202,10 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         updateDetectedItems(itemsMap)
       }
     }
-    
+
     // Schedule next frame
     animationFrameRef.current = requestAnimationFrame(detectionLoop)
-  }, [detect, isLoaded, updateDetectedItems])
+  }, [detect, isLoaded, updateDetectedItems, isMockMode])
   
   /**
    * Get policy display name and color
@@ -181,7 +220,7 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
     return policyMap[policyType] || policyMap.renters
   }, [policyType])
   
-  // Request camera on mount
+  // Request camera on mount (if not in mock mode)
   useEffect(() => {
     requestCamera()
     
@@ -192,7 +231,7 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [])
+  }, [isMockMode])
   
   // Start detection loop when video is ready and model is loaded
   useEffect(() => {
@@ -289,17 +328,46 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
           {policyInfo.name}
         </span>
       </div>
-      
-      {/* Video element */}
-      <video
-        ref={videoRef}
-        data-testid="camera-video"
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover"
-      />
-      
+
+      {/* Mock mode indicator */}
+      {isMockMode && (
+        <div
+          data-testid="mock-mode-indicator"
+          className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-yellow-600 rounded-full shadow-lg flex items-center gap-2"
+        >
+          <Bug className="w-3 h-3 text-yellow-100" />
+          <span className="text-xs font-semibold text-yellow-100">
+            Mock Mode
+          </span>
+        </div>
+      )}
+
+      {/* Video element (hidden in mock mode, shown in normal mode) */}
+      {!isMockMode && (
+        <video
+          ref={videoRef}
+          data-testid="camera-video"
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+      )}
+
+      {/* Mock mode background placeholder */}
+      {isMockMode && (
+        <div
+          data-testid="mock-background"
+          className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center"
+        >
+          <div className="text-center">
+            <Bug className="w-16 h-16 text-yellow-500 mx-auto mb-4 opacity-50" />
+            <p className="text-gray-400 text-sm">Mock Detection Mode</p>
+            <p className="text-gray-500 text-xs mt-1">Simulated camera feed</p>
+          </div>
+        </div>
+      )}
+
       {/* Coverage overlay for rendering bounding boxes */}
       <CoverageOverlay
         videoRef={videoRef}
@@ -308,7 +376,7 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         confidenceThreshold={confidenceThreshold}
         onItemClick={onItemClick}
       />
-      
+
       {/* Confidence threshold slider - positioned to not obstruct view */}
       <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-xs z-20">
         <ConfidenceThresholdSlider
@@ -317,9 +385,9 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
           defaultCollapsed={false}
         />
       </div>
-      
-      {/* Camera requesting indicator */}
-      {isRequestingCamera && (
+
+      {/* Camera requesting indicator (only in normal mode) */}
+      {!isMockMode && isRequestingCamera && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10">
           <Camera className="w-10 h-10 text-blue-500 mb-3" />
           <p className="text-white font-medium">Requesting camera access...</p>
