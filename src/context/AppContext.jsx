@@ -1,30 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react'
-
-/**
- * Valid policy types for the application
- */
-export const VALID_POLICY_TYPES = ['renters', 'homeowners', 'auto', 'none']
-
-/**
- * Default/initial state values
- */
-const DEFAULT_STATE = {
-  policyType: 'renters',
-  onboardingComplete: false,
-  activeTab: 'camera',
-  detectedItems: new Map(),
-  manualItems: [],
-  selectedItemId: null
-}
-
-/**
- * localStorage keys for persistence
- */
-const STORAGE_KEYS = {
-  policyType: 'insurescope_policyType',
-  onboardingComplete: 'insurescope_onboardingComplete',
-  manualItems: 'insurescope_manualItems'
-}
+import { createContext, useContext, useState, useCallback, useMemo } from 'react'
+import { VALID_POLICY_TYPES, DEFAULT_STATE, STORAGE_KEYS } from './appState.js'
 
 /**
  * Create the context
@@ -253,5 +228,3 @@ export function useAppContext() {
   
   return context
 }
-
-export default AppContext

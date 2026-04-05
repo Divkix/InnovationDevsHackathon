@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { AppProvider, useAppContext } from './AppContext'
-import { useContext } from 'react'
 
 // Helper component to access context values for testing
 function TestConsumer() {
