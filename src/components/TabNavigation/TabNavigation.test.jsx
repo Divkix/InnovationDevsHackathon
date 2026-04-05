@@ -67,9 +67,9 @@ describe('TabNavigation', () => {
       render(<TabNavigation activeTab="camera" onTabChange={vi.fn()} />)
 
       const cameraTab = screen.getByTestId('tab-camera')
-      // Check for active styling classes
-      expect(cameraTab.className).toContain('bg-blue-100')
-      expect(cameraTab.className).toContain('text-blue-700')
+      // Check for active styling classes - State Farm red
+      expect(cameraTab.className).toContain('bg-red-50')
+      expect(cameraTab.className).toContain('text-[#E31837]')
     })
 
     it('applies inactive styling to inactive tab', () => {
@@ -177,9 +177,9 @@ describe('TabNavigation', () => {
       render(<TabNavigation activeTab="camera" onTabChange={vi.fn()} />)
 
       const cameraTab = screen.getByTestId('tab-camera')
-      // Check for focus-visible ring classes
+      // Check for focus-visible ring classes - State Farm red
       expect(cameraTab.className).toContain('focus-visible:ring-2')
-      expect(cameraTab.className).toContain('focus-visible:ring-blue-500')
+      expect(cameraTab.className).toContain('focus-visible:ring-[#E31837]')
     })
 
     it('is focusable via tabIndex', () => {

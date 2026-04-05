@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 
 /**
- * Policy configuration with display names and icons
+ * Policy configuration with display names and icons - State Farm Branding
  */
 const POLICY_CONFIG = {
   renters: {
@@ -21,28 +21,28 @@ const POLICY_CONFIG = {
     shortLabel: "Renter's",
     icon: Home,
     description: 'Personal property coverage',
-    color: 'blue'
+    color: '[#E31837]'
   },
   homeowners: {
     label: "Homeowner's Insurance",
     shortLabel: "Homeowner's",
     icon: Shield,
     description: 'Full property coverage',
-    color: 'green'
+    color: '[#E31837]'
   },
   auto: {
     label: 'Auto Insurance',
     shortLabel: 'Auto',
     icon: Car,
     description: 'Vehicle coverage only',
-    color: 'indigo'
+    color: '[#E31837]'
   },
   none: {
     label: 'No Insurance',
     shortLabel: 'None',
     icon: ShieldAlert,
     description: 'No coverage - everything red',
-    color: 'red'
+    color: 'gray'
   }
 }
 

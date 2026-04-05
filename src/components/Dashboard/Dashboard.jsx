@@ -1,4 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
+import { motion, useSpring, useTransform } from 'framer-motion'
+import { isTestEnvironment } from '@/utils/testUtils.js'
 import {
   calculateValues,
   formatCurrency,
@@ -6,6 +8,33 @@ import {
   getUpgradeRecommendations
 } from '@/utils/valueCalculator.js'
 import { Shield, AlertTriangle, CheckCircle, DollarSign, TrendingUp } from 'lucide-react'
+
+/**
+ * AnimatedNumber component - Animates number changes with spring physics
+ */
+function AnimatedNumber({ value, formatter }) {
+  const spring = useSpring(value, { 
+    stiffness: 100, 
+    damping: 20,
+    duration: 0.5 
+  })
+  
+  useEffect(() => {
+    spring.set(value)
+  }, [value, spring])
+  
+  const display = useTransform(spring, (current) => formatter(current))
+  const [displayValue, setDisplayValue] = useState(formatter(value))
+  
+  useEffect(() => {
+    const unsubscribe = display.on('change', (latest) => {
+      setDisplayValue(latest)
+    })
+    return () => unsubscribe()
+  }, [display])
+  
+  return <span>{displayValue}</span>
+}
 
 /**
  * Dashboard component - Financial summary dashboard
@@ -56,7 +85,7 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
   const hasItems = items.length > 0
   const hasRecommendations = recommendations.length > 0
 
-  // Status color mapping for Tailwind classes
+  // Status color mapping for Tailwind classes - State Farm branding
   const statusColors = {
     covered: {
       bg: 'bg-green-100',
@@ -74,7 +103,7 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
       bg: 'bg-red-100',
       text: 'text-red-700',
       border: 'border-red-200',
-      icon: 'text-red-500'
+      icon: 'text-[#E31837]'
     }
   }
 
@@ -100,120 +129,162 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
           </div>
         </div>
 
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Financial Summary Cards - Responsive Grid */}
+        <motion.div 
+          className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ staggerChildren: 0.1 }}
+        >
           {/* Total Value */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-4 h-4 text-gray-500" />
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Total Detected Asset Value
+                Total Value
               </span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(totalValue)}
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <AnimatedNumber value={totalValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
           {/* Protected Value */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-green-500" />
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Protected Value
+                Protected
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600">
-              {formatCurrency(protectedValue)}
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              <AnimatedNumber value={protectedValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
-          {/* Unprotected Value - BIG RED NUMBER */}
-          <div
+          {/* Unprotected Value - State Farm Red - MOST PROMINENT */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
             data-testid="unprotected-section"
-            className="bg-white rounded-lg shadow-md border-2 border-red-200 p-4 col-span-2 lg:col-span-1"
+            className="bg-gradient-to-br from-[#E31837] to-[#B8122C] rounded-xl shadow-lg p-4 sm:p-5 col-span-1 xs:col-span-2 lg:col-span-1 transform hover:scale-[1.02] transition-transform"
           >
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-xs font-bold text-red-600 uppercase tracking-wide">
-                UNPROTECTED VALUE
+              <AlertTriangle className="w-5 h-5 text-white/90" />
+              <span className="text-xs font-bold text-white/90 uppercase tracking-wide">
+                UNPROTECTED
               </span>
             </div>
-            <p className="text-4xl lg:text-5xl font-black text-red-600 tracking-tight">
-              {formatCurrency(unprotectedValue)}
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight drop-shadow-sm">
+              <AnimatedNumber value={unprotectedValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
           {/* Coverage Gap */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-gray-500" />
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Coverage Gap
               </span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatPercentage(coverageGapPercentage)}
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <AnimatedNumber value={coverageGapPercentage} formatter={(v) => formatPercentage(v)} />
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Empty State Message */}
         {!hasItems && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-blue-50 border border-blue-200 rounded-xl p-6 sm:p-8 text-center"
+          >
             <div className="flex justify-center mb-3">
               <div className="bg-blue-100 rounded-full p-3">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+                <DollarSign className="w-6 h-6 text-[#E31837]" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No Items Detected
             </h3>
-            <p className="text-blue-700 max-w-md mx-auto">
+            <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
               Point your camera at objects to begin scanning. Detected items will appear here with their insurance coverage status.
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* All Covered Message */}
         {allCovered && hasItems && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6"
+          >
             <div className="flex items-center gap-3">
               <div className="bg-green-100 rounded-full p-2">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-green-900">
+                <h3 className="text-base sm:text-lg font-semibold text-green-900">
                   All items are fully covered!
                 </h3>
-                <p className="text-green-700">
+                <p className="text-green-700 text-sm sm:text-base">
                   Your current insurance policy protects all detected items.
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Per-Item Breakdown */}
         {hasItems && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <h3 className="font-semibold text-gray-900">Item Breakdown</h3>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+          >
+            <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Item Breakdown</h3>
             </div>
             <div className="divide-y divide-gray-100">
-              {items.map((item) => {
+              {items.map((item, index) => {
                 const colors = statusColors[item.status] || statusColors.not_covered
                 return (
-                  <button
+                  <motion.button
                     key={item.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     data-testid="item-row"
                     onClick={() => onItemClick && onItemClick(item)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                    className="w-full px-3 sm:px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#E31837]"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${colors.bg.replace('bg-', 'bg-').replace('100', '500')}`} />
-                      <div>
-                        <p className="font-medium text-gray-900 capitalize">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className={`w-3 h-3 rounded-full shrink-0 ${
+                        item.status === 'covered' ? 'bg-green-500' :
+                        item.status === 'conditional' ? 'bg-yellow-500' :
+                        'bg-[#E31837]'
+                      }`} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 capitalize text-sm sm:text-base truncate">
                           {item.category}
                         </p>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
@@ -221,37 +292,44 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = '
                         </span>
                       </div>
                     </div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base shrink-0 ml-2">
                       {formatCurrency(item.estimatedValue)}
                     </p>
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Upgrade Recommendations */}
         {hasRecommendations && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <h3 className="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-orange-50 border border-orange-200 rounded-xl p-4"
+          >
+            <h3 className="font-semibold text-orange-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
               <TrendingUp className="w-5 h-5" />
               Recommendations
             </h3>
             <ul className="space-y-2">
               {recommendations.map((recommendation, index) => (
-                <li
+                <motion.li
                   key={index}
-                  className="flex items-start gap-2 text-orange-800"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start gap-2 text-orange-800 text-sm sm:text-base"
                 >
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-200 text-orange-700 text-xs font-medium shrink-0 mt-0.5">
                     {index + 1}
                   </span>
                   <span>{recommendation}</span>
-                </li>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

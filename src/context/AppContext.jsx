@@ -85,6 +85,23 @@ export function AppProvider({ children }) {
     return normalizeThreshold(stored)
   })
   
+  // Camera permission and manual mode state
+  const [cameraPermissionDenied, setCameraPermissionDeniedState] = useState(() =>
+    loadFromStorage(
+      STORAGE_KEYS.cameraPermissionDenied,
+      false,
+      (v) => v === 'true'
+    )
+  )
+  
+  const [manualModeEnabled, setManualModeEnabledState] = useState(() =>
+    loadFromStorage(
+      STORAGE_KEYS.manualModeEnabled,
+      false,
+      (v) => v === 'true'
+    )
+  )
+  
   // Non-persisted state
   const [activeTab, setActiveTabState] = useState(DEFAULT_STATE.activeTab)
   const [detectedItems, setDetectedItemsState] = useState(() => new Map())
@@ -201,6 +218,44 @@ export function AppProvider({ children }) {
     setSelectedItemIdState(itemId)
   }, [])
 
+  /**
+   * Action: setCameraPermissionDenied
+   * Records when camera permission is denied to prevent auto-prompt
+   */
+  const setCameraPermissionDenied = useCallback((denied) => {
+    setCameraPermissionDeniedState(denied)
+    saveToStorage(STORAGE_KEYS.cameraPermissionDenied, denied.toString())
+  }, [])
+
+  /**
+   * Action: enableManualMode
+   * Enables manual mode when camera is unavailable
+   */
+  const enableManualMode = useCallback(() => {
+    setManualModeEnabledState(true)
+    setActiveTabState('dashboard')
+    saveToStorage(STORAGE_KEYS.manualModeEnabled, 'true')
+  }, [])
+
+  /**
+   * Action: disableManualMode
+   * Disables manual mode and attempts to use camera
+   */
+  const disableManualMode = useCallback(() => {
+    setManualModeEnabledState(false)
+    setActiveTabState('camera')
+    saveToStorage(STORAGE_KEYS.manualModeEnabled, 'false')
+  }, [])
+
+  /**
+   * Action: resetCameraPermission
+   * Clears the denied flag to allow re-prompting
+   */
+  const resetCameraPermission = useCallback(() => {
+    setCameraPermissionDeniedState(false)
+    saveToStorage(STORAGE_KEYS.cameraPermissionDenied, 'false')
+  }, [])
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     // State
@@ -211,6 +266,8 @@ export function AppProvider({ children }) {
     manualItems,
     selectedItemId,
     confidenceThreshold,
+    cameraPermissionDenied,
+    manualModeEnabled,
     // Actions
     setPolicyType,
     completeOnboarding,
@@ -220,7 +277,11 @@ export function AppProvider({ children }) {
     removeManualItem,
     updateManualItem,
     setSelectedItem,
-    setConfidenceThreshold
+    setConfidenceThreshold,
+    setCameraPermissionDenied,
+    enableManualMode,
+    disableManualMode,
+    resetCameraPermission
   }), [
     policyType,
     onboardingComplete,
@@ -229,6 +290,8 @@ export function AppProvider({ children }) {
     manualItems,
     selectedItemId,
     confidenceThreshold,
+    cameraPermissionDenied,
+    manualModeEnabled,
     setPolicyType,
     completeOnboarding,
     setActiveTab,
@@ -237,7 +300,11 @@ export function AppProvider({ children }) {
     removeManualItem,
     updateManualItem,
     setSelectedItem,
-    setConfidenceThreshold
+    setConfidenceThreshold,
+    setCameraPermissionDenied,
+    enableManualMode,
+    disableManualMode,
+    resetCameraPermission
   ])
 
   return (

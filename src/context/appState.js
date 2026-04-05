@@ -23,5 +23,7 @@ export const STORAGE_KEYS = {
   policyType: 'insurescope_policyType',
   onboardingComplete: 'insurescope_onboardingComplete',
   manualItems: 'insurescope_manualItems',
-  confidenceThreshold: 'insurescope_confidenceThreshold'
+  confidenceThreshold: 'insurescope_confidenceThreshold',
+  cameraPermissionDenied: 'insurescope_cameraPermissionDenied',
+  manualModeEnabled: 'insurescope_manualModeEnabled'
 }

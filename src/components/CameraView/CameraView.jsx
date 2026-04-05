@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAppContext } from '../../context/AppContext.jsx'
 import { useObjectDetection } from '../../hooks/useObjectDetection.js'
 import { CoverageOverlay } from '../CoverageOverlay/CoverageOverlay.jsx'
 import { ConfidenceThresholdSlider } from '../ConfidenceThresholdSlider/ConfidenceThresholdSlider.jsx'
-import { Loader2, Camera, AlertCircle, RefreshCw, Hand, Bug } from 'lucide-react'
+import { Loader2, Camera, AlertCircle, RefreshCw, Hand, Bug, Shield, ChevronRight } from 'lucide-react'
 
 /**
  * CameraView component - Main camera component for InsureScope
@@ -208,14 +209,14 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
   }, [detect, isLoaded, updateDetectedItems, isMockMode])
   
   /**
-   * Get policy display name and color
+   * Get policy display name and color - State Farm Branding
    */
   const getPolicyInfo = useCallback(() => {
     const policyMap = {
-      renters: { name: "Renter's Insurance", color: 'bg-blue-600', textColor: 'text-blue-100' },
-      homeowners: { name: "Homeowner's Insurance", color: 'bg-purple-600', textColor: 'text-purple-100' },
-      auto: { name: 'Auto Insurance', color: 'bg-green-600', textColor: 'text-green-100' },
-      none: { name: 'No Insurance', color: 'bg-red-600', textColor: 'text-red-100' }
+      renters: { name: "Renter's Insurance", color: 'bg-[#E31837]', textColor: 'text-white' },
+      homeowners: { name: "Homeowner's Insurance", color: 'bg-[#E31837]', textColor: 'text-white' },
+      auto: { name: 'Auto Insurance', color: 'bg-[#E31837]', textColor: 'text-white' },
+      none: { name: 'No Insurance', color: 'bg-gray-700', textColor: 'text-white' }
     }
     return policyMap[policyType] || policyMap.renters
   }, [policyType])
@@ -262,57 +263,103 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
   
   const policyInfo = getPolicyInfo()
   
-  // Loading state
+  // Loading state with State Farm branding
   if (isLoadingModel) {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         data-testid="camera-loading"
-        className="flex flex-col items-center justify-center h-full min-h-[300px] bg-gray-900 rounded-lg"
+        className="flex flex-col items-center justify-center h-full min-h-[300px] sm:min-h-[400px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl"
       >
-        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <p className="text-white text-lg font-medium">Loading AI Model...</p>
-        <p className="text-gray-400 text-sm mt-2">Please wait while we initialize the object detector</p>
-      </div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="mb-4"
+        >
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-gray-700 border-t-[#E31837]" />
+        </motion.div>
+        <p className="text-white text-base sm:text-lg font-semibold">Loading AI Model...</p>
+        <p className="text-gray-400 text-xs sm:text-sm mt-2 text-center px-4">
+          Please wait while we initialize the object detector
+        </p>
+      </motion.div>
     )
   }
   
-  // Error state
+  // Error state - Camera Denial Fallback with State Farm branding
   if (currentError) {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         data-testid="camera-error"
-        className="flex flex-col items-center justify-center h-full min-h-[300px] bg-gray-900 rounded-lg p-6"
+        className="flex flex-col items-center justify-center h-full min-h-[350px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 sm:p-6 text-center"
       >
-        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <p className="text-white text-lg font-medium mb-2">
-          {isModelError ? 'Model Failed to Load' : 'Camera Error'}
-        </p>
-        <p className="text-gray-400 text-sm text-center mb-6 max-w-md">
-          {currentError.message}
+        {/* State Farm Shield Icon */}
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E31837] rounded-full flex items-center justify-center mb-4 shadow-lg">
+          <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+        </div>
+        
+        <h3 className="text-white text-lg sm:text-xl font-bold mb-2">
+          {isCameraPermissionError ? 'Camera Access Needed' : 
+           isBrowserUnsupported ? 'Browser Not Supported' :
+           isModelError ? 'AI Model Failed to Load' : 'Camera Error'}
+        </h3>
+        
+        <p className="text-gray-400 text-sm sm:text-base text-center mb-6 max-w-sm leading-relaxed">
+          {isCameraPermissionError 
+            ? 'Camera access is required to detect items in your room. You can retry the permission request or use manual mode to add items yourself.'
+            : isBrowserUnsupported
+            ? 'Your browser does not support camera access. Please use a modern browser like Chrome, Safari, or Firefox.'
+            : isModelError
+            ? 'The AI detection model failed to load. This may be due to a network issue. Please try reloading the page.'
+            : currentError.message}
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-md">
+          {/* Retry Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             data-testid="retry-button"
             onClick={handleRetry}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#E31837] hover:bg-[#B8122C] text-white font-semibold rounded-lg transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2"
           >
             <RefreshCw className="w-4 h-4" />
-            {isModelError ? 'Reload Page' : 'Retry'}
-          </button>
+            {isCameraPermissionError ? 'Retry Permission' : 
+             isModelError ? 'Reload Page' : 'Try Again'}
+          </motion.button>
           
+          {/* Manual Mode Button */}
           {(isCameraPermissionError || isBrowserUnsupported) && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               data-testid="manual-mode-button"
               onClick={handleManualMode}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-lg transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
               <Hand className="w-4 h-4" />
               Use Manual Mode
-            </button>
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
           )}
         </div>
-      </div>
+        
+        {/* Helpful tip for manual mode */}
+        {(isCameraPermissionError || isBrowserUnsupported) && (
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-4 text-xs sm:text-sm text-gray-500 max-w-xs"
+          >
+            Manual mode lets you add items by hand. You can still switch policies, view coverage details, and see recommendations.
+          </motion.p>
+        )}
+      </motion.div>
     )
   }
   

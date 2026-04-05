@@ -112,7 +112,7 @@ describe('CameraView', () => {
         expect(screen.getByTestId('camera-error')).toBeInTheDocument()
       })
       
-      expect(screen.getByText(/camera access denied/i)).toBeInTheDocument()
+      expect(screen.getByText(/Camera Access Needed/i)).toBeInTheDocument()
     })
     
     it('shows retry button when camera permission is denied', async () => {
@@ -198,7 +198,7 @@ describe('CameraView', () => {
       render(<CameraView />)
       
       expect(screen.getByTestId('camera-error')).toBeInTheDocument()
-      expect(screen.getByText(/model failed to load/i)).toBeInTheDocument()
+      expect(screen.getByText(/AI Model Failed to Load/i)).toBeInTheDocument()
     })
     
     it('shows retry button when model fails to load', () => {

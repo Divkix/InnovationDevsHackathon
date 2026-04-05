@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { lookupCoverage } from '@/utils/coverageLookup.js'
 
 /**
- * Color definitions for coverage status
+ * Color definitions for coverage status - State Farm branding
  */
 const COLORS = {
   green: {
@@ -12,10 +12,10 @@ const COLORS = {
     labelBg: '#22c55e'
   },
   red: {
-    stroke: '#ef4444',
-    fill: 'rgba(239, 68, 68, 0.15)',
+    stroke: '#E31837',
+    fill: 'rgba(227, 24, 55, 0.15)',
     text: '#ffffff',
-    labelBg: '#ef4444'
+    labelBg: '#E31837'
   },
   yellow: {
     stroke: '#eab308',

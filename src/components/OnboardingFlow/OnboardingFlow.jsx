@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAppContext } from '@/context/AppContext.jsx'
 import { Home, Shield, Car, ShieldAlert, Camera, ChevronLeft, Check, ArrowRight } from 'lucide-react'
 
@@ -132,25 +133,25 @@ export function OnboardingFlow({ onComplete }) {
     }
   }, [selectedPolicy, isTransitioning, handleNext])
 
-  // Step indicator component
+  // Step indicator component with State Farm branding
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
       <div className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 1 ? 'opacity-100' : 'opacity-50'}`}>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
           currentStep >= 1 
-            ? 'bg-blue-600 text-white' 
+            ? 'bg-[#E31837] text-white' 
             : 'bg-gray-200 text-gray-500'
         }`}>
           1
         </div>
-        <span className={`text-sm font-medium ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+        <span className={`text-sm font-medium ${currentStep >= 1 ? 'text-[#E31837]' : 'text-gray-400'}`}>
           Policy
         </span>
       </div>
       
       <div className="w-12 h-0.5 bg-gray-200 rounded">
         <div 
-          className="h-full bg-blue-600 rounded transition-all duration-500"
+          className="h-full bg-[#E31837] rounded transition-all duration-500"
           style={{ width: currentStep >= 2 ? '100%' : '0%' }}
         />
       </div>
@@ -158,12 +159,12 @@ export function OnboardingFlow({ onComplete }) {
       <div className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 2 ? 'opacity-100' : 'opacity-50'}`}>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
           currentStep >= 2 
-            ? 'bg-blue-600 text-white' 
+            ? 'bg-[#E31837] text-white' 
             : 'bg-gray-200 text-gray-500'
         }`}>
           2
         </div>
-        <span className={`text-sm font-medium ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+        <span className={`text-sm font-medium ${currentStep >= 2 ? 'text-[#E31837]' : 'text-gray-400'}`}>
           Camera
         </span>
       </div>
@@ -172,7 +173,13 @@ export function OnboardingFlow({ onComplete }) {
 
   // Step 1: Policy Selection
   const PolicySelectionStep = () => (
-    <div className={`space-y-6 transition-all duration-300 ${direction === 'forward' ? 'animate-in fade-in slide-in-from-right-4' : 'animate-in fade-in slide-in-from-left-4'}`}>
+    <motion.div 
+      initial={{ opacity: 0, x: direction === 'forward' ? 20 : -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: direction === 'forward' ? -20 : 20 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Select Your Insurance</h2>
         <p className="text-gray-600">
@@ -187,8 +194,10 @@ export function OnboardingFlow({ onComplete }) {
           const isSelected = selectedPolicy === policy.id
           
           return (
-            <button
+            <motion.button
               key={policy.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               role="radio"
               aria-checked={isSelected}
               aria-label={policy.label}
@@ -198,16 +207,16 @@ export function OnboardingFlow({ onComplete }) {
               className={`
                 relative flex flex-col items-center p-6 rounded-xl border-2 
                 transition-all duration-200 cursor-pointer
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2
                 ${isSelected 
-                  ? `border-${policy.color}-500 bg-${policy.color}-50 shadow-md` 
+                  ? 'border-[#E31837] bg-red-50 shadow-md' 
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                 }
               `}
             >
               {/* Selected Indicator */}
               {isSelected && (
-                <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-${policy.color}-500`}>
+                <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-[#E31837]">
                   <Check className="w-4 h-4 text-white" />
                 </div>
               )}
@@ -215,7 +224,7 @@ export function OnboardingFlow({ onComplete }) {
               <Icon className={`
                 w-10 h-10 mb-3 transition-colors
                 ${isSelected 
-                  ? `text-${policy.color}-600` 
+                  ? 'text-[#E31837]' 
                   : 'text-gray-400'
                 }
               `} />
@@ -223,23 +232,25 @@ export function OnboardingFlow({ onComplete }) {
               <h3 className={`
                 font-semibold text-lg mb-1
                 ${isSelected 
-                  ? `text-${policy.color}-700` 
+                  ? 'text-[#E31837]' 
                   : 'text-gray-700'
                 }
               `}>
                 {policy.label}
               </h3>
               
-              <p className={`text-sm text-center ${isSelected ? `text-${policy.color}-600` : 'text-gray-500'}`}>
+              <p className={`text-sm text-center ${isSelected ? 'text-red-600' : 'text-gray-500'}`}>
                 {policy.description}
               </p>
-            </button>
+            </motion.button>
           )
         })}
       </div>
 
       {/* Continue Button */}
-      <button
+      <motion.button
+        whileHover={selectedPolicy ? { scale: 1.02 } : {}}
+        whileTap={selectedPolicy ? { scale: 0.98 } : {}}
         onClick={handleNext}
         onKeyDown={handleContinueKeyDown}
         disabled={!selectedPolicy || isTransitioning}
@@ -247,9 +258,9 @@ export function OnboardingFlow({ onComplete }) {
         className={`
           w-full py-4 px-6 rounded-xl font-semibold text-lg
           transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2
           ${selectedPolicy && !isTransitioning
-            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md cursor-pointer'
+            ? 'bg-[#E31837] text-white hover:bg-[#B8122C] shadow-md cursor-pointer'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }
         `}
@@ -266,13 +277,19 @@ export function OnboardingFlow({ onComplete }) {
             <ArrowRight className="w-5 h-5" />
           </span>
         )}
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   )
 
   // Step 2: Camera Instruction
   const CameraInstructionStep = () => (
-    <div className={`space-y-6 transition-all duration-300 ${direction === 'forward' ? 'animate-in fade-in slide-in-from-right-4' : 'animate-in fade-in slide-in-from-left-4'}`}>
+    <motion.div 
+      initial={{ opacity: 0, x: direction === 'forward' ? 20 : -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: direction === 'forward' ? -20 : 20 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Point Your Camera</h2>
         <p className="text-gray-600">
@@ -280,74 +297,100 @@ export function OnboardingFlow({ onComplete }) {
         </p>
       </div>
 
-      {/* Camera Illustration / Instructions */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 text-center">
-        <div className="relative w-32 h-32 mx-auto mb-6">
-          <div className="absolute inset-0 bg-blue-200 rounded-full animate-pulse opacity-30" />
-          <div className="relative w-full h-full bg-white rounded-full shadow-lg flex items-center justify-center">
-            <Camera className="w-14 h-14 text-blue-600" />
+      {/* Camera Illustration / Instructions - State Farm branded */}
+      <div className="bg-gradient-to-br from-red-50 to-gray-50 rounded-2xl p-6 sm:p-8 text-center border border-red-100">
+        <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6">
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 bg-[#E31837]/20 rounded-full" 
+          />
+          <div className="relative w-full h-full bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-red-100">
+            <Camera className="w-12 h-12 sm:w-14 sm:h-14 text-[#E31837]" />
           </div>
         </div>
         
         <h3 className="font-semibold text-gray-900 mb-4">How it works:</h3>
         <ul className="space-y-3 text-left max-w-sm mx-auto">
           <li className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-green-600 font-bold text-sm">1</span>
+            <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[#E31837] font-bold text-sm">1</span>
             </div>
-            <span className="text-gray-700">Point your camera at objects in your room</span>
+            <span className="text-gray-700 text-sm sm:text-base">Point your camera at objects in your room</span>
           </li>
           <li className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-green-600 font-bold text-sm">2</span>
+            <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[#E31837] font-bold text-sm">2</span>
             </div>
-            <span className="text-gray-700">AI detects items and shows coverage status</span>
+            <span className="text-gray-700 text-sm sm:text-base">AI detects items and shows coverage status</span>
           </li>
           <li className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-green-600 font-bold text-sm">3</span>
+            <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[#E31837] font-bold text-sm">3</span>
             </div>
-            <span className="text-gray-700">Green = Covered, Red = Not Covered</span>
+            <span className="text-gray-700 text-sm sm:text-base">Green = Covered, Red = Not Covered</span>
           </li>
         </ul>
       </div>
 
       {/* Privacy Note */}
-      <p className="text-sm text-gray-500 text-center">
+      <p className="text-xs sm:text-sm text-gray-500 text-center px-4">
         All processing happens on your device. No images are sent to any server.
       </p>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
-        <button
+      <div className="flex gap-3 sm:gap-4">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleBack}
           disabled={isTransitioning}
           tabIndex={0}
           className="
-            flex-1 py-3 px-4 rounded-xl font-medium
+            flex-1 py-3 px-3 sm:px-4 rounded-xl font-medium
             border-2 border-gray-200 text-gray-700
             hover:border-gray-300 hover:bg-gray-50
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+            text-sm sm:text-base
           "
         >
-          <span className="flex items-center justify-center gap-2">
-            <ChevronLeft className="w-5 h-5" />
+          <span className="flex items-center justify-center gap-1 sm:gap-2">
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             Back
           </span>
-        </button>
+        </motion.button>
         
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleNext}
           disabled={isTransitioning}
           tabIndex={0}
           className="
-            flex-[2] py-3 px-4 rounded-xl font-semibold
-            bg-blue-600 text-white hover:bg-blue-700
+            flex-[2] py-3 px-3 sm:px-4 rounded-xl font-semibold
+            bg-[#E31837] text-white hover:bg-[#B8122C]
             shadow-md
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2
+            text-sm sm:text-base
           "
+        >
+          {isTransitioning ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Starting...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+              Start Camera
+            </span>
+          )}
+        </motion.button>
+      </div>
+    </motion.div>
+  )
         >
           {isTransitioning ? (
             <span className="flex items-center justify-center gap-2">
@@ -367,44 +410,80 @@ export function OnboardingFlow({ onComplete }) {
 
   return (
     <div 
-      className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
+      className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-3 sm:p-4"
       data-testid="onboarding-flow"
     >
       <div className="w-full max-w-md">
-        {/* Header Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-            <Shield className="w-6 h-6 text-white" />
+        {/* Header Logo - State Farm Style */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center gap-3 mb-6 sm:mb-8"
+        >
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#E31837] rounded-xl flex items-center justify-center shadow-lg">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">InsureScope</h1>
-        </div>
+          <div className="flex flex-col">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">InsureScope</h1>
+            <span className="text-xs text-[#E31837] font-medium tracking-wider uppercase">By State Farm</span>
+          </div>
+        </motion.div>
 
         {/* Step Indicator */}
-        <StepIndicator />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <StepIndicator />
+        </motion.div>
 
         {/* Step Content */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          {currentStep === 1 && <PolicySelectionStep />}
-          {currentStep === 2 && <CameraInstructionStep />}
+        <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6">
+          <AnimatePresence mode="wait">
+            {currentStep === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <PolicySelectionStep />
+              </motion.div>
+            )}
+            {currentStep === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <CameraInstructionStep />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Skip Option (only on step 1) */}
-        {currentStep === 1 && (
-          <p className="text-center mt-6 text-sm text-gray-500">
-            Already have an account?{' '}
-            <button 
-              onClick={() => {
-                setSelectedPolicy('renters')
-                setPolicyType('renters')
-                completeOnboarding()
-                if (onComplete) onComplete()
-              }}
-              className="text-blue-600 hover:text-blue-700 underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
-            >
-              Skip to main view
-            </button>
-          </p>
-        )}
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500"
+        >
+          Already have an account?{' '}
+          <button 
+            onClick={() => {
+              setSelectedPolicy('renters')
+              setPolicyType('renters')
+              completeOnboarding()
+              if (onComplete) onComplete()
+            }}
+            className="text-[#E31837] hover:text-[#B8122C] underline focus:outline-none focus:ring-2 focus:ring-[#E31837] rounded px-1"
+          >
+            Skip to main view
+          </button>
+        </motion.p>
       </div>
     </div>
   )

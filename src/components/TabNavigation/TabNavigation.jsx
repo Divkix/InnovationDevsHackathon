@@ -1,14 +1,16 @@
 import { Camera, LayoutDashboard } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 /**
  * TabNavigation component - Responsive tab navigation for Camera and Dashboard views
  * 
  * Features:
  * - Two tabs: Camera and Dashboard
- * - Active tab is visually indicated with distinct styling
+ * - Active tab is visually indicated with State Farm red accent
  * - Responsive layout: bottom tabs on mobile, top tabs on desktop
  * - Uses Tailwind's responsive prefixes (md: for desktop breakpoint)
  * - Accessible: keyboard navigable with proper ARIA attributes
+ * - Animations: smooth transitions between tabs
  * 
  * @param {Object} props
  * @param {string} props.activeTab - Currently active tab ('camera' | 'dashboard')
@@ -82,8 +84,9 @@ export function TabNavigation({ activeTab, onTabChange, className = '' }) {
             const isActive = activeTab === tab.id
 
             return (
-              <button
+              <motion.button
                 key={tab.id}
+                whileTap={{ scale: 0.95 }}
                 role="tab"
                 aria-selected={isActive}
                 aria-label={tab.ariaLabel}
@@ -106,14 +109,14 @@ export function TabNavigation({ activeTab, onTabChange, className = '' }) {
                   font-medium
                   transition-all duration-200
                   
-                  /* Active vs inactive states */
+                  /* Active vs inactive states - State Farm red for active */
                   ${isActive
-                    ? 'bg-blue-100 text-blue-700 md:bg-blue-100 md:text-blue-700'
+                    ? 'bg-red-50 text-[#E31837] md:bg-red-50 md:text-[#E31837]'
                     : 'text-gray-600 hover:bg-gray-100'
                   }
                   
                   /* Focus visible for accessibility */
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E31837] focus-visible:ring-offset-2
                 `}
               >
                 <Icon
@@ -121,7 +124,7 @@ export function TabNavigation({ activeTab, onTabChange, className = '' }) {
                     /* Mobile: Larger icon for touch interface */
                     w-6 h-6
                     md:w-4 md:h-4
-                    ${isActive ? 'text-blue-600' : 'text-gray-500'}
+                    ${isActive ? 'text-[#E31837]' : 'text-gray-500'}
                   `}
                   aria-hidden="true"
                 />
@@ -133,7 +136,16 @@ export function TabNavigation({ activeTab, onTabChange, className = '' }) {
                 `}>
                   {tab.label}
                 </span>
-              </button>
+                
+                {/* Active indicator bar for mobile */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabIndicator"
+                    className="absolute -bottom-[2px] w-8 h-1 bg-[#E31837] rounded-full md:hidden"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </motion.button>
             )
           })}
         </div>

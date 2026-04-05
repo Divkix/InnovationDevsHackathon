@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAppContext } from './context/AppContext.jsx'
+import { useGemini } from './hooks/useGemini.js'
 import { Dashboard } from './components/Dashboard/Dashboard.jsx'
 import { PolicySelector } from './components/PolicySelector/PolicySelector.jsx'
 import { CameraView } from './components/CameraView/CameraView.jsx'
@@ -7,7 +9,7 @@ import { TabNavigation } from './components/TabNavigation/TabNavigation.jsx'
 import { DetailModal } from './components/DetailModal/DetailModal.jsx'
 import { OnboardingFlow } from './components/OnboardingFlow/OnboardingFlow.jsx'
 import { AddItemForm, ManualItemsList } from './components/AddItemForm/AddItemForm.jsx'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, MessageCircle, Shield } from 'lucide-react'
 
 function App() {
   const { 
@@ -17,10 +19,16 @@ function App() {
     detectedItems,
     selectedItemId,
     onboardingComplete,
+    manualModeEnabled,
     removeManualItem,
     setActiveTab,
     setSelectedItem,
+    enableManualMode,
+    disableManualMode,
   } = useAppContext()
+
+  // Gemini hook for AI assistance
+  const gemini = useGemini()
 
   // Handle camera errors (shown in error state)
   const [, setCameraError] = useState(null)
@@ -31,9 +39,13 @@ function App() {
 
   // Handle manual mode fallback
   const handleManualMode = () => {
-    // When camera is unavailable, switch to dashboard
-    // User can add items manually
-    setActiveTab('dashboard')
+    // When camera is unavailable, enable manual mode
+    enableManualMode()
+  }
+
+  // Handle enabling camera from manual mode
+  const handleEnableCamera = () => {
+    disableManualMode()
   }
 
   // Find selected item from detected or manual items
@@ -90,103 +102,177 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header with Policy Selector */}
-      <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">IS</span>
+    <div className="min-h-screen bg-[#F7F7F7] flex flex-col overflow-x-hidden">
+      {/* Manual Mode Banner */}
+      <AnimatePresence>
+        {manualModeEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-gray-800 text-white px-4 py-2 text-center text-sm"
+          >
+            <span className="font-medium">Manual Mode Active</span> — Camera is disabled. 
+            <button 
+              onClick={handleEnableCamera}
+              className="ml-2 underline hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded px-1"
+            >
+              Enable Camera
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header with State Farm Branding */}
+      <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-4 py-3 sticky top-0 z-40 safe-top">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          {/* Logo - State Farm Style */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#E31837] rounded-lg flex items-center justify-center shadow-md">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">InsureScope</h1>
+            <div className="flex flex-col items-start">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">InsureScope</h1>
+              <span className="text-[10px] sm:text-xs text-[#E31837] font-medium tracking-wider uppercase hidden sm:block">By State Farm</span>
+            </div>
           </div>
           
-          {/* Policy Selector in Header */}
-          <PolicySelector 
-            variant="compact" 
-            detectedItems={Array.from(detectedItems?.values() || [])}
-            manualItems={manualItems}
-          />
+          {/* Right side: Gemini button + Policy Selector */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Gemini Ask Button - Only show when API key is set */}
+            <AnimatePresence>
+              {gemini && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  aria-label="Ask about coverage"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="hidden md:inline">Ask about coverage</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
+            
+            {/* Policy Selector in Header */}
+            <PolicySelector 
+              variant="compact" 
+              detectedItems={Array.from(detectedItems?.values() || [])}
+              manualItems={manualItems}
+            />
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden">
-        {/* Camera Tab Content */}
-        {activeTab === 'camera' && (
-          <div className="h-full p-4 pb-24 md:pb-4">
-            <div className="max-w-4xl mx-auto h-full relative">
-              {/* Add Item Button - Camera View */}
-              <button
-                onClick={handleOpenAddItem}
-                className="absolute top-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 text-gray-700 font-medium hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Add manual item"
-              >
-                <Plus className="w-4 h-4" />
-                Add Item
-              </button>
-              
-              <CameraView 
-                onError={setCameraError}
-                onManualMode={handleManualMode}
-                onItemClick={(item) => setSelectedItem(item.id)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Dashboard Tab Content */}
-        {activeTab === 'dashboard' && (
-          <div className="h-full overflow-y-auto p-4 pb-24 md:pb-4">
-            <div className="max-w-4xl mx-auto space-y-4">
-              {/* Add Item Button - Dashboard View */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  Your Items
-                </h2>
-                <button
+      <main className="flex-1 overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          {/* Camera Tab Content */}
+          {activeTab === 'camera' && (
+            <motion.div
+              key="camera-tab"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full p-3 sm:p-4 pb-24 md:pb-4"
+            >
+              <div className="max-w-5xl xl:max-w-6xl mx-auto h-full relative camera-container">
+                {/* Add Item Button - Camera View */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleOpenAddItem}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 text-gray-700 font-medium hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-[#E31837] text-sm sm:text-base"
                   aria-label="Add manual item"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Item
-                </button>
+                  <span className="hidden sm:inline">Add Item</span>
+                </motion.button>
+                
+                <CameraView 
+                  onError={setCameraError}
+                  onManualMode={handleManualMode}
+                  onItemClick={(item) => setSelectedItem(item.id)}
+                />
               </div>
+            </motion.div>
+          )}
 
-              <Dashboard 
-                detectedItems={Array.from(detectedItems?.values() || [])}
-                manualItems={manualItems}
-                policyType={policyType}
-                onItemClick={(item) => setSelectedItem(item.id)}
-              />
-              
-              {/* Manual Items Section */}
-              {manualItems.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                      <Package className="w-4 h-4 text-blue-600" />
-                      Manual Items
-                      <span className="text-sm font-normal text-gray-500 ml-1">
-                        ({manualItems.length} item{manualItems.length !== 1 ? 's' : ''})
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="p-4">
-                    <ManualItemsList 
-                      items={manualItems}
-                      onEdit={handleEditItem}
-                      onRemove={handleRemoveItem}
-                      onItemClick={(item) => setSelectedItem(item.id)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          {/* Dashboard Tab Content */}
+          {activeTab === 'dashboard' && (
+            <motion.div
+              key="dashboard-tab"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full overflow-y-auto p-3 sm:p-4 pb-24 md:pb-4"
+            >
+              <div className="max-w-5xl xl:max-w-6xl mx-auto space-y-4">
+                {/* Add Item Button - Dashboard View */}
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-between flex-wrap gap-2"
+                >
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-[#E31837]" />
+                    Your Items
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleOpenAddItem}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#E31837] text-white rounded-lg font-medium hover:bg-[#B8122C] transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2 text-sm sm:text-base"
+                    aria-label="Add manual item"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Item
+                  </motion.button>
+                </motion.div>
+
+                <Dashboard 
+                  detectedItems={Array.from(detectedItems?.values() || [])}
+                  manualItems={manualItems}
+                  policyType={policyType}
+                  onItemClick={(item) => setSelectedItem(item.id)}
+                />
+                
+                {/* Manual Items Section */}
+                <AnimatePresence>
+                  {manualItems.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                    >
+                      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
+                          <Package className="w-4 h-4 text-[#E31837]" />
+                          Manual Items
+                          <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">
+                            ({manualItems.length} item{manualItems.length !== 1 ? 's' : ''})
+                          </span>
+                        </h3>
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        <ManualItemsList 
+                          items={manualItems}
+                          onEdit={handleEditItem}
+                          onRemove={handleRemoveItem}
+                          onItemClick={(item) => setSelectedItem(item.id)}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Tab Navigation - Responsive: bottom on mobile, top content area on desktop */}
