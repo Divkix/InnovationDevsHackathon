@@ -24,7 +24,8 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
             </div>
           </div>
           <p className="text-swiss-fg/50 text-sm max-w-xs mx-auto">
-            Add items via camera or manually, then run the disaster simulator to receive personalized recommendations.
+            Add items via camera or manually, then run the disaster simulator to receive
+            personalized recommendations.
           </p>
         </motion.div>
       )}
@@ -50,9 +51,7 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
                   <h4 className="font-black text-swiss-fg uppercase tracking-wide text-sm leading-snug">
                     {rec.title}
                   </h4>
-                  <p className="text-sm text-swiss-fg/70 mt-1 leading-relaxed">
-                    {rec.description}
-                  </p>
+                  <p className="text-sm text-swiss-fg/70 mt-1 leading-relaxed">{rec.description}</p>
                 </div>
 
                 <span

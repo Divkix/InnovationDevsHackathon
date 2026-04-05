@@ -25,21 +25,57 @@ interface GradeConfig {
 
 function computeGrade(coverageGapPercentage: number, policyType: PolicyType): GradeConfig {
   if (policyType === "none") {
-    return { grade: "F", label: "No Insurance", gradeTextClass: "text-swiss-bg", bgClass: "bg-swiss-accent", description: "Zero protection — all assets exposed" };
+    return {
+      grade: "F",
+      label: "No Insurance",
+      gradeTextClass: "text-swiss-bg",
+      bgClass: "bg-swiss-accent",
+      description: "Zero protection — all assets exposed",
+    };
   }
   if (coverageGapPercentage > 75) {
-    return { grade: "F", label: "Critical Gap", gradeTextClass: "text-swiss-bg", bgClass: "bg-swiss-accent", description: "Majority of assets unprotected" };
+    return {
+      grade: "F",
+      label: "Critical Gap",
+      gradeTextClass: "text-swiss-bg",
+      bgClass: "bg-swiss-accent",
+      description: "Majority of assets unprotected",
+    };
   }
   if (coverageGapPercentage > 50) {
-    return { grade: "D", label: "Severe Gap", gradeTextClass: "text-swiss-bg", bgClass: "bg-swiss-fg", description: "More than half your assets exposed" };
+    return {
+      grade: "D",
+      label: "Severe Gap",
+      gradeTextClass: "text-swiss-bg",
+      bgClass: "bg-swiss-fg",
+      description: "More than half your assets exposed",
+    };
   }
   if (coverageGapPercentage > 25) {
-    return { grade: "C", label: "Moderate Gap", gradeTextClass: "text-swiss-fg", bgClass: "bg-swiss-muted", description: "Significant coverage gaps remain" };
+    return {
+      grade: "C",
+      label: "Moderate Gap",
+      gradeTextClass: "text-swiss-fg",
+      bgClass: "bg-swiss-muted",
+      description: "Significant coverage gaps remain",
+    };
   }
   if (coverageGapPercentage > 10) {
-    return { grade: "B", label: "Minor Gap", gradeTextClass: "text-swiss-fg", bgClass: "bg-swiss-muted", description: "Most assets protected" };
+    return {
+      grade: "B",
+      label: "Minor Gap",
+      gradeTextClass: "text-swiss-fg",
+      bgClass: "bg-swiss-muted",
+      description: "Most assets protected",
+    };
   }
-  return { grade: "A", label: "Well Protected", gradeTextClass: "text-swiss-fg", bgClass: "bg-swiss", description: "Excellent coverage ratio" };
+  return {
+    grade: "A",
+    label: "Well Protected",
+    gradeTextClass: "text-swiss-fg",
+    bgClass: "bg-swiss",
+    description: "Excellent coverage ratio",
+  };
 }
 
 function computeTopGaps(items: ItemBreakdown[]): ItemBreakdown[] {
@@ -52,7 +88,8 @@ function computeTopGaps(items: ItemBreakdown[]): ItemBreakdown[] {
 function resolveActions(topActions: string[] | undefined, topGaps: ItemBreakdown[]): string[] {
   if (topActions && topActions.length > 0) return topActions.slice(0, 3);
   return topGaps.map(
-    (item) => `Review coverage for ${item.category} (${formatCurrency(item.estimatedValue)} at risk)`
+    (item) =>
+      `Review coverage for ${item.category} (${formatCurrency(item.estimatedValue)} at risk)`,
   );
 }
 
@@ -68,16 +105,16 @@ export function ReportCard({
   const topGaps = computeTopGaps(items);
   const resolvedActions = resolveActions(topActions, topGaps);
   const unprotectedValue = totalValue - protectedValue;
-  const protectedPercent = totalValue > 0 ? ((protectedValue / totalValue) * 100) : 0;
+  const protectedPercent = totalValue > 0 ? (protectedValue / totalValue) * 100 : 0;
 
   return (
     <div className="border-2 border-swiss-fg bg-swiss w-full">
-
       {/* GRADE HEADER */}
       <div className="border-b-2 border-swiss-fg flex flex-col sm:flex-row">
-
         {/* LEFT: Giant grade box */}
-        <div className={`flex items-center justify-center w-full sm:w-36 shrink-0 py-8 sm:py-0 border-b-2 sm:border-b-0 sm:border-r-2 border-swiss-fg ${gradeConfig.bgClass}`}>
+        <div
+          className={`flex items-center justify-center w-full sm:w-36 shrink-0 py-8 sm:py-0 border-b-2 sm:border-b-0 sm:border-r-2 border-swiss-fg ${gradeConfig.bgClass}`}
+        >
           <motion.span
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -91,7 +128,6 @@ export function ReportCard({
 
         {/* RIGHT: Grade details + coverage bar */}
         <div className="flex-1 p-6 space-y-4">
-
           {/* Grade label + policy */}
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -101,7 +137,9 @@ export function ReportCard({
               <p className="text-sm text-swiss-fg/60 mt-0.5">{gradeConfig.description}</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">Policy</p>
+              <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">
+                Policy
+              </p>
               <p className="font-bold text-swiss-fg capitalize">
                 {policyType === "none" ? "No Insurance" : `${policyType}'s`}
               </p>
@@ -123,39 +161,43 @@ export function ReportCard({
               />
             </div>
           </div>
-
         </div>
       </div>
 
       {/* SUMMARY STATS */}
       <div className="grid grid-cols-3 border-b-2 border-swiss-fg">
-
         {/* Total Assets */}
         <div className="p-4 border-r-2 border-swiss-fg">
-          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">Total Assets</p>
+          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">
+            Total Assets
+          </p>
           <p className="text-lg font-black text-swiss-fg">{formatCurrency(totalValue)}</p>
         </div>
 
         {/* Protected */}
         <div className="p-4 border-r-2 border-swiss-fg">
-          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">Protected</p>
+          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">
+            Protected
+          </p>
           <p className="text-lg font-black text-swiss-fg">{formatCurrency(protectedValue)}</p>
         </div>
 
         {/* Exposed */}
         <div className="p-4">
-          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">Exposed</p>
-          <p className={`text-lg font-black ${unprotectedValue > 0 ? "text-swiss-accent" : "text-swiss-fg"}`}>
+          <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50 mb-1">
+            Exposed
+          </p>
+          <p
+            className={`text-lg font-black ${unprotectedValue > 0 ? "text-swiss-accent" : "text-swiss-fg"}`}
+          >
             {formatCurrency(unprotectedValue)}
           </p>
         </div>
-
       </div>
 
       {/* TOP GAPS SECTION */}
       {topGaps.length > 0 && (
         <div className="border-b-2 border-swiss-fg">
-
           {/* Section header */}
           <div className="px-5 py-3 bg-swiss-muted border-b border-swiss-fg/20">
             <h4 className="text-xs uppercase tracking-widest font-black text-swiss-fg flex items-center gap-2">
@@ -169,16 +211,20 @@ export function ReportCard({
             <div
               key={item.id}
               className="flex items-center justify-between px-5 py-3 border-b border-swiss-fg/10 last:border-0 border-l-4"
-              style={{ borderLeftColor: item.status === "not_covered" ? "#FF3000" : "rgba(0,0,0,0.3)" }}
+              style={{
+                borderLeftColor: item.status === "not_covered" ? "#FF3000" : "rgba(0,0,0,0.3)",
+              }}
             >
               {/* Left */}
               <div className="flex items-center gap-3">
                 <span className="text-xs font-black text-swiss-fg/30">{`0${index + 1}`}</span>
                 <div>
                   <p className="font-bold text-swiss-fg text-sm capitalize">{item.category}</p>
-                  <span className={`text-xs uppercase tracking-wider font-bold ${
-                    item.status === "not_covered" ? "text-swiss-accent" : "text-swiss-fg/60"
-                  }`}>
+                  <span
+                    className={`text-xs uppercase tracking-wider font-bold ${
+                      item.status === "not_covered" ? "text-swiss-accent" : "text-swiss-fg/60"
+                    }`}
+                  >
                     {item.status === "not_covered" ? "Not Covered" : "Conditional"}
                   </span>
                 </div>
@@ -188,14 +234,12 @@ export function ReportCard({
               <p className="font-black text-swiss-fg">{formatCurrency(item.estimatedValue)}</p>
             </div>
           ))}
-
         </div>
       )}
 
       {/* TOP ACTIONS SECTION */}
       {resolvedActions.length > 0 && (
         <div>
-
           {/* Section header */}
           <div className="px-5 py-4 bg-swiss-fg text-swiss-bg">
             <h4 className="text-xs uppercase tracking-widest font-black flex items-center gap-2">
@@ -207,7 +251,7 @@ export function ReportCard({
           {/* Action rows */}
           {resolvedActions.map((action, index) => (
             <div
-              key={index}
+              key={action}
               className="flex items-start gap-3 px-5 py-4 border-b border-swiss-fg/10 last:border-0 hover:bg-swiss-muted transition-colors duration-150"
             >
               <span className="shrink-0 inline-flex items-center justify-center w-6 h-6 bg-swiss-accent text-swiss-bg font-black text-xs">
@@ -216,7 +260,6 @@ export function ReportCard({
               <p className="text-sm text-swiss-fg">{action}</p>
             </div>
           ))}
-
         </div>
       )}
 
@@ -229,7 +272,6 @@ export function ReportCard({
           </p>
         </div>
       )}
-
     </div>
   );
 }

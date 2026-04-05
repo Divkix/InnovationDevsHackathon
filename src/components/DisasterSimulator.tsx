@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Droplets, Flame, Package, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Droplets, Flame, Package, Zap } from "lucide-react";
 import type { ReactElement } from "react";
 import type { DisasterSimulationResult, DisasterType } from "@/types";
 import { formatCurrency } from "@/utils/valueCalculator";
@@ -112,12 +112,8 @@ export function DisasterSimulator({
             className="p-6 space-y-3"
           >
             <div className="flex items-center gap-3">
-              {SelectedIcon && (
-                <SelectedIcon className="w-5 h-5 text-swiss-fg" />
-              )}
-              <p className="text-sm text-swiss-fg/70">
-                {selectedConfig?.description}
-              </p>
+              {SelectedIcon && <SelectedIcon className="w-5 h-5 text-swiss-fg" />}
+              <p className="text-sm text-swiss-fg/70">{selectedConfig?.description}</p>
             </div>
             <p className="text-swiss-fg/40 italic text-sm">
               Simulation will run once items are detected...
@@ -154,8 +150,7 @@ export function DisasterSimulator({
             </div>
 
             {/* SAVINGS ROW */}
-            {result.recommendedPolicyOutOfPocket <
-              result.currentPolicyOutOfPocket && (
+            {result.recommendedPolicyOutOfPocket < result.currentPolicyOutOfPocket && (
               <div className="flex items-center justify-between p-4 border-2 border-swiss-fg bg-swiss-muted">
                 <div>
                   <p className="text-xs uppercase tracking-widest font-bold text-swiss-fg/50">
@@ -171,8 +166,7 @@ export function DisasterSimulator({
                   </p>
                   <p className="text-xl font-black text-swiss-fg">
                     {formatCurrency(
-                      result.currentPolicyOutOfPocket -
-                        result.recommendedPolicyOutOfPocket
+                      result.currentPolicyOutOfPocket - result.recommendedPolicyOutOfPocket,
                     )}
                   </p>
                 </div>

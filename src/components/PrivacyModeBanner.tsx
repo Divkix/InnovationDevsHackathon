@@ -50,20 +50,14 @@ export function PrivacyModeBanner({
             className="border-2 border-swiss-bg p-2 flex items-center justify-center"
             aria-hidden="true"
           >
-            {enabled ? (
-              <Lock className="w-5 h-5" />
-            ) : (
-              <Shield className="w-5 h-5" />
-            )}
+            {enabled ? <Lock className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
           </div>
           <div>
             <h3 className="font-black uppercase tracking-widest text-base">
               Zero Documentation Mode
             </h3>
             <p className="text-xs text-swiss-bg/80 uppercase tracking-wider mt-0.5">
-              {enabled
-                ? "Active \u2014 local processing only"
-                : "Your data stays on this device"}
+              {enabled ? "Active \u2014 local processing only" : "Your data stays on this device"}
             </p>
           </div>
         </div>
@@ -122,9 +116,7 @@ export function PrivacyModeBanner({
                       <p className="text-xs font-black uppercase tracking-wider text-swiss-fg">
                         {title}
                       </p>
-                      <p className="text-xs text-swiss-fg/60 mt-0.5">
-                        {description}
-                      </p>
+                      <p className="text-xs text-swiss-fg/60 mt-0.5">{description}</p>
                     </div>
                   </div>
                 ))}
