@@ -7,7 +7,7 @@ import tsEslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', '.venv', 'public/wasm', '*.config.js', '*.config.ts']),
+  globalIgnores(['dist', '.venv', 'public/wasm', '*.config.js']),
   // JavaScript and TypeScript files (non-test)
   {
     files: ['**/*.{ts,tsx}'],
@@ -75,4 +75,23 @@ export default defineConfig([
       'no-unused-vars': 'off',
     },
   },
-] satisfies Linter.Config[])
+  // Tooling config files
+  {
+    files: ['*.config.ts'],
+    extends: [js.configs.recommended, ...tsEslint.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2024,
+      globals: globals.node,
+      parser: tsEslint.parser,
+      parserOptions: {
+        ecmaVersion: 2024,
+        sourceType: 'module',
+        project: './tsconfig.tooling.json',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+      'no-unused-vars': 'off',
+    },
+  },
+] as Linter.Config[])
