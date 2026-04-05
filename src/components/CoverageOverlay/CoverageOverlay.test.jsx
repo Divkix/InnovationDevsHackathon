@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import { CoverageOverlay } from './CoverageOverlay'
 import { lookupCoverage } from '@/utils/coverageLookup.js'
@@ -9,12 +9,36 @@ vi.mock('@/utils/coverageLookup.js', () => ({
 }))
 
 describe('CoverageOverlay', () => {
-  const mockVideoRef = { current: null }
+  const mockVideoRef = { current: { readyState: 2, videoWidth: 640, videoHeight: 480, width: 640, height: 480 } }
   let mockCanvasContext
   let mockCanvasElement
+  
+  // Mock requestAnimationFrame
+  let rafCallbacks = []
+  let rafId = 0
+  const mockRequestAnimationFrame = vi.fn((callback) => {
+    rafCallbacks.push(callback)
+    return ++rafId
+  })
+  const mockCancelAnimationFrame = vi.fn((id) => {
+    rafCallbacks = rafCallbacks.filter((_, index) => index !== id - 1)
+  })
+  
+  // Helper to flush animation frames
+  const flushAnimationFrames = () => {
+    const callbacks = [...rafCallbacks]
+    rafCallbacks = []
+    callbacks.forEach(cb => cb(performance.now()))
+  }
 
   beforeEach(() => {
     vi.clearAllMocks()
+    
+    // Reset RAF mocks
+    rafCallbacks = []
+    rafId = 0
+    global.requestAnimationFrame = mockRequestAnimationFrame
+    global.cancelAnimationFrame = mockCancelAnimationFrame
     
     // Setup mock canvas context
     mockCanvasContext = {
@@ -31,7 +55,12 @@ describe('CoverageOverlay', () => {
       save: vi.fn(),
       restore: vi.fn(),
       scale: vi.fn(),
-      setTransform: vi.fn()
+      setTransform: vi.fn(),
+      canvas: null,
+      // Additional methods needed for drawRoundedRect
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      quadraticCurveTo: vi.fn()
     }
 
     // Setup mock canvas element
@@ -41,10 +70,35 @@ describe('CoverageOverlay', () => {
       height: 480,
       style: {}
     }
+    
+    // Set up canvas context reference
+    mockCanvasContext.canvas = mockCanvasElement
+
+    // Mock HTMLCanvasElement.prototype.getContext
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockCanvasContext)
+    
+    // Mock HTMLCanvasElement properties
+    Object.defineProperty(HTMLCanvasElement.prototype, 'width', {
+      configurable: true,
+      get: () => mockCanvasElement.width,
+      set: (value) => { mockCanvasElement.width = value }
+    })
+    Object.defineProperty(HTMLCanvasElement.prototype, 'height', {
+      configurable: true,
+      get: () => mockCanvasElement.height,
+      set: (value) => { mockCanvasElement.height = value }
+    })
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
+  // Helper function to create a mock video element with proper properties
+  const createMockVideoElement = (width = 1280, height = 720) => ({
+    readyState: 2,
+    videoWidth: width,
+    videoHeight: height,
+    width,
+    height,
+    play: vi.fn(),
+    pause: vi.fn()
   })
 
   describe('color coding', () => {
@@ -139,13 +193,18 @@ describe('CoverageOverlay', () => {
         { categories: [{ categoryName: 'couch', score: 0.8 }], boundingBox: { originX: 100, originY: 300, width: 250, height: 150 } }
       ]
 
+      const mockVideoWithReady = { current: { ...createMockVideoElement(), readyState: 2 } }
+
       const { container } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoWithReady}
           detections={detections}
           policyType="none"
         />
       )
+
+      // Flush animation frames to trigger detection processing
+      flushAnimationFrames()
 
       const canvas = container.querySelector('canvas')
       expect(canvas).toBeInTheDocument()
@@ -247,13 +306,18 @@ describe('CoverageOverlay', () => {
         { categories: [{ categoryName: 'bicycle', score: 0.85 }], boundingBox: { originX: 100, originY: 350, width: 150, height: 100 } }
       ]
 
+      const mockVideoWithReady = { current: { ...createMockVideoElement(), readyState: 2 } }
+
       const { container } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoWithReady}
           detections={detections}
           policyType="renters"
         />
       )
+
+      // Flush animation frames to trigger detection processing
+      flushAnimationFrames()
 
       const canvas = container.querySelector('canvas')
       expect(canvas).toBeInTheDocument()
@@ -504,10 +568,11 @@ describe('CoverageOverlay', () => {
   describe('canvas sizing', () => {
     it('canvas has correct dimensions matching video', () => {
       const mockVideo = {
+        readyState: 2,
         videoWidth: 1280,
         videoHeight: 720
       }
-      mockVideoRef.current = mockVideo
+      const mockVideoRefWithReady = { current: mockVideo }
 
       lookupCoverage.mockReturnValue({
         status: 'covered',
@@ -523,11 +588,14 @@ describe('CoverageOverlay', () => {
 
       const { container } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoRefWithReady}
           detections={detections}
           policyType="renters"
         />
       )
+
+      // Flush animation frames to trigger canvas sizing update
+      flushAnimationFrames()
 
       const canvas = container.querySelector('canvas')
       expect(canvas).toBeInTheDocument()
@@ -538,10 +606,11 @@ describe('CoverageOverlay', () => {
 
     it('updates canvas size when video dimensions change', () => {
       const mockVideo = {
+        readyState: 2,
         videoWidth: 640,
         videoHeight: 480
       }
-      mockVideoRef.current = mockVideo
+      const mockVideoRefWithReady = { current: mockVideo }
 
       lookupCoverage.mockReturnValue({
         status: 'covered',
@@ -557,29 +626,37 @@ describe('CoverageOverlay', () => {
 
       const { container, rerender } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoRefWithReady}
           detections={detections}
           policyType="renters"
         />
       )
+
+      // Flush animation frames for initial render
+      flushAnimationFrames()
 
       let canvas = container.querySelector('canvas')
       expect(canvas.width).toBe(640)
       expect(canvas.height).toBe(480)
 
       // Update video dimensions
-      mockVideoRef.current = {
+      const newMockVideo = {
+        readyState: 2,
         videoWidth: 1920,
         videoHeight: 1080
       }
+      const newMockVideoRef = { current: newMockVideo }
 
       rerender(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={newMockVideoRef}
           detections={detections}
           policyType="renters"
         />
       )
+
+      // Flush animation frames for rerender
+      flushAnimationFrames()
 
       canvas = container.querySelector('canvas')
       expect(canvas.width).toBe(1920)
@@ -608,22 +685,30 @@ describe('CoverageOverlay', () => {
         boundingBox: { originX: 100, originY: 100, width: 200, height: 150 }
       }]
 
+      const mockVideoWithReady = { current: { ...createMockVideoElement(), readyState: 2 } }
+
       const { container, rerender } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoWithReady}
           detections={detections}
           policyType="renters"
         />
       )
 
+      // Flush animation frames for initial render
+      flushAnimationFrames()
+
       // Change policy type
       rerender(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoWithReady}
           detections={detections}
           policyType="auto"
         />
       )
+
+      // Flush animation frames for rerender
+      flushAnimationFrames()
 
       const canvas = container.querySelector('canvas')
       expect(canvas).toBeInTheDocument()
@@ -697,14 +782,19 @@ describe('CoverageOverlay', () => {
         { categories: [{ categoryName: 'tv', score: 0.3 }], boundingBox: { originX: 400, originY: 100, width: 180, height: 120 } }
       ]
 
+      const mockVideoWithReady = { current: { ...createMockVideoElement(), readyState: 2 } }
+
       const { container } = render(
         <CoverageOverlay
-          videoRef={mockVideoRef}
+          videoRef={mockVideoWithReady}
           detections={detections}
           policyType="renters"
           confidenceThreshold={0.5}
         />
       )
+
+      // Flush animation frames to trigger detection processing
+      flushAnimationFrames()
 
       const canvas = container.querySelector('canvas')
       expect(canvas).toBeInTheDocument()

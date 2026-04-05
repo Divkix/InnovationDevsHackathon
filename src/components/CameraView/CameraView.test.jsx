@@ -320,7 +320,7 @@ describe('CameraView', () => {
       render(<CameraView />)
       
       await waitFor(() => {
-        const canvas = screen.getByTestId('detection-canvas')
+        const canvas = screen.getByTestId('coverage-overlay')
         expect(canvas).toBeInTheDocument()
       })
     })
@@ -329,7 +329,7 @@ describe('CameraView', () => {
       render(<CameraView />)
       
       await waitFor(() => {
-        const canvas = screen.getByTestId('detection-canvas')
+        const canvas = screen.getByTestId('coverage-overlay')
         expect(canvas).toHaveClass('absolute')
       })
     })
