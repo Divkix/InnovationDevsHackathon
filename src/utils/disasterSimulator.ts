@@ -114,8 +114,7 @@ function buildInsight(
     currentPolicyOutOfPocket <= 0
       ? 0
       : Math.round(
-          ((currentPolicyOutOfPocket - recommendedPolicyOutOfPocket) /
-            currentPolicyOutOfPocket) *
+          ((currentPolicyOutOfPocket - recommendedPolicyOutOfPocket) / currentPolicyOutOfPocket) *
             100,
         );
 
@@ -181,10 +180,6 @@ export function simulateDisaster({
     recommendedPolicyOutOfPocket,
     uncoveredItems,
     impactedItems,
-    insight: buildInsight(
-      disasterType,
-      currentPolicyOutOfPocket,
-      recommendedPolicyOutOfPocket,
-    ),
+    insight: buildInsight(disasterType, currentPolicyOutOfPocket, recommendedPolicyOutOfPocket),
   };
 }

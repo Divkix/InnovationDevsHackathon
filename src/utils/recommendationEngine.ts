@@ -19,6 +19,14 @@ interface RecommendationArgs {
   hazards?: HazardWarning[];
 }
 
+const SCHEDULED_VALUABLE_CATEGORIES = [
+  "jewelry",
+  "bicycle",
+  "furs",
+  "art_collectibles",
+  "musical_instruments",
+];
+
 function hasCategory(items: ItemBreakdown[], category: string): boolean {
   return items.some((item) => item.category.toLowerCase() === category);
 }
@@ -44,6 +52,11 @@ export function getCoverageRecommendations({
   const seen = new Set<string>();
   const uncoveredItems = breakdown.filter((item) => item.status !== "covered");
   const uncoveredValue = uncoveredItems.reduce((sum, item) => sum + item.estimatedValue, 0);
+  const hasScheduledValuablesExposure =
+    uncoveredItems.some((item) =>
+      SCHEDULED_VALUABLE_CATEGORIES.includes(item.category.toLowerCase()),
+    ) ||
+    manualItems.some((item) => SCHEDULED_VALUABLE_CATEGORIES.includes(item.category.toLowerCase()));
 
   const pushRecommendation = (recommendation: CoverageRecommendation): void => {
     if (seen.has(recommendation.id)) return;
@@ -87,13 +100,7 @@ export function getCoverageRecommendations({
     });
   }
 
-  if (
-    uncoveredItems.some((item) =>
-      ["jewelry", "bicycle", "furs", "art_collectibles", "musical_instruments"].includes(
-        item.category.toLowerCase(),
-      ),
-    )
-  ) {
+  if (hasScheduledValuablesExposure) {
     pushRecommendation({
       id: "coverage-schedule-valuables",
       title: "Schedule high-value valuables separately",

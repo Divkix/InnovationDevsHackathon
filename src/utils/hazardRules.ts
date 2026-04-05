@@ -1,4 +1,4 @@
-import type { BoundingBox, Detection, DetectedItem } from "@/types";
+import type { BoundingBox, DetectedItem, Detection } from "@/types";
 
 type HazardSeverity = "low" | "medium" | "high";
 
@@ -39,7 +39,9 @@ function getCategory(subject: HazardSubject | Detection | DetectedItem): string 
   return "unknown";
 }
 
-function getBoundingBox(subject: HazardSubject | Detection | DetectedItem): BoundingBox | undefined {
+function getBoundingBox(
+  subject: HazardSubject | Detection | DetectedItem,
+): BoundingBox | undefined {
   if ("boundingBox" in subject) {
     return subject.boundingBox;
   }
@@ -70,7 +72,10 @@ function findByCategory(
   return items.filter((item) => getCategory(item) === normalized);
 }
 
-function hasCategory(items: Array<HazardSubject | Detection | DetectedItem>, category: string): boolean {
+function hasCategory(
+  items: Array<HazardSubject | Detection | DetectedItem>,
+  category: string,
+): boolean {
   return findByCategory(items, category).length > 0;
 }
 
@@ -125,7 +130,8 @@ export function getHazardWarnings(
       severity: "medium",
       message:
         "Kitchen appliances are present, but no fire extinguisher is visible. This is a simple prevention upgrade with high value.",
-      relatedCategories: hasMicrowave && hasOven ? ["microwave", "oven"] : [hasMicrowave ? "microwave" : "oven"],
+      relatedCategories:
+        hasMicrowave && hasOven ? ["microwave", "oven"] : [hasMicrowave ? "microwave" : "oven"],
     });
   }
 

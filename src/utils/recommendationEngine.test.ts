@@ -39,28 +39,41 @@ function getRecommendations(policyType: PolicyType, manualItems: ManualItem[] = 
   });
 }
 
-describe("recommendationEngine", () => {
-  it("recommends getting insured when the current policy is none", () => {
-    const recommendations = getRecommendations("none");
-
-    expect(recommendations.some((recommendation) => recommendation.id === "coverage-get-insured")).toBe(true);
-  });
-
-  it("recommends auto coverage when a vehicle is uncovered", () => {
-    const recommendations = getRecommendations("renters");
-
-    expect(recommendations.some((recommendation) => recommendation.id === "coverage-add-auto")).toBe(true);
-  });
-
-  it("recommends scheduled coverage for valuables", () => {
-    const recommendations = getRecommendations("renters", [
+function getValuablesRecommendations() {
+  return getCoverageRecommendations({
+    detectedItems: [makeDetectedItem("laptop", "det-1")],
+    manualItems: [
       {
         id: "manual-1",
         name: "Grandma Ring",
         category: "jewelry",
         estimatedValue: 3200,
       },
-    ]);
+    ],
+    policyType: "renters",
+    hazards: [],
+  });
+}
+
+describe("recommendationEngine", () => {
+  it("recommends getting insured when the current policy is none", () => {
+    const recommendations = getRecommendations("none");
+
+    expect(
+      recommendations.some((recommendation) => recommendation.id === "coverage-get-insured"),
+    ).toBe(true);
+  });
+
+  it("recommends auto coverage when a vehicle is uncovered", () => {
+    const recommendations = getRecommendations("renters");
+
+    expect(
+      recommendations.some((recommendation) => recommendation.id === "coverage-add-auto"),
+    ).toBe(true);
+  });
+
+  it("recommends scheduled coverage for valuables", () => {
+    const recommendations = getValuablesRecommendations();
 
     expect(
       recommendations.some((recommendation) => recommendation.id === "coverage-schedule-valuables"),
@@ -71,7 +84,9 @@ describe("recommendationEngine", () => {
     const recommendations = getRecommendations("renters");
 
     expect(
-      recommendations.some((recommendation) => recommendation.id === "prevention-reduce-hazard-risk"),
+      recommendations.some(
+        (recommendation) => recommendation.id === "prevention-reduce-hazard-risk",
+      ),
     ).toBe(true);
   });
 });
