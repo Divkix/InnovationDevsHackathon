@@ -74,6 +74,31 @@ function formatCurrency(value) {
   }).format(value)
 }
 
+export function getObjectCoverLayout(videoWidth, videoHeight, containerWidth, containerHeight) {
+  if (!videoWidth || !videoHeight || !containerWidth || !containerHeight) {
+    return { scale: 1, offsetX: 0, offsetY: 0 }
+  }
+
+  const scale = Math.max(containerWidth / videoWidth, containerHeight / videoHeight)
+  const renderedWidth = videoWidth * scale
+  const renderedHeight = videoHeight * scale
+
+  return {
+    scale,
+    offsetX: (containerWidth - renderedWidth) / 2,
+    offsetY: (containerHeight - renderedHeight) / 2
+  }
+}
+
+export function projectBoundingBoxToCanvas(box, layout) {
+  return {
+    x: (box.originX || 0) * layout.scale + layout.offsetX,
+    y: (box.originY || 0) * layout.scale + layout.offsetY,
+    width: (box.width || 0) * layout.scale,
+    height: (box.height || 0) * layout.scale
+  }
+}
+
 /**
  * CoverageOverlay component - Canvas-based overlay for camera feed
  *
@@ -128,9 +153,10 @@ export function CoverageOverlay({
 
     if (!canvas || !video) return
 
-    // Use video's intrinsic dimensions for canvas
-    const width = video.videoWidth || video.width || 640
-    const height = video.videoHeight || video.height || 480
+    // Match the displayed overlay area so canvas coordinates align with
+    // the visible object-cover video frame.
+    const width = Math.round(canvas.clientWidth || video.clientWidth || video.videoWidth || video.width || 640)
+    const height = Math.round(canvas.clientHeight || video.clientHeight || video.videoHeight || video.height || 480)
 
     // Only update if dimensions changed
     if (canvas.width !== width || canvas.height !== height) {
@@ -264,7 +290,7 @@ export function CoverageOverlay({
   /**
    * Process detections and update tracked items
    */
-  const processDetections = useCallback(() => {
+  const processDetections = useCallback((layout) => {
     const now = Date.now()
     const currentIds = new Set()
 
@@ -287,12 +313,7 @@ export function CoverageOverlay({
       const category = detection.categories?.[0]?.categoryName || 'unknown'
       const box = detection.boundingBox || {}
 
-      const currentCoords = {
-        x: box.originX || 0,
-        y: box.originY || 0,
-        width: box.width || 100,
-        height: box.height || 100
-      }
+      const currentCoords = projectBoundingBoxToCanvas(box, layout)
 
       const existing = trackedItemsRef.current.get(id)
       const smoothedCoords = smoothCoordinates(currentCoords, existing?.coordinates)
@@ -339,8 +360,15 @@ export function CoverageOverlay({
     // If no video or video not ready, don't render detections
     if (!video || video.readyState < 2) return
 
+    const layout = getObjectCoverLayout(
+      video.videoWidth || video.width || canvas.width,
+      video.videoHeight || video.height || canvas.height,
+      canvas.width,
+      canvas.height
+    )
+
     // Process detections and get tracked items
-    const items = processDetections()
+    const items = processDetections(layout)
 
     // Draw each tracked item
     items.forEach(item => {

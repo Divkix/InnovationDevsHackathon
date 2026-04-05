@@ -20,7 +20,7 @@ export default defineConfig({
   },
   // ONNX Runtime Web optimizations
   optimizeDeps: {
-    include: ['onnxruntime-web'],
+    exclude: ['onnxruntime-web', 'onnxruntime-web/wasm'],
     esbuildOptions: {
       target: 'es2020'
     }
@@ -33,7 +33,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Separate ONNX into its own chunk for better caching
-          'onnx': ['onnxruntime-web']
+          'onnx': ['onnxruntime-web/wasm']
         }
       }
     }

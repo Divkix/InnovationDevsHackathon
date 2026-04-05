@@ -1,13 +1,26 @@
-import * as ort from "onnxruntime-web";
+import * as ort from "onnxruntime-web/wasm";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { COCO_CLASS_NAMES, processYOLOOutput } from "../utils/yoloProcessor.js";
 import { getMockDetections } from "./mockDetections.js";
 import { MOCK_STORAGE_KEY } from "./useMockDetection.js";
 
 // Model configuration
-const MODEL_PATH = "/models/yolo26n/yolo26n.onnx";
 const MODEL_INPUT_SIZE = 640;
 const CONFIDENCE_THRESHOLD = 0.5;
+
+function resolvePublicAssetUrl(assetPath) {
+	const normalizedPath = assetPath.replace(/^\//, "");
+	const basePath = import.meta.env.BASE_URL || "/";
+
+	if (typeof window === "undefined") {
+		return `${basePath}${normalizedPath}`;
+	}
+
+	return new URL(normalizedPath, new URL(basePath, window.location.origin)).href;
+}
+
+const MODEL_PATH = resolvePublicAssetUrl("models/yolo26n/yolo26n.onnx");
+const WASM_PATH = resolvePublicAssetUrl("ort-wasm-simd-threaded.wasm");
 
 /**
  * Check if mock mode is enabled via URL query parameter or localStorage
@@ -122,6 +135,7 @@ export function useYOLODetection() {
 		// Skip ONNX initialization in mock mode
 		if (isMockMode) return;
 
+		isMountedRef.current = true;
 		let isCancelled = false;
 
 		async function initializeModel() {
@@ -132,10 +146,10 @@ export function useYOLODetection() {
 				ort.env.wasm.numThreads = 1;
 				ort.env.wasm.simd = true;
 				
-				// Set WASM path (required for dev server)
+				// Point ORT at the public runtime binary so Vite does not resolve it into
+				// node_modules/.vite/deps, which returns HTML instead of WebAssembly.
 				ort.env.wasm.wasmPaths = {
-					'ort-wasm-simd-threaded.wasm': '/assets/ort-wasm-simd-threaded.wasm',
-					'ort-wasm-simd-threaded.jsep.wasm': '/assets/ort-wasm-simd-threaded.jsep.wasm'
+					wasm: WASM_PATH,
 				};
 				
 				console.log("[useYOLODetection] WASM paths configured");
@@ -273,25 +287,28 @@ export function useYOLODetection() {
 						throw new Error("No output tensor found");
 					}
 
-					// Convert to MediaPipe format
-					// ONNX output is [batch, num_detections, 6] same as YOLO
+					// Convert to MediaPipe format.
+					// This exported model returns [x1, y1, x2, y2, score, class_id]
+					// in 640x640 model space, so rescale back into the source video.
 					const outputData = outputTensor.data;
 					const dims = outputTensor.dims;
+					const scaleX = video.videoWidth / MODEL_INPUT_SIZE;
+					const scaleY = video.videoHeight / MODEL_INPUT_SIZE;
 
 					// Reshape output data into array of detections
 					const numDetections = dims[1]; // 300 for YOLO26
 					const detections = [];
 
-					for (let i = 0; i < numDetections; i++) {
-						const offset = i * 6;
-						const detection = [
-							outputData[offset], // x_center
-							outputData[offset + 1], // y_center
-							outputData[offset + 2], // width
-							outputData[offset + 3], // height
-							outputData[offset + 4], // confidence
-							outputData[offset + 5], // class_id
-						];
+						for (let i = 0; i < numDetections; i++) {
+							const offset = i * 6;
+							const detection = [
+								outputData[offset], // x1
+								outputData[offset + 1], // y1
+								outputData[offset + 2], // x2
+								outputData[offset + 3], // y2
+								outputData[offset + 4], // confidence
+								outputData[offset + 5], // class_id
+							];
 						detections.push(detection);
 					}
 
@@ -300,6 +317,12 @@ export function useYOLODetection() {
 						detections,
 						COCO_CLASS_NAMES,
 						CONFIDENCE_THRESHOLD,
+						{
+							scaleX,
+							scaleY,
+							imageWidth: video.videoWidth,
+							imageHeight: video.videoHeight,
+						},
 					);
 
 					return { detections: processedDetections };

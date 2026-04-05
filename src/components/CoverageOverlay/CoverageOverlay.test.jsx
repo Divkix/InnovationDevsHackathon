@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
-import { CoverageOverlay } from './CoverageOverlay'
+import { CoverageOverlay, getObjectCoverLayout, projectBoundingBoxToCanvas } from './CoverageOverlay'
 import { lookupCoverage } from '@/utils/coverageLookup.js'
 
 // Mock the coverage lookup module
@@ -19,6 +19,30 @@ describe('CoverageOverlay', () => {
   const mockRequestAnimationFrame = vi.fn((callback) => {
     rafCallbacks.push(callback)
     return ++rafId
+  })
+
+  describe('geometry helpers', () => {
+    it('computes object-cover offsets for cropped video', () => {
+      expect(getObjectCoverLayout(640, 480, 1280, 720)).toEqual({
+        scale: 2,
+        offsetX: 0,
+        offsetY: -120
+      })
+    })
+
+    it('projects video-space boxes into displayed canvas space', () => {
+      const layout = getObjectCoverLayout(640, 480, 1280, 720)
+
+      expect(projectBoundingBoxToCanvas(
+        { originX: 100, originY: 80, width: 50, height: 40 },
+        layout
+      )).toEqual({
+        x: 200,
+        y: 40,
+        width: 100,
+        height: 80
+      })
+    })
   })
   const mockCancelAnimationFrame = vi.fn((id) => {
     rafCallbacks = rafCallbacks.filter((_, index) => index !== id - 1)
