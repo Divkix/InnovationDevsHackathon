@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAppContext } from '../../context/AppContext.jsx'
 import { useObjectDetection } from '../../hooks/useObjectDetection.js'
+import { CoverageOverlay } from '../CoverageOverlay/CoverageOverlay.jsx'
 import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
 
 /**
@@ -8,13 +9,14 @@ import { Loader2, Camera, AlertCircle, RefreshCw, Hand } from 'lucide-react'
  * 
  * Features:
  * - Requests camera via getUserMedia with facingMode 'environment' (mobile) or 'user' (desktop)
- * - Displays video feed with canvas overlay for detection visualization
+ * - Displays video feed with CoverageOverlay for detection visualization
  * - Integrates useObjectDetection hook for object detection
  * - Shows loading spinner during model initialization
  * - Shows error states for camera permission denial, unsupported browser, or model loading failure
  * - Stops camera tracks on unmount
  * - Runs detection loop via requestAnimationFrame
  * - Displays current policy type indicator badge
+ * - Passes detections to CoverageOverlay for color-coded bounding box rendering
  * 
  * @param {Object} props
  * @param {Function} props.onError - Callback when an error occurs
@@ -27,13 +29,13 @@ export function CameraView({ onError, onManualMode }) {
   
   // Refs for video and canvas elements
   const videoRef = useRef(null)
-  const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const animationFrameRef = useRef(null)
   
-  // State for camera and errors
+  // State for camera, errors, and detections
   const [cameraError, setCameraError] = useState(null)
   const [isRequestingCamera, setIsRequestingCamera] = useState(false)
+  const [detections, setDetections] = useState([])
   
   /**
    * Detect if device is mobile
@@ -134,11 +136,14 @@ export function CameraView({ onError, onManualMode }) {
    * Detection loop using requestAnimationFrame
    */
   const detectionLoop = useCallback(async (timestamp) => {
-    if (!videoRef.current || !canvasRef.current) return
+    if (!videoRef.current) return
     
     // Run detection if video is playing and model is loaded
     if (videoRef.current.readyState >= 2 && isLoaded) {
       const results = await detect(videoRef.current, timestamp)
+      
+      // Update detections for CoverageOverlay
+      setDetections(results.detections || [])
       
       // Update detected items in context
       if (results.detections && results.detections.length > 0) {
@@ -293,11 +298,11 @@ export function CameraView({ onError, onManualMode }) {
         className="w-full h-full object-cover"
       />
       
-      {/* Canvas overlay for detection visualization */}
-      <canvas
-        ref={canvasRef}
-        data-testid="detection-canvas"
-        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+      {/* Coverage overlay for rendering bounding boxes */}
+      <CoverageOverlay
+        videoRef={videoRef}
+        detections={detections}
+        policyType={policyType}
       />
       
       {/* Camera requesting indicator */}
