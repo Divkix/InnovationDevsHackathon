@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Package, Plus, Shield } from "lucide-react";
 import { type ReactElement, useState } from "react";
+import { SwissButton } from "./components/Swiss";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
@@ -28,100 +29,51 @@ function App(): ReactElement {
     disableManualMode,
   } = useAppContext();
 
-  // Gemini hook for AI assistance
   const gemini = useGemini();
-
-  // Handle camera errors (shown in error state)
   const [, setCameraError] = useState<Error | string | null>(null);
-
-  // State for Add Item form modal
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState<boolean>(false);
   const [editItem, setEditItem] = useState<ManualItem | null>(null);
 
-  // Handle manual mode fallback
-  const handleManualMode = (): void => {
-    // When camera is unavailable, enable manual mode
-    enableManualMode();
-  };
+  const handleManualMode = (): void => enableManualMode();
+  const handleEnableCamera = (): void => disableManualMode();
 
-  // Handle enabling camera from manual mode
-  const handleEnableCamera = (): void => {
-    disableManualMode();
-  };
-
-  // Find selected item from detected or manual items
   const selectedItem = selectedItemId
     ? detectedItems.get(selectedItemId) || manualItems.find((item) => item.id === selectedItemId)
     : null;
 
-  // Prepare item for DetailModal
-  const detailModalItem =
-    selectedItem && selectedItemId
-      ? {
-          ...selectedItem,
-          // Add source based on which collection it came from
-          source: (detectedItems.has(selectedItemId) ? "camera" : "dashboard") as
-            | "camera"
-            | "dashboard",
-        }
-      : null;
+  const detailModalItem = selectedItem && selectedItemId
+    ? { ...selectedItem, source: (detectedItems.has(selectedItemId) ? "camera" : "dashboard") as "camera" | "dashboard" }
+    : null;
 
-  // Handle modal close
-  const handleCloseDetailModal = (): void => {
-    setSelectedItem(null);
-  };
-
-  // Handle opening Add Item form
-  const handleOpenAddItem = (): void => {
-    setEditItem(null);
-    setIsAddItemFormOpen(true);
-  };
-
-  // Handle editing an item
-  const handleEditItem = (item: ManualItem): void => {
-    setEditItem(item);
-    setIsAddItemFormOpen(true);
-  };
-
-  // Handle removing an item
+  const handleCloseDetailModal = (): void => setSelectedItem(null);
+  const handleOpenAddItem = (): void => { setEditItem(null); setIsAddItemFormOpen(true); };
+  const handleEditItem = (item: ManualItem): void => { setEditItem(item); setIsAddItemFormOpen(true); };
   const handleRemoveItem = (item: ManualItem): void => {
-    if (confirm(`Are you sure you want to remove "${item.name}"?`)) {
-      removeManualItem(item.id);
-    }
+    if (confirm(`Remove "${item.name}"?`)) removeManualItem(item.id);
   };
+  const handleCloseAddItem = (): void => { setIsAddItemFormOpen(false); setEditItem(null); };
 
-  // Handle closing Add Item form
-  const handleCloseAddItem = (): void => {
-    setIsAddItemFormOpen(false);
-    setEditItem(null);
-  };
-
-  // Show onboarding if not complete
   if (!onboardingComplete) {
-    return (
-      <OnboardingFlow
-        onComplete={() => {
-          // Onboarding complete - App will re-render and show main view
-        }}
-      />
-    );
+    return <OnboardingFlow onComplete={() => {}} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex flex-col overflow-x-hidden">
-      {/* Manual Mode Banner */}
+    <div className="min-h-screen bg-swiss flex flex-col overflow-x-hidden">
+      {/* Manual Mode Banner — Swiss Style */}
       <AnimatePresence>
         {manualModeEnabled && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-gray-800 text-white px-4 py-2 text-center text-sm"
+            className="bg-swiss-fg text-swiss-bg px-4 py-3 text-center border-b-2 border-swiss-accent"
           >
-            <span className="font-medium">Manual Mode Active</span> — Camera is disabled.
+            <span className="font-bold uppercase tracking-widest text-sm">Manual Mode Active</span>
+            <span className="mx-2 text-swiss-accent">—</span>
+            <span className="text-sm">Camera disabled.</span>
             <button
               onClick={handleEnableCamera}
-              className="ml-2 underline hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded px-1"
+              className="ml-3 underline hover:text-swiss-accent uppercase text-sm font-bold"
             >
               Enable Camera
             </button>
@@ -129,119 +81,85 @@ function App(): ReactElement {
         )}
       </AnimatePresence>
 
-      {/* Header with State Farm Branding */}
-      <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-4 py-3 sticky top-0 z-40 safe-top">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          {/* Logo - State Farm Style */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#E31837] rounded-lg flex items-center justify-center shadow-md">
-              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      {/* Header — Swiss Style */}
+      <header className="bg-swiss border-b-4 border-swiss-fg px-6 py-5 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-swiss-fg border-2 border-swiss-fg flex items-center justify-center">
+              <Shield className="w-7 h-7 text-swiss-bg" />
             </div>
-            <div className="flex flex-col items-start">
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">
-                InsureScope
-              </h1>
-              <span className="text-[10px] sm:text-xs text-[#E31837] font-medium tracking-wider uppercase hidden sm:block">
-                By State Farm
-              </span>
-            </div>
+            <h1 className="text-2xl font-black text-swiss-fg uppercase tracking-tight">
+              InsureScope
+            </h1>
           </div>
 
-          {/* Right side: Gemini button + Policy Selector */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Gemini Ask Button - Only show when API key is set */}
+          {/* Right side */}
+          <div className="flex items-center gap-4">
             <AnimatePresence>
               {gemini && (
                 <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  aria-label="Ask about coverage"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-swiss-fg text-swiss-bg border-2 border-swiss-fg uppercase font-bold text-sm tracking-widest hover:bg-swiss-accent hover:border-swiss-accent transition-colors duration-200"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span className="hidden md:inline">Ask about coverage</span>
+                  <span>Ask</span>
                 </motion.button>
               )}
             </AnimatePresence>
-
-            {/* Policy Selector in Header */}
-            <PolicySelector
-              variant="compact"
-              detectedItems={Array.from(detectedItems?.values() || [])}
-              manualItems={manualItems}
-            />
+            <PolicySelector variant="compact" detectedItems={Array.from(detectedItems?.values() || [])} manualItems={manualItems} />
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">
-          {/* Camera Tab Content */}
           {activeTab === "camera" && (
             <motion.div
               key="camera-tab"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="h-full p-3 sm:p-4 pb-24 md:pb-4"
+              className="h-full p-4 pb-24 md:pb-4"
             >
-              <div className="max-w-5xl xl:max-w-6xl mx-auto h-full relative camera-container">
-                {/* Add Item Button - Camera View */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="max-w-6xl mx-auto h-full relative">
+                <SwissButton
                   onClick={handleOpenAddItem}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 text-gray-700 font-medium hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-[#E31837] text-sm sm:text-base"
-                  aria-label="Add manual item"
+                  variant="secondary"
+                  className="absolute top-4 right-4 z-30"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add Item</span>
-                </motion.button>
-
-                <CameraView
-                  onError={setCameraError}
-                  onManualMode={handleManualMode}
-                  onItemClick={(item) => setSelectedItem(item.id)}
-                />
+                  Add Item
+                </SwissButton>
+                <CameraView onError={setCameraError} onManualMode={handleManualMode} onItemClick={(item) => setSelectedItem(item.id)} />
               </div>
             </motion.div>
           )}
 
-          {/* Dashboard Tab Content */}
           {activeTab === "dashboard" && (
             <motion.div
               key="dashboard-tab"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="h-full overflow-y-auto p-3 sm:p-4 pb-24 md:pb-4"
+              className="h-full overflow-y-auto p-4 pb-24 md:pb-4"
             >
-              <div className="max-w-5xl xl:max-w-6xl mx-auto space-y-4">
-                {/* Add Item Button - Dashboard View */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between flex-wrap gap-2"
-                >
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-[#E31837]" />
+              <div className="max-w-6xl mx-auto space-y-6">
+                <div className="flex items-center justify-between border-b-2 border-swiss-fg pb-4">
+                  <h2 className="text-xl font-black text-swiss-fg uppercase tracking-widest flex items-center gap-2">
+                    <Package className="w-6 h-6" />
                     Your Items
                   </h2>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleOpenAddItem}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#E31837] text-white rounded-lg font-medium hover:bg-[#B8122C] transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2 text-sm sm:text-base"
-                    aria-label="Add manual item"
-                  >
+                  <SwissButton onClick={handleOpenAddItem} variant="accent">
                     <Plus className="w-4 h-4" />
                     Add Item
-                  </motion.button>
-                </motion.div>
+                  </SwissButton>
+                </div>
 
                 <Dashboard
                   detectedItems={Array.from(detectedItems?.values() || [])}
@@ -250,25 +168,22 @@ function App(): ReactElement {
                   onItemClick={(item) => setSelectedItem(item.id)}
                 />
 
-                {/* Manual Items Section */}
                 <AnimatePresence>
                   {manualItems.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                      className="border-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern"
                     >
-                      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
-                          <Package className="w-4 h-4 text-[#E31837]" />
+                      <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-fg text-swiss-bg">
+                        <h3 className="font-black uppercase tracking-widest flex items-center gap-2">
+                          <Package className="w-5 h-5" />
                           Manual Items
-                          <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">
-                            ({manualItems.length} item{manualItems.length !== 1 ? "s" : ""})
-                          </span>
+                          <span className="text-sm font-normal ml-2">({manualItems.length})</span>
                         </h3>
                       </div>
-                      <div className="p-3 sm:p-4">
+                      <div className="p-6">
                         <ManualItemsList
                           items={manualItems}
                           onEdit={handleEditItem}
@@ -285,18 +200,8 @@ function App(): ReactElement {
         </AnimatePresence>
       </main>
 
-      {/* Tab Navigation - Responsive: bottom on mobile, top content area on desktop */}
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* Detail Modal */}
-      <DetailModal
-        isOpen={!!selectedItemId}
-        onClose={handleCloseDetailModal}
-        item={detailModalItem}
-        policyType={policyType}
-      />
-
-      {/* Add Item Form Modal */}
+      <DetailModal isOpen={!!selectedItemId} onClose={handleCloseDetailModal} item={detailModalItem} policyType={policyType} />
       <AddItemForm isOpen={isAddItemFormOpen} onClose={handleCloseAddItem} editItem={editItem} />
     </div>
   );
