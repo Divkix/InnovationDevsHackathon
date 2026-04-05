@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import type { GeminiClient, PolicyType } from '../types'
+import type { GeminiClient, PolicyType } from "../types";
 
 /**
  * useGemini hook - Gemini API integration placeholder
@@ -14,11 +14,11 @@ import type { GeminiClient, PolicyType } from '../types'
  * @returns Gemini client configuration or null if no API key
  */
 export function useGemini(): GeminiClient | null {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   // Return null if no API key is configured
-  if (!apiKey || apiKey.trim() === '') {
-    return null
+  if (!apiKey || apiKey.trim() === "") {
+    return null;
   }
 
   // Return a minimal client configuration object
@@ -29,10 +29,10 @@ export function useGemini(): GeminiClient | null {
     // Placeholder for future chat functionality
     askAboutCoverage: async (item: string, policyType: PolicyType): Promise<null> => {
       // This would make an actual API call to Gemini
-      console.log(`[Gemini Placeholder] Asking about ${item} under ${policyType}`)
-      return null
-    }
-  }
+      console.log(`[Gemini Placeholder] Asking about ${item} under ${policyType}`);
+      return null;
+    },
+  };
 }
 
-export default useGemini
+export default useGemini;

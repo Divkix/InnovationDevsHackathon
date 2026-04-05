@@ -1,6 +1,6 @@
-import { Camera, LayoutDashboard, LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
-import type { TabNavigationProps, AppTab } from '../../types';
+import { motion } from "framer-motion";
+import { Camera, LayoutDashboard, type LucideIcon } from "lucide-react";
+import type { AppTab, TabNavigationProps } from "../../types";
 
 interface TabConfig {
   id: AppTab;
@@ -20,23 +20,19 @@ interface TabConfig {
  * - Accessible: keyboard navigable with proper ARIA attributes
  * - Animations: smooth transitions between tabs
  */
-export function TabNavigation({
-  activeTab,
-  onTabChange,
-  className = '',
-}: TabNavigationProps) {
+export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNavigationProps) {
   const tabs: TabConfig[] = [
     {
-      id: 'camera',
-      label: 'Camera',
+      id: "camera",
+      label: "Camera",
       icon: Camera,
-      ariaLabel: 'Switch to Camera view',
+      ariaLabel: "Switch to Camera view",
     },
     {
-      id: 'dashboard',
-      label: 'Dashboard',
+      id: "dashboard",
+      label: "Dashboard",
       icon: LayoutDashboard,
-      ariaLabel: 'Switch to Dashboard view',
+      ariaLabel: "Switch to Dashboard view",
     },
   ];
 
@@ -46,12 +42,9 @@ export function TabNavigation({
     }
   };
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLButtonElement>,
-    tabId: AppTab
-  ): void => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, tabId: AppTab): void => {
     // Handle keyboard navigation
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleTabClick(tabId);
     }
@@ -59,7 +52,6 @@ export function TabNavigation({
 
   return (
     <nav
-      role="tablist"
       aria-label="Main navigation"
       className={`
         /* Mobile: Fixed bottom, full width, horizontal layout */
@@ -124,8 +116,8 @@ export function TabNavigation({
                   /* Active vs inactive states - State Farm red for active */
                   ${
                     isActive
-                      ? 'bg-red-50 text-[#E31837] md:bg-red-50 md:text-[#E31837]'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? "bg-red-50 text-[#E31837] md:bg-red-50 md:text-[#E31837]"
+                      : "text-gray-600 hover:bg-gray-100"
                   }
 
                   /* Focus visible for accessibility */
@@ -137,7 +129,7 @@ export function TabNavigation({
                     /* Mobile: Larger icon for touch interface */
                     w-6 h-6
                     md:w-4 md:h-4
-                    ${isActive ? 'text-[#E31837]' : 'text-gray-500'}
+                    ${isActive ? "text-[#E31837]" : "text-gray-500"}
                   `}
                   aria-hidden="true"
                 />
@@ -146,7 +138,7 @@ export function TabNavigation({
                   /* Mobile: Smaller text under icon */
                   text-xs
                   md:text-sm
-                  ${isActive ? 'font-semibold' : ''}
+                  ${isActive ? "font-semibold" : ""}
                 `}
                 >
                   {tab.label}
@@ -157,7 +149,7 @@ export function TabNavigation({
                   <motion.div
                     layoutId="activeTabIndicator"
                     className="absolute -bottom-[2px] w-8 h-1 bg-[#E31837] rounded-full md:hidden"
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
               </motion.button>

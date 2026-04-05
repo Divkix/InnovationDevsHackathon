@@ -1,12 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "files": {
-    "includes": [
-      "src/**/*.js",
-      "src/**/*.jsx",
-      "*.js",
-      "*.json"
-    ],
+    "includes": ["src/**/*.{js,jsx,ts,tsx}", "*.{js,ts}", "*.json"],
     "ignoreUnknown": true
   },
   "linter": {
@@ -15,12 +10,15 @@
       "recommended": true,
       "correctness": {
         "noUnusedVariables": "error"
+      },
+      "a11y": {
+        "useButtonType": "off"
       }
     }
   },
   "formatter": {
     "enabled": true,
-    "indentStyle": "tab",
+    "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100
   }

@@ -1,1 +1,1 @@
-export { TabNavigation } from './TabNavigation';
+export { TabNavigation } from "./TabNavigation";

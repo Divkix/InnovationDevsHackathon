@@ -1,2 +1,1 @@
-export { OnboardingFlow } from './OnboardingFlow'
-export { default } from './OnboardingFlow'
+export { default, OnboardingFlow } from "./OnboardingFlow";

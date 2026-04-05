@@ -1,6 +1,21 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode, type ReactElement } from 'react';
-import type { PolicyType, AppTab, ManualItem, DetectedItem, DetectedItemsInput, AppContextValue } from '../types';
-import { VALID_POLICY_TYPES, DEFAULT_STATE, STORAGE_KEYS } from './appState';
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import type {
+  AppContextValue,
+  AppTab,
+  DetectedItem,
+  DetectedItemsInput,
+  ManualItem,
+  PolicyType,
+} from "../types";
+import { DEFAULT_STATE, STORAGE_KEYS, VALID_POLICY_TYPES } from "./appState";
 
 // Re-export AppContextValue for backward compatibility
 export type { AppContextValue };
@@ -16,9 +31,9 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 function loadFromStorage<T>(
   key: string,
   defaultValue: T,
-  parser: (value: string) => T = (v) => v as unknown as T
+  parser: (value: string) => T = (v) => v as unknown as T,
 ): T {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === "undefined" || !window.localStorage) {
     return defaultValue;
   }
 
@@ -38,7 +53,7 @@ function loadFromStorage<T>(
  * Helper to safely save to localStorage
  */
 function saveToStorage(key: string, value: string): void {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === "undefined" || !window.localStorage) {
     return;
   }
 
@@ -55,7 +70,7 @@ function saveToStorage(key: string, value: string): void {
  * @returns Normalized value between 0.1 and 0.9
  */
 function normalizeThreshold(value: string | number): number {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  const num = typeof value === "string" ? parseFloat(value) : value;
   if (Number.isNaN(num)) return 0.5;
   return Math.max(0.1, Math.min(0.9, num));
 }
@@ -73,54 +88,50 @@ interface AppProviderProps {
 export function AppProvider({ children }: AppProviderProps): ReactElement {
   // Load persisted values from localStorage on initial mount
   const [policyType, setPolicyTypeState] = useState<PolicyType>(() =>
-    loadFromStorage<PolicyType>(STORAGE_KEYS.policyType, DEFAULT_STATE.policyType)
+    loadFromStorage<PolicyType>(STORAGE_KEYS.policyType, DEFAULT_STATE.policyType),
   );
 
   const [onboardingComplete, setOnboardingCompleteState] = useState<boolean>(() =>
     loadFromStorage<boolean>(
       STORAGE_KEYS.onboardingComplete,
       DEFAULT_STATE.onboardingComplete,
-      (v) => v === 'true'
-    )
+      (v) => v === "true",
+    ),
   );
 
   const [manualItems, setManualItemsState] = useState<ManualItem[]>(() =>
     loadFromStorage<ManualItem[]>(
       STORAGE_KEYS.manualItems,
       DEFAULT_STATE.manualItems,
-      (v) => JSON.parse(v) as ManualItem[]
-    )
+      (v) => JSON.parse(v) as ManualItem[],
+    ),
   );
 
   const [confidenceThreshold, setConfidenceThresholdState] = useState<number>(() => {
     const stored = loadFromStorage<string>(
       STORAGE_KEYS.confidenceThreshold,
-      DEFAULT_STATE.confidenceThreshold.toString()
+      DEFAULT_STATE.confidenceThreshold.toString(),
     );
     return normalizeThreshold(stored);
   });
 
   // Camera permission and manual mode state
   const [cameraPermissionDenied, setCameraPermissionDeniedState] = useState<boolean>(() =>
-    loadFromStorage<boolean>(
-      STORAGE_KEYS.cameraPermissionDenied,
-      false,
-      (v) => v === 'true'
-    )
+    loadFromStorage<boolean>(STORAGE_KEYS.cameraPermissionDenied, false, (v) => v === "true"),
   );
 
   const [manualModeEnabled, setManualModeEnabledState] = useState<boolean>(() =>
-    loadFromStorage<boolean>(
-      STORAGE_KEYS.manualModeEnabled,
-      false,
-      (v) => v === 'true'
-    )
+    loadFromStorage<boolean>(STORAGE_KEYS.manualModeEnabled, false, (v) => v === "true"),
   );
 
   // Non-persisted state
   const [activeTab, setActiveTabState] = useState<AppTab>(DEFAULT_STATE.activeTab);
-  const [detectedItems, setDetectedItemsState] = useState<Map<string, DetectedItem>>(() => new Map());
-  const [selectedItemId, setSelectedItemIdState] = useState<string | null>(DEFAULT_STATE.selectedItemId);
+  const [detectedItems, setDetectedItemsState] = useState<Map<string, DetectedItem>>(
+    () => new Map(),
+  );
+  const [selectedItemId, setSelectedItemIdState] = useState<string | null>(
+    DEFAULT_STATE.selectedItemId,
+  );
 
   /**
    * Action: setPolicyType
@@ -153,7 +164,7 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const completeOnboarding = useCallback((): void => {
     setOnboardingCompleteState(true);
-    saveToStorage(STORAGE_KEYS.onboardingComplete, 'true');
+    saveToStorage(STORAGE_KEYS.onboardingComplete, "true");
   }, []);
 
   /**
@@ -171,11 +182,11 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const updateDetectedItems = useCallback((nextItems: DetectedItemsInput): void => {
     if (nextItems instanceof Map) {
-      setDetectedItemsState(new Map(nextItems))
-      return
+      setDetectedItemsState(new Map(nextItems));
+      return;
     }
 
-    setDetectedItemsState(new Map(Object.entries(nextItems)))
+    setDetectedItemsState(new Map(Object.entries(nextItems)));
   }, []);
 
   /**
@@ -183,8 +194,8 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    * Adds a new manual item and persists to localStorage
    */
   const addManualItem = useCallback((item: ManualItem): void => {
-    if (!item || !item.id) {
-      console.warn('Cannot add manual item without id');
+    if (!item?.id) {
+      console.warn("Cannot add manual item without id");
       return;
     }
 
@@ -201,7 +212,7 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const removeManualItem = useCallback((itemId: string): void => {
     setManualItemsState((prevItems: ManualItem[]) => {
-      const newItems = prevItems.filter(item => item.id !== itemId);
+      const newItems = prevItems.filter((item) => item.id !== itemId);
       saveToStorage(STORAGE_KEYS.manualItems, JSON.stringify(newItems));
       return newItems;
     });
@@ -213,8 +224,8 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const updateManualItem = useCallback((itemId: string, updates: Partial<ManualItem>): void => {
     setManualItemsState((prevItems: ManualItem[]) => {
-      const newItems = prevItems.map(item =>
-        item.id === itemId ? { ...item, ...updates } : item
+      const newItems = prevItems.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item,
       );
       saveToStorage(STORAGE_KEYS.manualItems, JSON.stringify(newItems));
       return newItems;
@@ -245,8 +256,8 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const enableManualMode = useCallback((): void => {
     setManualModeEnabledState(true);
-    setActiveTabState('dashboard');
-    saveToStorage(STORAGE_KEYS.manualModeEnabled, 'true');
+    setActiveTabState("dashboard");
+    saveToStorage(STORAGE_KEYS.manualModeEnabled, "true");
   }, []);
 
   /**
@@ -255,8 +266,8 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const disableManualMode = useCallback((): void => {
     setManualModeEnabledState(false);
-    setActiveTabState('camera');
-    saveToStorage(STORAGE_KEYS.manualModeEnabled, 'false');
+    setActiveTabState("camera");
+    saveToStorage(STORAGE_KEYS.manualModeEnabled, "false");
   }, []);
 
   /**
@@ -265,65 +276,64 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    */
   const resetCameraPermission = useCallback((): void => {
     setCameraPermissionDeniedState(false);
-    saveToStorage(STORAGE_KEYS.cameraPermissionDenied, 'false');
+    saveToStorage(STORAGE_KEYS.cameraPermissionDenied, "false");
   }, []);
 
   // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo<AppContextValue>(() => ({
-    // State
-    policyType,
-    onboardingComplete,
-    activeTab,
-    detectedItems,
-    manualItems,
-    selectedItemId,
-    confidenceThreshold,
-    cameraPermissionDenied,
-    manualModeEnabled,
-    // Actions
-    setPolicyType,
-    completeOnboarding,
-    setActiveTab,
-    updateDetectedItems,
-    addManualItem,
-    removeManualItem,
-    updateManualItem,
-    setSelectedItem,
-    setConfidenceThreshold,
-    setCameraPermissionDenied,
-    enableManualMode,
-    disableManualMode,
-    resetCameraPermission
-  }), [
-    policyType,
-    onboardingComplete,
-    activeTab,
-    detectedItems,
-    manualItems,
-    selectedItemId,
-    confidenceThreshold,
-    cameraPermissionDenied,
-    manualModeEnabled,
-    setPolicyType,
-    completeOnboarding,
-    setActiveTab,
-    updateDetectedItems,
-    addManualItem,
-    removeManualItem,
-    updateManualItem,
-    setSelectedItem,
-    setConfidenceThreshold,
-    setCameraPermissionDenied,
-    enableManualMode,
-    disableManualMode,
-    resetCameraPermission
-  ]);
-
-  return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
+  const contextValue = useMemo<AppContextValue>(
+    () => ({
+      // State
+      policyType,
+      onboardingComplete,
+      activeTab,
+      detectedItems,
+      manualItems,
+      selectedItemId,
+      confidenceThreshold,
+      cameraPermissionDenied,
+      manualModeEnabled,
+      // Actions
+      setPolicyType,
+      completeOnboarding,
+      setActiveTab,
+      updateDetectedItems,
+      addManualItem,
+      removeManualItem,
+      updateManualItem,
+      setSelectedItem,
+      setConfidenceThreshold,
+      setCameraPermissionDenied,
+      enableManualMode,
+      disableManualMode,
+      resetCameraPermission,
+    }),
+    [
+      policyType,
+      onboardingComplete,
+      activeTab,
+      detectedItems,
+      manualItems,
+      selectedItemId,
+      confidenceThreshold,
+      cameraPermissionDenied,
+      manualModeEnabled,
+      setPolicyType,
+      completeOnboarding,
+      setActiveTab,
+      updateDetectedItems,
+      addManualItem,
+      removeManualItem,
+      updateManualItem,
+      setSelectedItem,
+      setConfidenceThreshold,
+      setCameraPermissionDenied,
+      enableManualMode,
+      disableManualMode,
+      resetCameraPermission,
+    ],
   );
+
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 }
 
 /**
@@ -335,7 +345,7 @@ export function useAppContext(): AppContextValue {
   const context = useContext(AppContext);
 
   if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
+    throw new Error("useAppContext must be used within an AppProvider");
   }
 
   return context;

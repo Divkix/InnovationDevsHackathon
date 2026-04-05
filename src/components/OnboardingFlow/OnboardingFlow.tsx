@@ -1,9 +1,18 @@
-import { useState, useCallback, type KeyboardEvent, type ReactElement } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAppContext } from '@/context/AppContext';
-import { Home, Shield, Car, ShieldAlert, Camera, ChevronLeft, Check, ArrowRight } from 'lucide-react';
-import type { OnboardingFlowProps, PolicyType } from '@/types';
-import type { LucideIcon } from 'lucide-react';
+import { AnimatePresence, motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  Car,
+  Check,
+  ChevronLeft,
+  Home,
+  Shield,
+  ShieldAlert,
+} from "lucide-react";
+import { type KeyboardEvent, type ReactElement, useCallback, useState } from "react";
+import { useAppContext } from "@/context/AppContext";
+import type { OnboardingFlowProps, PolicyType } from "@/types";
 
 /**
  * Policy option configuration interface
@@ -21,52 +30,52 @@ interface PolicyOption {
  */
 const POLICY_OPTIONS: PolicyOption[] = [
   {
-    id: 'renters',
+    id: "renters",
     label: "Renter's Insurance",
     icon: Home,
-    description: 'Coverage for personal property in rented homes',
-    color: 'blue'
+    description: "Coverage for personal property in rented homes",
+    color: "blue",
   },
   {
-    id: 'homeowners',
+    id: "homeowners",
     label: "Homeowner's Insurance",
     icon: Shield,
-    description: 'Full property and belongings coverage',
-    color: 'green'
+    description: "Full property and belongings coverage",
+    color: "green",
   },
   {
-    id: 'auto',
-    label: 'Auto Insurance',
+    id: "auto",
+    label: "Auto Insurance",
     icon: Car,
-    description: 'Vehicle coverage and roadside protection',
-    color: 'indigo'
+    description: "Vehicle coverage and roadside protection",
+    color: "indigo",
   },
   {
-    id: 'none',
-    label: 'No Insurance',
+    id: "none",
+    label: "No Insurance",
     icon: ShieldAlert,
-    description: 'See what is unprotected (demo mode)',
-    color: 'red'
-  }
+    description: "See what is unprotected (demo mode)",
+    color: "red",
+  },
 ];
 
 /**
  * Get animation props based on direction
  */
-const getAnimationProps = (direction: 'forward' | 'backward') => ({
-  initial: { opacity: 0, x: direction === 'forward' ? 20 : -20 },
+const getAnimationProps = (direction: "forward" | "backward") => ({
+  initial: { opacity: 0, x: direction === "forward" ? 20 : -20 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: direction === 'forward' ? -20 : 20 },
-  transition: { duration: 0.3 }
+  exit: { opacity: 0, x: direction === "forward" ? -20 : 20 },
+  transition: { duration: 0.3 },
 });
 
 /**
  * OnboardingFlow component - Multi-step onboarding for new users
- * 
+ *
  * Step 1: Policy Selection (4 options, Continue disabled until selection)
  * Step 2: Camera Instruction (guidance text + Start Camera button)
  * Step 3: Transition to camera view (onboarding completes here)
- * 
+ *
  * Features:
  * - Step indicator showing progress
  * - Back navigation preserving selection
@@ -82,15 +91,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyType | null>(policyType || null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   /**
    * Handle policy selection
    */
-  const handlePolicySelect = useCallback((policyId: PolicyType): void => {
-    setSelectedPolicy(policyId);
-    setPolicyType(policyId);
-  }, [setPolicyType]);
+  const handlePolicySelect = useCallback(
+    (policyId: PolicyType): void => {
+      setSelectedPolicy(policyId);
+      setPolicyType(policyId);
+    },
+    [setPolicyType],
+  );
 
   /**
    * Navigate to next step with rapid-click protection
@@ -99,7 +111,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
     if (isTransitioning) return;
 
     setIsTransitioning(true);
-    setDirection('forward');
+    setDirection("forward");
 
     setTimeout(() => {
       if (currentStep === 1) {
@@ -123,7 +135,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
     if (currentStep === 1) return;
 
     setIsTransitioning(true);
-    setDirection('backward');
+    setDirection("backward");
 
     setTimeout(() => {
       setCurrentStep((prev: 1 | 2) => (prev === 2 ? 1 : 1));
@@ -134,31 +146,37 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
   /**
    * Handle keyboard navigation for policy selection
    */
-  const handlePolicyKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, policyId: PolicyType): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handlePolicySelect(policyId);
-    }
-  }, [handlePolicySelect]);
+  const handlePolicyKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>, policyId: PolicyType): void => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handlePolicySelect(policyId);
+      }
+    },
+    [handlePolicySelect],
+  );
 
   /**
    * Handle Enter key on continue button
    */
-  const handleContinueKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      if (selectedPolicy && !isTransitioning) {
-        handleNext();
+  const handleContinueKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>): void => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (selectedPolicy && !isTransitioning) {
+          handleNext();
+        }
       }
-    }
-  }, [selectedPolicy, isTransitioning, handleNext]);
+    },
+    [selectedPolicy, isTransitioning, handleNext],
+  );
 
   /**
    * Handle skip to main view
    */
   const handleSkip = useCallback((): void => {
-    setSelectedPolicy('renters');
-    setPolicyType('renters');
+    setSelectedPolicy("renters");
+    setPolicyType("renters");
     completeOnboarding();
     if (onComplete) {
       onComplete();
@@ -168,15 +186,19 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
   // Step indicator component with State Farm branding
   const StepIndicator = (): ReactElement => (
     <div className="flex items-center justify-center gap-2 mb-8">
-      <div className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 1 ? 'opacity-100' : 'opacity-50'}`}>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-          currentStep >= 1
-            ? 'bg-[#E31837] text-white'
-            : 'bg-gray-200 text-gray-500'
-        }`}>
+      <div
+        className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 1 ? "opacity-100" : "opacity-50"}`}
+      >
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+            currentStep >= 1 ? "bg-[#E31837] text-white" : "bg-gray-200 text-gray-500"
+          }`}
+        >
           1
         </div>
-        <span className={`text-sm font-medium ${currentStep >= 1 ? 'text-[#E31837]' : 'text-gray-400'}`}>
+        <span
+          className={`text-sm font-medium ${currentStep >= 1 ? "text-[#E31837]" : "text-gray-400"}`}
+        >
           Policy
         </span>
       </div>
@@ -184,19 +206,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
       <div className="w-12 h-0.5 bg-gray-200 rounded">
         <div
           className="h-full bg-[#E31837] rounded transition-all duration-500"
-          style={{ width: currentStep >= 2 ? '100%' : '0%' }}
+          style={{ width: currentStep >= 2 ? "100%" : "0%" }}
         />
       </div>
 
-      <div className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 2 ? 'opacity-100' : 'opacity-50'}`}>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-          currentStep >= 2
-            ? 'bg-[#E31837] text-white'
-            : 'bg-gray-200 text-gray-500'
-        }`}>
+      <div
+        className={`flex items-center gap-2 transition-all duration-300 ${currentStep >= 2 ? "opacity-100" : "opacity-50"}`}
+      >
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+            currentStep >= 2 ? "bg-[#E31837] text-white" : "bg-gray-200 text-gray-500"
+          }`}
+        >
           2
         </div>
-        <span className={`text-sm font-medium ${currentStep >= 2 ? 'text-[#E31837]' : 'text-gray-400'}`}>
+        <span
+          className={`text-sm font-medium ${currentStep >= 2 ? "text-[#E31837]" : "text-gray-400"}`}
+        >
           Camera
         </span>
       </div>
@@ -222,7 +248,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
         </div>
 
         {/* Policy Options Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" role="radiogroup" aria-label="Select insurance policy type">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+          role="radiogroup"
+          aria-label="Select insurance policy type"
+        >
           {POLICY_OPTIONS.map((policy) => {
             const Icon = policy.icon;
             const isSelected = selectedPolicy === policy.id;
@@ -242,9 +272,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                   relative flex flex-col items-center p-6 rounded-xl border-2
                   transition-all duration-200 cursor-pointer
                   focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2
-                  ${isSelected
-                    ? 'border-[#E31837] bg-red-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ${
+                    isSelected
+                      ? "border-[#E31837] bg-red-50 shadow-md"
+                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                   }
                 `}
               >
@@ -255,25 +286,25 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                   </div>
                 )}
 
-                <Icon className={`
+                <Icon
+                  className={`
                   w-10 h-10 mb-3 transition-colors
-                  ${isSelected
-                    ? 'text-[#E31837]'
-                    : 'text-gray-400'
-                  }
-                `} />
+                  ${isSelected ? "text-[#E31837]" : "text-gray-400"}
+                `}
+                />
 
-                <h3 className={`
+                <h3
+                  className={`
                   font-semibold text-lg mb-1
-                  ${isSelected
-                    ? 'text-[#E31837]'
-                    : 'text-gray-700'
-                  }
-                `}>
+                  ${isSelected ? "text-[#E31837]" : "text-gray-700"}
+                `}
+                >
                   {policy.label}
                 </h3>
 
-                <p className={`text-sm text-center ${isSelected ? 'text-red-600' : 'text-gray-500'}`}>
+                <p
+                  className={`text-sm text-center ${isSelected ? "text-red-600" : "text-gray-500"}`}
+                >
                   {policy.description}
                 </p>
               </motion.button>
@@ -293,9 +324,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
             w-full py-4 px-6 rounded-xl font-semibold text-lg
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2
-            ${selectedPolicy && !isTransitioning
-              ? 'bg-[#E31837] text-white hover:bg-[#B8122C] shadow-md cursor-pointer'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            ${
+              selectedPolicy && !isTransitioning
+                ? "bg-[#E31837] text-white hover:bg-[#B8122C] shadow-md cursor-pointer"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }
           `}
           aria-disabled={!selectedPolicy || isTransitioning}
@@ -353,19 +385,25 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
               <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-[#E31837] font-bold text-sm">1</span>
               </div>
-              <span className="text-gray-700 text-sm sm:text-base">Point your camera at objects in your room</span>
+              <span className="text-gray-700 text-sm sm:text-base">
+                Point your camera at objects in your room
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-[#E31837] font-bold text-sm">2</span>
               </div>
-              <span className="text-gray-700 text-sm sm:text-base">AI detects items and shows coverage status</span>
+              <span className="text-gray-700 text-sm sm:text-base">
+                AI detects items and shows coverage status
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-[#E31837]/10 flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-[#E31837] font-bold text-sm">3</span>
               </div>
-              <span className="text-gray-700 text-sm sm:text-base">Green = Covered, Red = Not Covered</span>
+              <span className="text-gray-700 text-sm sm:text-base">
+                Green = Covered, Red = Not Covered
+              </span>
             </li>
           </ul>
         </div>
@@ -447,16 +485,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
           </div>
           <div className="flex flex-col">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">InsureScope</h1>
-            <span className="text-xs text-[#E31837] font-medium tracking-wider uppercase">By State Farm</span>
+            <span className="text-xs text-[#E31837] font-medium tracking-wider uppercase">
+              By State Farm
+            </span>
           </div>
         </motion.div>
 
         {/* Step Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
           <StepIndicator />
         </motion.div>
 
@@ -493,7 +529,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
           transition={{ delay: 0.3 }}
           className="text-center mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500"
         >
-          Already have an account?{' '}
+          Already have an account?{" "}
           <button
             onClick={handleSkip}
             className="text-[#E31837] hover:text-[#B8122C] underline focus:outline-none focus:ring-2 focus:ring-[#E31837] rounded px-1"

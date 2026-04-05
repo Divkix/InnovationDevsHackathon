@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react'
-import { motion } from 'framer-motion'
-import { useAppContext } from '../../context/AppContext'
-import { useObjectDetection } from '../../hooks/useObjectDetection'
-import { CoverageOverlay } from '../CoverageOverlay/CoverageOverlay'
-import { ConfidenceThresholdSlider } from '../ConfidenceThresholdSlider/ConfidenceThresholdSlider'
-import { Camera, RefreshCw, Hand, Bug, Shield, ChevronRight } from 'lucide-react'
-import type { CameraViewProps, Detection, AppContextValue } from '../../types'
-import type { UseYOLODetectionReturn } from '../../hooks/useYOLODetection'
+import { motion } from "framer-motion";
+import { Bug, Camera, ChevronRight, Hand, RefreshCw, Shield } from "lucide-react";
+import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import { useAppContext } from "../../context/AppContext";
+import { useObjectDetection } from "../../hooks/useObjectDetection";
+import type { UseYOLODetectionReturn } from "../../hooks/useYOLODetection";
+import type { AppContextValue, CameraViewProps, Detection } from "../../types";
+import { ConfidenceThresholdSlider } from "../ConfidenceThresholdSlider/ConfidenceThresholdSlider";
+import { CoverageOverlay } from "../CoverageOverlay/CoverageOverlay";
 
 /**
  * CameraView component - Main camera component for InsureScope
@@ -27,27 +27,43 @@ import type { UseYOLODetectionReturn } from '../../hooks/useYOLODetection'
  * @returns React element
  */
 export function CameraView({ onError, onManualMode, onItemClick }: CameraViewProps): ReactElement {
-  const { policyType, updateDetectedItems, confidenceThreshold, setConfidenceThreshold }: AppContextValue = useAppContext()
-  const { detect, isLoaded, error: modelError, isMockMode }: UseYOLODetectionReturn = useObjectDetection()
+  const {
+    policyType,
+    updateDetectedItems,
+    confidenceThreshold,
+    setConfidenceThreshold,
+  }: AppContextValue = useAppContext();
+  const {
+    detect,
+    isLoaded,
+    error: modelError,
+    isMockMode,
+  }: UseYOLODetectionReturn = useObjectDetection();
 
   // Refs for video and canvas elements
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const animationFrameRef = useRef<number | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // State for camera, errors, and detections
-  const [cameraError, setCameraError] = useState<Error | null>(null)
-  const [isRequestingCamera, setIsRequestingCamera] = useState<boolean>(false)
-  const [detections, setDetections] = useState<Detection[]>([])
-  
+  const [cameraError, setCameraError] = useState<Error | null>(null);
+  const [isRequestingCamera, setIsRequestingCamera] = useState<boolean>(false);
+  const [detections, setDetections] = useState<Detection[]>([]);
+
   /**
    * Detect if device is mobile
    */
   const isMobile = useCallback((): boolean => {
-    const userAgent = navigator.userAgent || navigator.vendor || (window as unknown as { opera?: string }).opera || ''
-    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
-  }, [])
-  
+    const userAgent =
+      navigator.userAgent ||
+      navigator.vendor ||
+      (window as unknown as { opera?: string }).opera ||
+      "";
+    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      userAgent.toLowerCase(),
+    );
+  }, []);
+
   /**
    * Request camera access with appropriate facing mode
    * In mock mode, skips camera request and creates a simulated ready state
@@ -55,217 +71,224 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
   const requestCamera = useCallback(async (): Promise<void> => {
     // Skip camera request in mock mode
     if (isMockMode) {
-      setIsRequestingCamera(false)
-      setCameraError(null)
-      return
+      setIsRequestingCamera(false);
+      setCameraError(null);
+      return;
     }
 
-    setIsRequestingCamera(true)
-    setCameraError(null)
+    setIsRequestingCamera(true);
+    setCameraError(null);
 
     try {
       // Check if browser supports getUserMedia
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Browser not supported')
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Browser not supported");
       }
 
       // Determine facing mode based on device type
-      const facingMode = isMobile() ? 'environment' : 'user'
+      const facingMode = isMobile() ? "environment" : "user";
 
       // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facingMode,
           width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          height: { ideal: 1080 },
         },
-        audio: false
-      })
+        audio: false,
+      });
 
       // Store stream reference for cleanup
-      streamRef.current = stream
+      streamRef.current = stream;
 
       // Attach stream to video element
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      let errorMessage = 'Camera access failed'
+      let errorMessage = "Camera access failed";
 
       if (err instanceof Error) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          errorMessage = 'Camera access denied'
-        } else if (err.name === 'NotFoundError') {
-          errorMessage = 'No camera found'
-        } else if (err.message === 'Browser not supported') {
-          errorMessage = 'Browser not supported'
+        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+          errorMessage = "Camera access denied";
+        } else if (err.name === "NotFoundError") {
+          errorMessage = "No camera found";
+        } else if (err.message === "Browser not supported") {
+          errorMessage = "Browser not supported";
         } else {
-          errorMessage = err.message || 'Camera error'
+          errorMessage = err.message || "Camera error";
         }
       }
 
-      const error = new Error(errorMessage)
-      setCameraError(error)
-      if (onError) onError(error)
+      const error = new Error(errorMessage);
+      setCameraError(error);
+      if (onError) onError(error);
     } finally {
-      setIsRequestingCamera(false)
+      setIsRequestingCamera(false);
     }
-  }, [isMobile, onError, isMockMode])
-  
+  }, [isMobile, onError, isMockMode]);
+
   /**
    * Stop all camera tracks
    */
   const stopCamera = useCallback((): void => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop()
-      })
-      streamRef.current = null
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+      streamRef.current = null;
     }
-  }, [])
-  
+  }, []);
+
   /**
    * Handle retry button click
    */
   const handleRetry = useCallback((): void => {
     if (modelError) {
       // Reload the page to reinitialize the model
-      window.location.reload()
+      window.location.reload();
     } else {
-      requestCamera()
+      requestCamera();
     }
-  }, [modelError, requestCamera])
-  
+  }, [modelError, requestCamera]);
+
   /**
    * Handle manual mode button click
    */
   const handleManualMode = useCallback((): void => {
     if (onManualMode) {
-      onManualMode()
+      onManualMode();
     }
-  }, [onManualMode])
-  
+  }, [onManualMode]);
+
   /**
    * Detection loop using requestAnimationFrame
    * In mock mode, runs detection without requiring video readyState
    */
-  const detectionLoop = useCallback(async (timestamp: number): Promise<void> => {
-    // In mock mode, run detection directly without video element check
-    if (isMockMode && isLoaded) {
-      const results = await detect(null, timestamp)
+  const detectionLoop = useCallback(
+    async (timestamp: number): Promise<void> => {
+      // In mock mode, run detection directly without video element check
+      if (isMockMode && isLoaded) {
+        const results = await detect(null, timestamp);
 
-      // Update detections for CoverageOverlay
-      setDetections(results.detections || [])
+        // Update detections for CoverageOverlay
+        setDetections(results.detections || []);
 
-      // Update detected items in context
-      if (results.detections && results.detections.length > 0) {
-        const itemsMap = new Map()
-        results.detections.forEach((detection, index) => {
-          const category = detection.categories?.[0]?.categoryName || 'unknown'
-          const confidence = detection.categories?.[0]?.score || 0
-          itemsMap.set(`detection-${index}`, {
-            id: `detection-${index}`,
-            category: category,
-            confidence: confidence,
-            boundingBox: detection.boundingBox,
-            categories: detection.categories || [{ categoryName: category, score: confidence, displayName: category }],
-          })
-        })
-        updateDetectedItems(itemsMap)
+        // Update detected items in context
+        if (results.detections && results.detections.length > 0) {
+          const itemsMap = new Map();
+          results.detections.forEach((detection, index) => {
+            const category = detection.categories?.[0]?.categoryName || "unknown";
+            const confidence = detection.categories?.[0]?.score || 0;
+            itemsMap.set(`detection-${index}`, {
+              id: `detection-${index}`,
+              category: category,
+              confidence: confidence,
+              boundingBox: detection.boundingBox,
+              categories: detection.categories || [
+                { categoryName: category, score: confidence, displayName: category },
+              ],
+            });
+          });
+          updateDetectedItems(itemsMap);
+        }
+
+        // Schedule next frame
+        animationFrameRef.current = requestAnimationFrame(detectionLoop);
+        return;
+      }
+
+      // Normal mode: require video element
+      if (!videoRef.current) return;
+
+      // Run detection if video is playing and model is loaded
+      if (videoRef.current.readyState >= 2 && isLoaded) {
+        const results = await detect(videoRef.current, timestamp);
+
+        // Update detections for CoverageOverlay
+        setDetections(results.detections || []);
+
+        // Update detected items in context
+        if (results.detections && results.detections.length > 0) {
+          const itemsMap = new Map();
+          results.detections.forEach((detection, index) => {
+            const category = detection.categories?.[0]?.categoryName || "unknown";
+            const confidence = detection.categories?.[0]?.score || 0;
+            itemsMap.set(`detection-${index}`, {
+              id: `detection-${index}`,
+              category: category,
+              confidence: confidence,
+              boundingBox: detection.boundingBox,
+              categories: detection.categories || [
+                { categoryName: category, score: confidence, displayName: category },
+              ],
+            });
+          });
+          updateDetectedItems(itemsMap);
+        }
       }
 
       // Schedule next frame
-      animationFrameRef.current = requestAnimationFrame(detectionLoop)
-      return
-    }
+      animationFrameRef.current = requestAnimationFrame(detectionLoop);
+    },
+    [detect, isLoaded, updateDetectedItems, isMockMode],
+  );
 
-    // Normal mode: require video element
-    if (!videoRef.current) return
-
-    // Run detection if video is playing and model is loaded
-    if (videoRef.current.readyState >= 2 && isLoaded) {
-      const results = await detect(videoRef.current, timestamp)
-
-      // Update detections for CoverageOverlay
-      setDetections(results.detections || [])
-
-      // Update detected items in context
-      if (results.detections && results.detections.length > 0) {
-        const itemsMap = new Map()
-        results.detections.forEach((detection, index) => {
-          const category = detection.categories?.[0]?.categoryName || 'unknown'
-          const confidence = detection.categories?.[0]?.score || 0
-          itemsMap.set(`detection-${index}`, {
-            id: `detection-${index}`,
-            category: category,
-            confidence: confidence,
-            boundingBox: detection.boundingBox,
-            categories: detection.categories || [{ categoryName: category, score: confidence, displayName: category }],
-          })
-        })
-        updateDetectedItems(itemsMap)
-      }
-    }
-
-    // Schedule next frame
-    animationFrameRef.current = requestAnimationFrame(detectionLoop)
-  }, [detect, isLoaded, updateDetectedItems, isMockMode])
-  
   /**
    * Get policy display name and color - State Farm Branding
    */
   const getPolicyInfo = useCallback(() => {
     const policyMap = {
-      renters: { name: "Renter's Insurance", color: 'bg-[#E31837]', textColor: 'text-white' },
-      homeowners: { name: "Homeowner's Insurance", color: 'bg-[#E31837]', textColor: 'text-white' },
-      auto: { name: 'Auto Insurance', color: 'bg-[#E31837]', textColor: 'text-white' },
-      none: { name: 'No Insurance', color: 'bg-gray-700', textColor: 'text-white' }
-    }
-    return policyMap[policyType] || policyMap.renters
-  }, [policyType])
-  
+      renters: { name: "Renter's Insurance", color: "bg-[#E31837]", textColor: "text-white" },
+      homeowners: { name: "Homeowner's Insurance", color: "bg-[#E31837]", textColor: "text-white" },
+      auto: { name: "Auto Insurance", color: "bg-[#E31837]", textColor: "text-white" },
+      none: { name: "No Insurance", color: "bg-gray-700", textColor: "text-white" },
+    };
+    return policyMap[policyType] || policyMap.renters;
+  }, [policyType]);
+
   // Request camera on mount (if not in mock mode)
   useEffect(() => {
-    requestCamera()
-    
+    requestCamera();
+
     // Cleanup on unmount
     return () => {
-      stopCamera()
+      stopCamera();
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
       }
-    }
-  }, [isMockMode, requestCamera, stopCamera])
-  
+    };
+  }, [requestCamera, stopCamera]);
+
   // Start detection loop when video is ready and model is loaded
   useEffect(() => {
     if (isLoaded && !cameraError && !modelError) {
-      animationFrameRef.current = requestAnimationFrame(detectionLoop)
+      animationFrameRef.current = requestAnimationFrame(detectionLoop);
     }
-    
+
     return () => {
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
       }
-    }
-  }, [isLoaded, cameraError, modelError, detectionLoop])
-  
+    };
+  }, [isLoaded, cameraError, modelError, detectionLoop]);
+
   // Report model errors
   useEffect(() => {
     if (modelError && onError) {
-      onError(modelError)
+      onError(modelError);
     }
-  }, [modelError, onError])
-  
+  }, [modelError, onError]);
+
   // Determine current error state
-  const currentError = modelError || cameraError
-  const isLoadingModel = !isLoaded && !modelError
-  const isCameraPermissionError = cameraError?.message?.includes('denied')
-  const isBrowserUnsupported = cameraError?.message?.includes('Browser not supported')
-  const isModelError = !!modelError
-  
-  const policyInfo = getPolicyInfo()
-  
+  const currentError = modelError || cameraError;
+  const isLoadingModel = !isLoaded && !modelError;
+  const isCameraPermissionError = cameraError?.message?.includes("denied");
+  const isBrowserUnsupported = cameraError?.message?.includes("Browser not supported");
+  const isModelError = !!modelError;
+
+  const policyInfo = getPolicyInfo();
+
   // Loading state with State Farm branding and timeout warning
   if (isLoadingModel) {
     return (
@@ -290,9 +313,9 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
           (This may take up to 15 seconds)
         </p>
       </motion.div>
-    )
+    );
   }
-  
+
   // Error state - Camera Denial Fallback with State Farm branding
   if (currentError) {
     return (
@@ -306,25 +329,29 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E31837] rounded-full flex items-center justify-center mb-4 shadow-lg">
           <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </div>
-        
+
         <h3 className="text-white text-lg sm:text-xl font-bold mb-2">
-          {isCameraPermissionError ? 'Camera Access Needed' : 
-           isBrowserUnsupported ? 'Browser Not Supported' :
-           isModelError ? 'AI Model Failed to Load' : 'Camera Error'}
-        </h3>
-        
-        <p className="text-gray-400 text-sm sm:text-base text-center mb-6 max-w-sm leading-relaxed">
-          {isCameraPermissionError 
-            ? 'Camera access is required to detect items in your room. You can retry the permission request or use manual mode to add items yourself.'
+          {isCameraPermissionError
+            ? "Camera Access Needed"
             : isBrowserUnsupported
-            ? 'Your browser does not support camera access. Please use a modern browser like Chrome, Safari, or Firefox.'
-            : isModelError
-            ? (modelError?.message?.includes('timeout') 
-                ? 'The AI model took too long to load. This is typically due to network issues or CDN unavailability. Please check your internet connection and try again.'
-                : 'The AI detection model failed to load. This may be due to a network issue. Please try reloading the page.')
-            : currentError.message}
+              ? "Browser Not Supported"
+              : isModelError
+                ? "AI Model Failed to Load"
+                : "Camera Error"}
+        </h3>
+
+        <p className="text-gray-400 text-sm sm:text-base text-center mb-6 max-w-sm leading-relaxed">
+          {isCameraPermissionError
+            ? "Camera access is required to detect items in your room. You can retry the permission request or use manual mode to add items yourself."
+            : isBrowserUnsupported
+              ? "Your browser does not support camera access. Please use a modern browser like Chrome, Safari, or Firefox."
+              : isModelError
+                ? modelError?.message?.includes("timeout")
+                  ? "The AI model took too long to load. This is typically due to network issues or CDN unavailability. Please check your internet connection and try again."
+                  : "The AI detection model failed to load. This may be due to a network issue. Please try reloading the page."
+                : currentError.message}
         </p>
-        
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-md">
           {/* Retry Button */}
@@ -336,10 +363,13 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#E31837] hover:bg-[#B8122C] text-white font-semibold rounded-lg transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#E31837] focus:ring-offset-2"
           >
             <RefreshCw className="w-4 h-4" />
-            {isCameraPermissionError ? 'Retry Permission' : 
-             isModelError ? 'Reload Page' : 'Try Again'}
+            {isCameraPermissionError
+              ? "Retry Permission"
+              : isModelError
+                ? "Reload Page"
+                : "Try Again"}
           </motion.button>
-          
+
           {/* Manual Mode Button */}
           {(isCameraPermissionError || isBrowserUnsupported) && (
             <motion.button
@@ -355,22 +385,23 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
             </motion.button>
           )}
         </div>
-        
+
         {/* Helpful tip for manual mode */}
         {(isCameraPermissionError || isBrowserUnsupported) && (
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
             className="mt-4 text-xs sm:text-sm text-gray-500 max-w-xs"
           >
-            Manual mode lets you add items by hand. You can still switch policies, view coverage details, and see recommendations.
+            Manual mode lets you add items by hand. You can still switch policies, view coverage
+            details, and see recommendations.
           </motion.p>
         )}
       </motion.div>
-    )
+    );
   }
-  
+
   // Camera view state
   return (
     <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
@@ -379,9 +410,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         data-testid="policy-badge"
         className={`absolute top-4 left-4 z-20 px-3 py-1.5 ${policyInfo.color} rounded-full shadow-lg`}
       >
-        <span className={`text-xs font-semibold ${policyInfo.textColor}`}>
-          {policyInfo.name}
-        </span>
+        <span className={`text-xs font-semibold ${policyInfo.textColor}`}>{policyInfo.name}</span>
       </div>
 
       {/* Mock mode indicator */}
@@ -391,9 +420,7 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
           className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-yellow-600 rounded-full shadow-lg flex items-center gap-2"
         >
           <Bug className="w-3 h-3 text-yellow-100" />
-          <span className="text-xs font-semibold text-yellow-100">
-            Mock Mode
-          </span>
+          <span className="text-xs font-semibold text-yellow-100">Mock Mode</span>
         </div>
       )}
 
@@ -449,5 +476,5 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         </div>
       )}
     </div>
-  )
+  );
 }

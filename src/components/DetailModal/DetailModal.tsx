@@ -1,44 +1,44 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { lookupCoverage } from '@/utils/coverageLookup'
-import coverageRules from '@/data/coverageRules.json'
-import type { DetectedItem, ManualItem, CoverageResult, PolicyType } from '../../types'
-import { 
-  X, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Shield, 
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
   DollarSign,
   FileText,
+  type LucideIcon,
+  Shield,
   TrendingUp,
-  AlertCircle,
-  type LucideIcon
-} from 'lucide-react'
+  X,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import coverageRules from "@/data/coverageRules.json";
+import { lookupCoverage } from "@/utils/coverageLookup";
+import type { CoverageResult, DetectedItem, ManualItem, PolicyType } from "../../types";
 
 // Local type for item with source property
- type DetailModalItem = (DetectedItem | ManualItem) & { source?: 'camera' | 'dashboard' }
+type DetailModalItem = (DetectedItem | ManualItem) & { source?: "camera" | "dashboard" };
 
 /** Props for DetailModal component */
 export interface DetailModalProps {
   /** Whether the modal is visible */
-  isOpen: boolean
+  isOpen: boolean;
   /** Callback when modal should close */
-  onClose: () => void
+  onClose: () => void;
   /** The item to display details for */
-  item: DetailModalItem | null
+  item: DetailModalItem | null;
   /** Current policy type */
-  policyType?: PolicyType
+  policyType?: PolicyType;
 }
 
 /** Status configuration type */
 interface StatusConfig {
-  icon: LucideIcon
-  label: string
-  bgColor: string
-  textColor: string
-  borderColor: string
-  iconColor: string
+  icon: LucideIcon;
+  label: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+  iconColor: string;
 }
 
 /**
@@ -47,11 +47,11 @@ interface StatusConfig {
  * @returns Formatted currency string
  */
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0
-  }).format(value || 0)
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
 }
 
 /**
@@ -60,11 +60,11 @@ function formatCurrency(value: number): string {
  * @returns Capitalized string
  */
 function capitalizeWords(str: string): string {
-  if (!str) return ''
+  if (!str) return "";
   return str
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 /**
@@ -76,10 +76,10 @@ function getPolicyDisplayName(policyType: string): string {
   const policyNames: Record<string, string> = {
     renters: "Renter's Insurance",
     homeowners: "Homeowner's Insurance",
-    auto: 'Auto Insurance',
-    none: 'No Insurance'
-  }
-  return policyNames[policyType] || policyType
+    auto: "Auto Insurance",
+    none: "No Insurance",
+  };
+  return policyNames[policyType] || policyType;
 }
 
 /**
@@ -88,51 +88,54 @@ function getPolicyDisplayName(policyType: string): string {
  * @param policyType - The policy type
  * @returns Array of scenario strings
  */
-function getCommonScenarios(category: string | undefined, policyType: string | undefined): string[] {
-  const normalizedCategory = category?.toLowerCase()
-  const normalizedPolicy = policyType?.toLowerCase()
-  
+function getCommonScenarios(
+  category: string | undefined,
+  policyType: string | undefined,
+): string[] {
+  const normalizedCategory = category?.toLowerCase();
+  const normalizedPolicy = policyType?.toLowerCase();
+
   // Try to get scenarios from coverage rules
-  const policyRules = coverageRules[normalizedPolicy as keyof typeof coverageRules]
+  const policyRules = coverageRules[normalizedPolicy as keyof typeof coverageRules];
   if (policyRules) {
-    const categoryRule = policyRules[normalizedCategory as keyof typeof policyRules]
-    if (categoryRule && typeof categoryRule === 'object' && 'commonScenarios' in categoryRule) {
-      const ruleWithScenarios = categoryRule as { commonScenarios?: string[] }
+    const categoryRule = policyRules[normalizedCategory as keyof typeof policyRules];
+    if (categoryRule && typeof categoryRule === "object" && "commonScenarios" in categoryRule) {
+      const ruleWithScenarios = categoryRule as { commonScenarios?: string[] };
       if (ruleWithScenarios.commonScenarios) {
-        return ruleWithScenarios.commonScenarios
+        return ruleWithScenarios.commonScenarios;
       }
     }
   }
-  
+
   // Default scenarios based on coverage status
-  const coverage = lookupCoverage(category || '', policyType || '')
-  
-  if (coverage.status === 'covered') {
+  const coverage = lookupCoverage(category || "", policyType || "");
+
+  if (coverage.status === "covered") {
     return [
-      'Theft or burglary',
-      'Fire damage',
-      'Water damage (non-flood)',
-      'Vandalism',
-      'Accidental damage (check your policy)'
-    ]
-  } else if (coverage.status === 'conditional') {
+      "Theft or burglary",
+      "Fire damage",
+      "Water damage (non-flood)",
+      "Vandalism",
+      "Accidental damage (check your policy)",
+    ];
+  } else if (coverage.status === "conditional") {
     return [
-      'Theft from secured location',
-      'Damage during covered peril (conditions apply)',
-      'Contact your agent for specific scenarios'
-    ]
+      "Theft from secured location",
+      "Damage during covered peril (conditions apply)",
+      "Contact your agent for specific scenarios",
+    ];
   } else {
     return [
-      'Item is not covered under current policy',
-      'Consider alternative coverage options',
-      'Speak with an insurance agent for guidance'
-    ]
+      "Item is not covered under current policy",
+      "Consider alternative coverage options",
+      "Speak with an insurance agent for guidance",
+    ];
   }
 }
 
 /**
  * DetailModal component - Modal showing detailed coverage information
- * 
+ *
  * Features:
  * - Shows item name, estimated value, coverage status
  * - Displays why item is/isn't covered
@@ -144,137 +147,143 @@ function getCommonScenarios(category: string | undefined, policyType: string | u
  * - Camera feed dimming when opened from camera view
  * - Content updates on policy change
  */
-export function DetailModal({ 
-  isOpen, 
-  onClose, 
-  item, 
-  policyType = 'renters'
+export function DetailModal({
+  isOpen,
+  onClose,
+  item,
+  policyType = "renters",
 }: DetailModalProps): React.ReactNode {
-  const modalRef = useRef<HTMLDivElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-  const previousActiveElement = useRef<HTMLElement | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
 
   // Get coverage information
   const coverage: CoverageResult | null = useMemo(() => {
-    if (!item) return null
-    return lookupCoverage(item.category, policyType)
-  }, [item, policyType])
+    if (!item) return null;
+    return lookupCoverage(item.category, policyType);
+  }, [item, policyType]);
 
   // Get common scenarios
   const scenarios: string[] = useMemo(() => {
-    if (!item) return []
-    return getCommonScenarios(item.category, policyType)
-  }, [item, policyType])
+    if (!item) return [];
+    return getCommonScenarios(item.category, policyType);
+  }, [item, policyType]);
 
   // Status configuration with State Farm branding
   const statusConfig: StatusConfig | null = useMemo(() => {
-    if (!coverage) return null
-    
+    if (!coverage) return null;
+
     const configs: Record<string, StatusConfig> = {
       covered: {
         icon: CheckCircle,
-        label: 'Covered',
-        bgColor: 'bg-green-100',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-200',
-        iconColor: 'text-green-500'
+        label: "Covered",
+        bgColor: "bg-green-100",
+        textColor: "text-green-700",
+        borderColor: "border-green-200",
+        iconColor: "text-green-500",
       },
       conditional: {
         icon: AlertTriangle,
-        label: 'Conditional',
-        bgColor: 'bg-yellow-100',
-        textColor: 'text-yellow-700',
-        borderColor: 'border-yellow-200',
-        iconColor: 'text-yellow-500'
+        label: "Conditional",
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-700",
+        borderColor: "border-yellow-200",
+        iconColor: "text-yellow-500",
       },
       not_covered: {
         icon: XCircle,
-        label: 'Not Covered',
-        bgColor: 'bg-red-100',
-        textColor: 'text-red-700',
-        borderColor: 'border-red-200',
-        iconColor: 'text-[#E31837]'
-      }
-    }
-    
-    return configs[coverage.status] || configs.not_covered
-  }, [coverage])
+        label: "Not Covered",
+        bgColor: "bg-red-100",
+        textColor: "text-red-700",
+        borderColor: "border-red-200",
+        iconColor: "text-[#E31837]",
+      },
+    };
+
+    return configs[coverage.status] || configs.not_covered;
+  }, [coverage]);
 
   // Handle Escape key
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      onClose()
-    }
-  }, [onClose])
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   // Handle backdrop click
-  const handleBackdropClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) {
-      onClose()
-    }
-  }, [onClose])
+  const handleBackdropClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   // Focus trap implementation
   const handleModalKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== 'Tab') return
+    if (event.key !== "Tab") return;
 
-    const modal = modalRef.current
-    if (!modal) return
+    const modal = modalRef.current;
+    if (!modal) return;
 
     const focusableElements = modal.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )
-    
-    if (focusableElements.length === 0) return
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
 
-    const firstElement = focusableElements[0]
-    const lastElement = focusableElements[focusableElements.length - 1]
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
 
     if (event.shiftKey && document.activeElement === firstElement) {
-      event.preventDefault()
-      lastElement.focus()
+      event.preventDefault();
+      lastElement.focus();
     } else if (!event.shiftKey && document.activeElement === lastElement) {
-      event.preventDefault()
-      firstElement.focus()
+      event.preventDefault();
+      firstElement.focus();
     }
-  }, [])
+  }, []);
 
   // Save previously focused element and add event listeners
   useEffect(() => {
     if (isOpen) {
-      previousActiveElement.current = document.activeElement as HTMLElement
-      
+      previousActiveElement.current = document.activeElement as HTMLElement;
+
       // Add Escape key listener to document
-      document.addEventListener('keydown', handleKeyDown)
-      
+      document.addEventListener("keydown", handleKeyDown);
+
       // Focus the close button when modal opens
       setTimeout(() => {
-        closeButtonRef.current?.focus()
-      }, 0)
-      
+        closeButtonRef.current?.focus();
+      }, 0);
+
       // Prevent body scroll
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     }
-    
+
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
-      
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+
       // Restore focus when modal closes
       if (!isOpen && previousActiveElement.current) {
-        previousActiveElement.current.focus()
+        previousActiveElement.current.focus();
       }
-    }
-  }, [isOpen, handleKeyDown])
+    };
+  }, [isOpen, handleKeyDown]);
 
   // Don't render if not open or no item
   if (!isOpen || !item || !coverage || !statusConfig) {
-    return null
+    return null;
   }
 
-  const StatusIcon = statusConfig.icon
-  const isFromCamera = item.source === 'camera'
-  const policyDisplayName = getPolicyDisplayName(policyType)
+  const StatusIcon = statusConfig.icon;
+  const isFromCamera = item.source === "camera";
+  const policyDisplayName = getPolicyDisplayName(policyType);
 
   return (
     <AnimatePresence>
@@ -295,14 +304,14 @@ export function DetailModal({
           {/* Backdrop */}
           <motion.div
             data-testid="modal-backdrop"
-            className={`absolute inset-0 ${isFromCamera ? 'bg-black/60' : 'bg-black/50'} backdrop-blur-sm`}
+            className={`absolute inset-0 ${isFromCamera ? "bg-black/60" : "bg-black/50"} backdrop-blur-sm`}
             onClick={handleBackdropClick}
             aria-hidden="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
-          
+
           {/* Modal Content - Slide Up Animation */}
           <motion.div
             data-testid="modal-content"
@@ -313,12 +322,14 @@ export function DetailModal({
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             {/* Header */}
-            <div className={`px-4 sm:px-6 py-4 border-b ${statusConfig.borderColor} ${statusConfig.bgColor}`}>
+            <div
+              className={`px-4 sm:px-6 py-4 border-b ${statusConfig.borderColor} ${statusConfig.bgColor}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <StatusIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${statusConfig.iconColor}`} />
-                  <h2 
-                    id="modal-title" 
+                  <h2
+                    id="modal-title"
                     data-testid="modal-title"
                     className="text-lg sm:text-xl font-bold text-gray-900"
                   >
@@ -344,8 +355,8 @@ export function DetailModal({
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm text-gray-500 mb-1">Item</p>
-                  <h3 
-                    data-testid="item-name" 
+                  <h3
+                    data-testid="item-name"
                     className="text-xl sm:text-2xl font-bold text-gray-900 capitalize"
                   >
                     {capitalizeWords(item.category)}
@@ -353,8 +364,8 @@ export function DetailModal({
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-xs sm:text-sm text-gray-500 mb-1">Estimated Value</p>
-                  <p 
-                    data-testid="item-value" 
+                  <p
+                    data-testid="item-value"
                     className="text-xl sm:text-2xl font-bold text-gray-900"
                   >
                     {formatCurrency(coverage.estimatedValue)}
@@ -363,10 +374,12 @@ export function DetailModal({
               </div>
 
               {/* Coverage Status Badge */}
-              <div className={`p-3 sm:p-4 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}>
+              <div
+                className={`p-3 sm:p-4 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}
+              >
                 <div className="flex items-center gap-3">
                   <StatusIcon className={`w-5 h-5 ${statusConfig.iconColor}`} />
-                  <span 
+                  <span
                     data-testid="coverage-status"
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}
                   >
@@ -379,10 +392,12 @@ export function DetailModal({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Coverage Details</h4>
+                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+                    Coverage Details
+                  </h4>
                 </div>
-                <p 
-                  data-testid="coverage-note" 
+                <p
+                  data-testid="coverage-note"
                   className="text-gray-700 leading-relaxed pl-6 sm:pl-7 text-sm sm:text-base"
                 >
                   {coverage.note}
@@ -393,10 +408,12 @@ export function DetailModal({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Current Policy</h4>
+                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+                    Current Policy
+                  </h4>
                 </div>
-                <p 
-                  data-testid="policy-info" 
+                <p
+                  data-testid="policy-info"
                   className="text-gray-700 pl-6 sm:pl-7 text-sm sm:text-base"
                 >
                   {policyDisplayName}
@@ -404,32 +421,44 @@ export function DetailModal({
               </div>
 
               {/* Conditions (for conditional coverage) */}
-              {coverage.status === 'conditional' && coverage.conditions && coverage.conditions.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Conditions That Apply</h4>
+              {coverage.status === "conditional" &&
+                coverage.conditions &&
+                coverage.conditions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+                        Conditions That Apply
+                      </h4>
+                    </div>
+                    <ul data-testid="conditions-list" className="space-y-1 pl-6 sm:pl-7">
+                      {coverage.conditions.map((condition) => (
+                        <li
+                          key={condition}
+                          className="text-gray-700 flex items-start gap-2 text-sm sm:text-base"
+                        >
+                          <span className="text-yellow-500 mt-1">•</span>
+                          {condition}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul data-testid="conditions-list" className="space-y-1 pl-6 sm:pl-7">
-                    {coverage.conditions.map((condition, index) => (
-                      <li key={index} className="text-gray-700 flex items-start gap-2 text-sm sm:text-base">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        {condition}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                )}
 
               {/* Common Claim Scenarios */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Common Claim Scenarios</h4>
+                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+                    Common Claim Scenarios
+                  </h4>
                 </div>
                 <ul data-testid="common-scenarios" className="space-y-2 pl-6 sm:pl-7">
-                  {scenarios.map((scenario, index) => (
-                    <li key={index} className="text-gray-700 flex items-start gap-2 text-sm sm:text-base">
+                  {scenarios.map((scenario) => (
+                    <li
+                      key={scenario}
+                      className="text-gray-700 flex items-start gap-2 text-sm sm:text-base"
+                    >
                       <span className="text-gray-400 mt-1">•</span>
                       {scenario}
                     </li>
@@ -438,15 +467,19 @@ export function DetailModal({
               </div>
 
               {/* Upgrade Options */}
-              <div className={`p-3 sm:p-4 rounded-lg ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
+              <div
+                className={`p-3 sm:p-4 rounded-lg ${statusConfig.bgColor} border ${statusConfig.borderColor}`}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className={`w-4 h-4 sm:w-5 sm:h-5 ${statusConfig.iconColor}`} />
                   <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {coverage.status === 'covered' ? 'Coverage Enhancements' : 'How to Get Coverage'}
+                    {coverage.status === "covered"
+                      ? "Coverage Enhancements"
+                      : "How to Get Coverage"}
                   </h4>
                 </div>
-                <p 
-                  data-testid="upgrade-options" 
+                <p
+                  data-testid="upgrade-options"
                   className="text-gray-700 pl-6 sm:pl-7 text-sm sm:text-base"
                 >
                   {coverage.upgrade}
@@ -467,7 +500,7 @@ export function DetailModal({
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
-export default DetailModal
+export default DetailModal;

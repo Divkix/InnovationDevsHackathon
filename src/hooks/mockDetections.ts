@@ -10,7 +10,7 @@
  * @module mockDetections
  */
 
-import type { MockDetection, Detection, BoundingBox, DetectionCategory } from '../types';
+import type { BoundingBox, Detection, DetectionCategory, MockDetection } from "../types";
 
 /**
  * Mock detection for a laptop
@@ -26,9 +26,9 @@ export const MOCK_LAPTOP: MockDetection = {
   } satisfies BoundingBox,
   categories: [
     {
-      categoryName: 'laptop',
+      categoryName: "laptop",
       score: 0.92,
-      displayName: 'Laptop',
+      displayName: "Laptop",
     } satisfies DetectionCategory,
   ],
 };
@@ -47,9 +47,9 @@ export const MOCK_CAR: MockDetection = {
   } satisfies BoundingBox,
   categories: [
     {
-      categoryName: 'car',
+      categoryName: "car",
       score: 0.88,
-      displayName: 'Car',
+      displayName: "Car",
     } satisfies DetectionCategory,
   ],
 };
@@ -68,9 +68,9 @@ export const MOCK_BICYCLE: MockDetection = {
   } satisfies BoundingBox,
   categories: [
     {
-      categoryName: 'bicycle',
+      categoryName: "bicycle",
       score: 0.85,
-      displayName: 'Bicycle',
+      displayName: "Bicycle",
     } satisfies DetectionCategory,
   ],
 };
@@ -106,9 +106,7 @@ export function getMockDetectionByCategory(category: string): Detection | null {
  * @returns Filtered mock detections
  */
 export function getMockDetectionsByConfidence(minScore = 0.5): Detection[] {
-  return getMockDetections().filter(
-    (detection) => detection.categories[0]?.score >= minScore
-  );
+  return getMockDetections().filter((detection) => detection.categories[0]?.score >= minScore);
 }
 
 export default getMockDetections;

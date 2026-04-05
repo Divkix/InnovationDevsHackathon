@@ -1,8 +1,8 @@
-import type { AnimationProps } from '../types';
+import type { AnimationProps } from "../types";
 
 /**
  * Test environment detection utility
- * 
+ *
  * Provides a way to detect if code is running in a test environment
  * and adjust behavior accordingly (e.g., disable animations)
  */
@@ -10,7 +10,7 @@ import type { AnimationProps } from '../types';
 // Extend Window interface to include test globals
 declare global {
   interface Window {
-    __TESTING__?: boolean
+    __TESTING__?: boolean;
   }
 }
 
@@ -20,11 +20,9 @@ declare global {
  */
 export function isTestEnvironment(): boolean {
   return (
-    typeof process !== 'undefined' && 
-    (process.env.NODE_ENV === 'test' || process.env.VITEST !== undefined)
-  ) || (
-    typeof window !== 'undefined' && 
-    window.__TESTING__ === true
+    (typeof process !== "undefined" &&
+      (process.env.NODE_ENV === "test" || process.env.VITEST !== undefined)) ||
+    (typeof window !== "undefined" && window.__TESTING__ === true)
   );
 }
 
@@ -41,7 +39,7 @@ export function getAnimationProps(animationProps: AnimationProps = {}): Animatio
       initial: false,
       animate: animationProps.animate || {},
       exit: animationProps.exit || {},
-      transition: { duration: 0 }
+      transition: { duration: 0 },
     };
   }
   return animationProps;
@@ -52,5 +50,5 @@ export function getAnimationProps(animationProps: AnimationProps = {}): Animatio
  * Use this to spread props onto motion components
  */
 export const testSafeMotion: AnimationProps = {
-  initial: typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ? false : undefined
+  initial: typeof process !== "undefined" && process.env.NODE_ENV === "test" ? false : undefined,
 };

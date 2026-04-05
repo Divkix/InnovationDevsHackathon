@@ -1,35 +1,30 @@
-import coverageRules from '@/data/coverageRules.json';
-import type {
-  PolicyType,
-  CoverageStatus,
-  CoverageColor,
-  CoverageResult,
-} from '../types';
+import coverageRules from "@/data/coverageRules.json";
+import type { CoverageColor, CoverageResult, CoverageStatus, PolicyType } from "../types";
 
 /**
  * Default coverage result for unknown categories
  */
 const DEFAULT_COVERAGE_RESULT: CoverageResult = {
-  status: 'not_covered',
-  color: 'red',
+  status: "not_covered",
+  color: "red",
   estimatedValue: 0,
-  note: 'Unknown category — assuming not covered. Please verify with your insurance provider.',
+  note: "Unknown category — assuming not covered. Please verify with your insurance provider.",
   conditions: [],
-  upgrade: 'Consult with an insurance agent about coverage for this item',
+  upgrade: "Consult with an insurance agent about coverage for this item",
 };
 
 /**
  * Valid policy types
  */
-export const VALID_POLICY_TYPES: PolicyType[] = ['renters', 'homeowners', 'auto', 'none'];
+export const VALID_POLICY_TYPES: PolicyType[] = ["renters", "homeowners", "auto", "none"];
 
 /**
  * Normalizes a category name to match the keys in coverageRules.json
  * Handles case insensitivity and common variations
  */
 function normalizeCategory(category: string): string {
-  if (!category || typeof category !== 'string') {
-    return '';
+  if (!category || typeof category !== "string") {
+    return "";
   }
 
   // Convert to lowercase and trim
@@ -40,29 +35,29 @@ function normalizeCategory(category: string): string {
  * Normalizes a policy type to ensure it's valid
  */
 function normalizePolicyType(policyType: string): PolicyType {
-  if (!policyType || typeof policyType !== 'string') {
-    return 'none';
+  if (!policyType || typeof policyType !== "string") {
+    return "none";
   }
 
   const normalized = policyType.toLowerCase().trim();
 
   // Map common variations to valid types
   const policyMap: Record<string, PolicyType> = {
-    renters: 'renters',
-    renter: 'renters',
-    "renter's": 'renters',
-    homeowners: 'homeowners',
-    homeowner: 'homeowners',
-    "homeowner's": 'homeowners',
-    auto: 'auto',
-    car: 'auto',
-    vehicle: 'auto',
-    none: 'none',
-    no: 'none',
-    uninsured: 'none',
+    renters: "renters",
+    renter: "renters",
+    "renter's": "renters",
+    homeowners: "homeowners",
+    homeowner: "homeowners",
+    "homeowner's": "homeowners",
+    auto: "auto",
+    car: "auto",
+    vehicle: "auto",
+    none: "none",
+    no: "none",
+    uninsured: "none",
   };
 
-  return policyMap[normalized] || 'none';
+  return policyMap[normalized] || "none";
 }
 
 /**
@@ -76,10 +71,7 @@ function normalizePolicyType(policyType: string): PolicyType {
  * const result = lookupCoverage('car', 'renters');
  * // Returns: { status: 'not_covered', color: 'red', estimatedValue: 15000, ... }
  */
-export function lookupCoverage(
-  category: string,
-  policyType: string,
-): CoverageResult {
+export function lookupCoverage(category: string, policyType: string): CoverageResult {
   // Normalize inputs
   const normalizedCategory = normalizeCategory(category);
   const normalizedPolicy = normalizePolicyType(policyType);
@@ -119,7 +111,7 @@ export function lookupCoverage(
  */
 export function getCategoriesForPolicy(policyType: string): string[] {
   // Don't normalize - check if it's a valid policy type
-  if (!policyType || typeof policyType !== 'string') {
+  if (!policyType || typeof policyType !== "string") {
     return [];
   }
 
@@ -155,7 +147,7 @@ export function isValidCategory(category: string): boolean {
   // Check if category exists in any policy
   for (const policyType of VALID_POLICY_TYPES) {
     const policyRules = coverageRules[policyType as keyof typeof coverageRules];
-    if (policyRules && policyRules[normalizedCategory as keyof typeof policyRules]) {
+    if (policyRules?.[normalizedCategory as keyof typeof policyRules]) {
       return true;
     }
   }

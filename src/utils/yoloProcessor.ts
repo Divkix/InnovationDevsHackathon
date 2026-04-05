@@ -6,13 +6,7 @@
  * [x1, y1, x2, y2, confidence, class_id]
  */
 
-import type {
-	BoundingBox,
-	XYXYBox,
-	Detection,
-	YOLODetection,
-	YOLOProcessOptions,
-} from "../types";
+import type { BoundingBox, Detection, XYXYBox, YOLODetection, YOLOProcessOptions } from "../types";
 
 /**
  * Convert XYXY (corner-based) coordinates to a bounding box object.
@@ -20,17 +14,17 @@ import type {
  * @returns Box in {originX, originY, width, height} format (corner coords)
  */
 export function xyxyToBoundingBox(box: XYXYBox): BoundingBox {
-	const originX = Math.max(0, box.x1);
-	const originY = Math.max(0, box.y1);
-	const width = Math.max(0, box.x2 - box.x1);
-	const height = Math.max(0, box.y2 - box.y1);
+  const originX = Math.max(0, box.x1);
+  const originY = Math.max(0, box.y1);
+  const width = Math.max(0, box.x2 - box.x1);
+  const height = Math.max(0, box.y2 - box.y1);
 
-	return {
-		originX,
-		originY,
-		width,
-		height,
-	};
+  return {
+    originX,
+    originY,
+    width,
+    height,
+  };
 }
 
 /**
@@ -40,17 +34,13 @@ export function xyxyToBoundingBox(box: XYXYBox): BoundingBox {
  * @param scaleY
  * @returns
  */
-export function scaleBoundingBox(
-	box: BoundingBox,
-	scaleX = 1,
-	scaleY = 1,
-): BoundingBox {
-	return {
-		originX: box.originX * scaleX,
-		originY: box.originY * scaleY,
-		width: box.width * scaleX,
-		height: box.height * scaleY,
-	};
+export function scaleBoundingBox(box: BoundingBox, scaleX = 1, scaleY = 1): BoundingBox {
+  return {
+    originX: box.originX * scaleX,
+    originY: box.originY * scaleY,
+    width: box.width * scaleX,
+    height: box.height * scaleY,
+  };
 }
 
 /**
@@ -61,21 +51,21 @@ export function scaleBoundingBox(
  * @returns
  */
 export function clampBoundingBox(
-	box: BoundingBox,
-	maxWidth = Infinity,
-	maxHeight = Infinity,
+  box: BoundingBox,
+  maxWidth = Infinity,
+  maxHeight = Infinity,
 ): BoundingBox {
-	const left = Math.min(Math.max(0, box.originX), maxWidth);
-	const top = Math.min(Math.max(0, box.originY), maxHeight);
-	const right = Math.min(Math.max(left, box.originX + box.width), maxWidth);
-	const bottom = Math.min(Math.max(top, box.originY + box.height), maxHeight);
+  const left = Math.min(Math.max(0, box.originX), maxWidth);
+  const top = Math.min(Math.max(0, box.originY), maxHeight);
+  const right = Math.min(Math.max(left, box.originX + box.width), maxWidth);
+  const bottom = Math.min(Math.max(top, box.originY + box.height), maxHeight);
 
-	return {
-		originX: left,
-		originY: top,
-		width: Math.max(0, right - left),
-		height: Math.max(0, bottom - top),
-	};
+  return {
+    originX: left,
+    originY: top,
+    width: Math.max(0, right - left),
+    height: Math.max(0, bottom - top),
+  };
 }
 
 /**
@@ -93,62 +83,53 @@ export function clampBoundingBox(
  * @returns Detections in MediaPipe format
  */
 export function processYOLOOutput(
-	yoloOutput: YOLODetection[],
-	classNames: string[],
-	confidenceThreshold = 0.5,
-	options: YOLOProcessOptions = {},
+  yoloOutput: YOLODetection[],
+  classNames: string[],
+  confidenceThreshold = 0.5,
+  options: YOLOProcessOptions = {},
 ): Detection[] {
-	if (!yoloOutput || !Array.isArray(yoloOutput) || yoloOutput.length === 0) {
-		return [];
-	}
+  if (!yoloOutput || !Array.isArray(yoloOutput) || yoloOutput.length === 0) {
+    return [];
+  }
 
-	const {
-		scaleX = 1,
-		scaleY = 1,
-		imageWidth = Infinity,
-		imageHeight = Infinity,
-	} = options;
+  const { scaleX = 1, scaleY = 1, imageWidth = Infinity, imageHeight = Infinity } = options;
 
-	const detections: Detection[] = [];
+  const detections: Detection[] = [];
 
-	for (const detection of yoloOutput) {
-		// Skip invalid detections
-		if (!Array.isArray(detection) || detection.length < 6) continue;
+  for (const detection of yoloOutput) {
+    // Skip invalid detections
+    if (!Array.isArray(detection) || detection.length < 6) continue;
 
-		const [x1, y1, x2, y2, confidence, classId] = detection;
+    const [x1, y1, x2, y2, confidence, classId] = detection;
 
-		// Filter by confidence threshold
-		if (confidence < confidenceThreshold) continue;
+    // Filter by confidence threshold
+    if (confidence < confidenceThreshold) continue;
 
-		// Get class name
-		const categoryName = classNames[Math.floor(classId)] || "unknown";
+    // Get class name
+    const categoryName = classNames[Math.floor(classId)] || "unknown";
 
-		// Convert from model output coordinates into source image coordinates.
-		const boundingBox = clampBoundingBox(
-			scaleBoundingBox(
-				xyxyToBoundingBox({ x1, y1, x2, y2 }),
-				scaleX,
-				scaleY,
-			),
-			imageWidth,
-			imageHeight,
-		);
+    // Convert from model output coordinates into source image coordinates.
+    const boundingBox = clampBoundingBox(
+      scaleBoundingBox(xyxyToBoundingBox({ x1, y1, x2, y2 }), scaleX, scaleY),
+      imageWidth,
+      imageHeight,
+    );
 
-		if (boundingBox.width <= 0 || boundingBox.height <= 0) continue;
+    if (boundingBox.width <= 0 || boundingBox.height <= 0) continue;
 
-		detections.push({
-			boundingBox,
-			categories: [
-				{
-					categoryName,
-					score: confidence,
-					displayName: categoryName,
-				},
-			],
-		});
-	}
+    detections.push({
+      boundingBox,
+      categories: [
+        {
+          categoryName,
+          score: confidence,
+          displayName: categoryName,
+        },
+      ],
+    });
+  }
 
-	return detections;
+  return detections;
 }
 
 /**
@@ -156,86 +137,86 @@ export function processYOLOOutput(
  * These match the standard COCO dataset used by YOLO models
  */
 export const COCO_CLASS_NAMES: string[] = [
-	"person",
-	"bicycle",
-	"car",
-	"motorcycle",
-	"airplane",
-	"bus",
-	"train",
-	"truck",
-	"boat",
-	"traffic light",
-	"fire hydrant",
-	"stop sign",
-	"parking meter",
-	"bench",
-	"bird",
-	"cat",
-	"dog",
-	"horse",
-	"sheep",
-	"cow",
-	"elephant",
-	"bear",
-	"zebra",
-	"giraffe",
-	"backpack",
-	"umbrella",
-	"handbag",
-	"tie",
-	"suitcase",
-	"frisbee",
-	"skis",
-	"snowboard",
-	"sports ball",
-	"kite",
-	"baseball bat",
-	"baseball glove",
-	"skateboard",
-	"surfboard",
-	"tennis racket",
-	"bottle",
-	"wine glass",
-	"cup",
-	"fork",
-	"knife",
-	"spoon",
-	"bowl",
-	"banana",
-	"apple",
-	"sandwich",
-	"orange",
-	"broccoli",
-	"carrot",
-	"hot dog",
-	"pizza",
-	"donut",
-	"cake",
-	"chair",
-	"couch",
-	"potted plant",
-	"bed",
-	"dining table",
-	"toilet",
-	"tv",
-	"laptop",
-	"mouse",
-	"remote",
-	"keyboard",
-	"cell phone",
-	"microwave",
-	"oven",
-	"toaster",
-	"sink",
-	"refrigerator",
-	"book",
-	"clock",
-	"vase",
-	"scissors",
-	"teddy bear",
-	"hair drier",
-	"toothbrush",
+  "person",
+  "bicycle",
+  "car",
+  "motorcycle",
+  "airplane",
+  "bus",
+  "train",
+  "truck",
+  "boat",
+  "traffic light",
+  "fire hydrant",
+  "stop sign",
+  "parking meter",
+  "bench",
+  "bird",
+  "cat",
+  "dog",
+  "horse",
+  "sheep",
+  "cow",
+  "elephant",
+  "bear",
+  "zebra",
+  "giraffe",
+  "backpack",
+  "umbrella",
+  "handbag",
+  "tie",
+  "suitcase",
+  "frisbee",
+  "skis",
+  "snowboard",
+  "sports ball",
+  "kite",
+  "baseball bat",
+  "baseball glove",
+  "skateboard",
+  "surfboard",
+  "tennis racket",
+  "bottle",
+  "wine glass",
+  "cup",
+  "fork",
+  "knife",
+  "spoon",
+  "bowl",
+  "banana",
+  "apple",
+  "sandwich",
+  "orange",
+  "broccoli",
+  "carrot",
+  "hot dog",
+  "pizza",
+  "donut",
+  "cake",
+  "chair",
+  "couch",
+  "potted plant",
+  "bed",
+  "dining table",
+  "toilet",
+  "tv",
+  "laptop",
+  "mouse",
+  "remote",
+  "keyboard",
+  "cell phone",
+  "microwave",
+  "oven",
+  "toaster",
+  "sink",
+  "refrigerator",
+  "book",
+  "clock",
+  "vase",
+  "scissors",
+  "teddy bear",
+  "hair drier",
+  "toothbrush",
 ];
 
 export default processYOLOOutput;

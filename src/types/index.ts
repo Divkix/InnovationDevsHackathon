@@ -1,27 +1,27 @@
 /**
  * Shared domain types for InsureScope
- * 
+ *
  * These types define the contracts used across the application.
  * They are consumed by hooks, components, and utilities.
  */
 
-import type { RefObject, ReactNode } from 'react';
+import type { ReactNode, RefObject } from "react";
 
 // Re-export React types for convenience
-export type { RefObject, ReactNode };
+export type { ReactNode, RefObject };
 
 // ============================================================================
 // Policy & Coverage Types
 // ============================================================================
 
 /** Valid insurance policy types */
-export type PolicyType = 'renters' | 'homeowners' | 'auto' | 'none';
+export type PolicyType = "renters" | "homeowners" | "auto" | "none";
 
 /** Coverage status for an item */
-export type CoverageStatus = 'covered' | 'conditional' | 'not_covered';
+export type CoverageStatus = "covered" | "conditional" | "not_covered";
 
 /** Color coding for coverage status */
-export type CoverageColor = 'green' | 'yellow' | 'red';
+export type CoverageColor = "green" | "yellow" | "red";
 
 /** Coverage result returned by lookup functions */
 export interface CoverageResult {
@@ -34,7 +34,7 @@ export interface CoverageResult {
 }
 
 /** Valid policy type values for runtime checks */
-export const VALID_POLICY_TYPES: PolicyType[] = ['renters', 'homeowners', 'auto', 'none'];
+export const VALID_POLICY_TYPES: PolicyType[] = ["renters", "homeowners", "auto", "none"];
 
 // ============================================================================
 // Detection & ML Types
@@ -94,7 +94,7 @@ export type YOLODetection = [
   x2: number,
   y2: number,
   confidence: number,
-  classId: number
+  classId: number,
 ];
 
 /** Options for YOLO output processing */
@@ -110,7 +110,7 @@ export interface YOLOProcessOptions {
 // ============================================================================
 
 /** Tab identifiers for navigation */
-export type AppTab = 'camera' | 'upload' | 'manual' | 'dashboard';
+export type AppTab = "camera" | "upload" | "manual" | "dashboard";
 
 /** Storage key constants */
 export interface StorageKeys {
@@ -134,9 +134,7 @@ export interface AppState {
 }
 
 /** Input type for updating detected items */
-export type DetectedItemsInput =
-  | Map<string, DetectedItem>
-  | Record<string, DetectedItem>
+export type DetectedItemsInput = Map<string, DetectedItem> | Record<string, DetectedItem>;
 
 /** Gemini API coverage response */
 export interface GeminiCoverageResponse {
@@ -184,7 +182,7 @@ export interface ItemBreakdown {
   estimatedValue: number;
   status: CoverageStatus;
   color: CoverageColor;
-  source: 'detected' | 'manual';
+  source: "detected" | "manual";
   confidence?: number;
 }
 
@@ -205,7 +203,10 @@ export interface ValueCalculationResult {
 export interface GeminiClient {
   apiKey: string;
   isConfigured: true;
-  askAboutCoverage: (item: string, policyType: PolicyType) => Promise<GeminiCoverageResponse | null>;
+  askAboutCoverage: (
+    item: string,
+    policyType: PolicyType,
+  ) => Promise<GeminiCoverageResponse | null>;
 }
 
 // ============================================================================
@@ -214,7 +215,7 @@ export interface GeminiClient {
 
 /** Props for policy selector component */
 export interface PolicySelectorProps {
-  variant?: 'default' | 'compact';
+  variant?: "default" | "compact";
   detectedItems: DetectedItem[];
   manualItems: ManualItem[];
 }
@@ -225,7 +226,7 @@ export interface CameraItemClickData {
   category: string;
   estimatedValue: number;
   status: CoverageStatus;
-  source: 'camera';
+  source: "camera";
 }
 
 /** Props for camera view component */
@@ -244,8 +245,8 @@ export interface DashboardProps {
 }
 
 /** Modal item type - combines item types with source info */
-export type ModalItem = (DetectedItem | ManualItem) & { 
-  source: 'camera' | 'dashboard';
+export type ModalItem = (DetectedItem | ManualItem) & {
+  source: "camera" | "dashboard";
 };
 
 /** Props for detail modal */

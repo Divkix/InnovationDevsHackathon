@@ -7,11 +7,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": [
-    "src/**/*.test.*",
-    "src/**/__tests__/**/*",
-    "src/setupTests.*",
-    "src/**/*"
-  ],
+  "include": ["src/**/*.test.*", "src/**/__tests__/**/*", "src/setupTests.*", "src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

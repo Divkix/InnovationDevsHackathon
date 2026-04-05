@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
-import { Minus, Plus } from 'lucide-react';
-import type { ConfidenceThresholdSliderProps } from '../../types';
+import { Minus, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
+import type { ConfidenceThresholdSliderProps } from "../../types";
 import {
-  MIN_CONFIDENCE_THRESHOLD,
+  formatThresholdPercentage,
   MAX_CONFIDENCE_THRESHOLD,
+  MIN_CONFIDENCE_THRESHOLD,
   THRESHOLD_STEP,
-  formatThresholdPercentage
-} from './thresholdUtils';
+} from "./thresholdUtils";
 
 /**
  * ConfidenceThresholdSlider component - Collapsible slider for adjusting detection confidence threshold
@@ -22,25 +22,28 @@ export function ConfidenceThresholdSlider({
   value,
   onChange,
   defaultCollapsed = false,
-  className = ''
+  className = "",
 }: ConfidenceThresholdSliderProps): React.JSX.Element {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(defaultCollapsed);
 
   /**
    * Handle slider value change
    */
-  const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(event.target.value);
-    if (onChange) {
-      onChange(newValue);
-    }
-  }, [onChange]);
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = parseFloat(event.target.value);
+      if (onChange) {
+        onChange(newValue);
+      }
+    },
+    [onChange],
+  );
 
   /**
    * Toggle collapsed state
    */
   const toggleCollapse = useCallback(() => {
-    setIsCollapsed(prev => !prev);
+    setIsCollapsed((prev) => !prev);
   }, []);
 
   // Collapsed state - show compact badge with expand button

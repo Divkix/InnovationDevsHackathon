@@ -1,11 +1,11 @@
-import { lookupCoverage } from './coverageLookup';
 import type {
   DetectedItem,
+  ItemBreakdown,
   ManualItem,
   PolicyType,
-  ItemBreakdown,
   ValueCalculationResult,
-} from '../types';
+} from "../types";
+import { lookupCoverage } from "./coverageLookup";
 
 /**
  * Calculates the total value of all items
@@ -18,7 +18,7 @@ export function calculateTotalValue(items: ItemBreakdown[]): number {
   }
 
   return items.reduce((total, item) => {
-    const value = typeof item.estimatedValue === 'number' ? item.estimatedValue : 0;
+    const value = typeof item.estimatedValue === "number" ? item.estimatedValue : 0;
     return total + Math.max(0, value);
   }, 0);
 }
@@ -34,7 +34,7 @@ export function calculateProtectedValue(breakdown: ItemBreakdown[]): number {
   }
 
   return breakdown
-    .filter((item) => item.status === 'covered')
+    .filter((item) => item.status === "covered")
     .reduce((total, item) => total + Math.max(0, item.estimatedValue), 0);
 }
 
@@ -49,7 +49,7 @@ export function calculateUnprotectedValue(breakdown: ItemBreakdown[]): number {
   }
 
   return breakdown
-    .filter((item) => item.status === 'not_covered' || item.status === 'conditional')
+    .filter((item) => item.status === "not_covered" || item.status === "conditional")
     .reduce((total, item) => total + Math.max(0, item.estimatedValue), 0);
 }
 
@@ -67,7 +67,7 @@ export function calculateCoverageGapPercentage(
   totalValue: number,
 ): number {
   // Handle edge cases
-  if (typeof unprotectedValue !== 'number' || typeof totalValue !== 'number') {
+  if (typeof unprotectedValue !== "number" || typeof totalValue !== "number") {
     return 0.0;
   }
 
@@ -104,7 +104,7 @@ export function createItemBreakdown(
   if (Array.isArray(detectedItems)) {
     for (const item of detectedItems) {
       // Skip items without required fields
-      if (!item || !item.id || !item.category) {
+      if (!item?.id || !item.category) {
         continue;
       }
 
@@ -123,7 +123,7 @@ export function createItemBreakdown(
         estimatedValue: coverage.estimatedValue,
         status: coverage.status,
         color: coverage.color,
-        source: 'detected',
+        source: "detected",
         confidence: item.confidence || 0,
       });
     }
@@ -133,7 +133,7 @@ export function createItemBreakdown(
   if (Array.isArray(manualItems)) {
     for (const item of manualItems) {
       // Skip items without required fields
-      if (!item || !item.id || !item.category) {
+      if (!item?.id || !item.category) {
         continue;
       }
 
@@ -148,9 +148,7 @@ export function createItemBreakdown(
 
       // For manual items, use the user-provided value if available, otherwise use the default
       const estimatedValue =
-        typeof item.estimatedValue === 'number'
-          ? item.estimatedValue
-          : coverage.estimatedValue;
+        typeof item.estimatedValue === "number" ? item.estimatedValue : coverage.estimatedValue;
 
       breakdown.push({
         id: item.id,
@@ -158,7 +156,7 @@ export function createItemBreakdown(
         estimatedValue: Math.max(0, estimatedValue),
         status: coverage.status,
         color: coverage.color,
-        source: 'manual',
+        source: "manual",
       });
     }
   }
@@ -220,15 +218,15 @@ export function calculateValues(
  * @returns Formatted string (e.g., "$1,200")
  */
 export function formatCurrency(amount: number): string {
-  if (typeof amount !== 'number' || isNaN(amount)) {
-    return '$0';
+  if (typeof amount !== "number" || Number.isNaN(amount)) {
+    return "$0";
   }
 
   const safeAmount = Math.max(0, amount);
 
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(safeAmount);
@@ -240,8 +238,8 @@ export function formatCurrency(amount: number): string {
  * @returns Formatted string with % symbol (e.g., "28.0%")
  */
 export function formatPercentage(percentage: number): string {
-  if (typeof percentage !== 'number' || isNaN(percentage)) {
-    return '0.0%';
+  if (typeof percentage !== "number" || Number.isNaN(percentage)) {
+    return "0.0%";
   }
 
   const safePercentage = Math.max(0, Math.min(100, percentage));
@@ -263,9 +261,9 @@ export function verifyArithmeticInvariant(
   unprotectedValue: number,
 ): boolean {
   if (
-    typeof totalValue !== 'number' ||
-    typeof protectedValue !== 'number' ||
-    typeof unprotectedValue !== 'number'
+    typeof totalValue !== "number" ||
+    typeof protectedValue !== "number" ||
+    typeof unprotectedValue !== "number"
   ) {
     return false;
   }
@@ -295,7 +293,7 @@ export function getUpgradeRecommendations(
 
   // Get unique uncovered categories sorted by value
   const uncoveredItems = breakdown
-    .filter((item) => item.status === 'not_covered' || item.status === 'conditional')
+    .filter((item) => item.status === "not_covered" || item.status === "conditional")
     .sort((a, b) => b.estimatedValue - a.estimatedValue);
 
   if (uncoveredItems.length === 0) {
@@ -312,20 +310,20 @@ export function getUpgradeRecommendations(
   }
 
   // Add general recommendations based on policy type
-  if (currentPolicy === 'none') {
-    recommendations.add('Get insurance coverage immediately — you have no protection');
+  if (currentPolicy === "none") {
+    recommendations.add("Get insurance coverage immediately — you have no protection");
   } else if (
-    currentPolicy === 'auto' &&
+    currentPolicy === "auto" &&
     uncoveredItems.some((item) =>
-      ['laptop', 'tv', 'cell phone', 'couch', 'bed'].includes(item.category.toLowerCase()),
+      ["laptop", "tv", "cell phone", "couch", "bed"].includes(item.category.toLowerCase()),
     )
   ) {
     recommendations.add("Consider adding renter's or homeowner's insurance for household items");
   } else if (
-    currentPolicy === 'renters' &&
-    uncoveredItems.some((item) => ['car', 'motorcycle'].includes(item.category.toLowerCase()))
+    currentPolicy === "renters" &&
+    uncoveredItems.some((item) => ["car", "motorcycle"].includes(item.category.toLowerCase()))
   ) {
-    recommendations.add('Add auto insurance to cover your vehicle(s)');
+    recommendations.add("Add auto insurance to cover your vehicle(s)");
   }
 
   return Array.from(recommendations).slice(0, 5);

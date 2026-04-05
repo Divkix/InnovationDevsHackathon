@@ -1,126 +1,121 @@
-import { useRef, useEffect, useCallback, useMemo } from 'react'
-import { lookupCoverage } from '@/utils/coverageLookup'
-import { DEFAULT_CONFIDENCE_THRESHOLD } from '@/components/ConfidenceThresholdSlider/thresholdUtils'
-import { getObjectCoverLayout, projectBoundingBoxToCanvas } from './layout'
-import type {
-  PolicyType,
-  CoverageResult,
-  CoverageStatus,
-  Detection,
-} from '@/types'
-import type { ObjectCoverLayout, CanvasCoordinates } from './layout'
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/components/ConfidenceThresholdSlider/thresholdUtils";
+import type { CoverageResult, CoverageStatus, Detection, PolicyType } from "@/types";
+import { lookupCoverage } from "@/utils/coverageLookup";
+import type { CanvasCoordinates, ObjectCoverLayout } from "./layout";
+import { getObjectCoverLayout, projectBoundingBoxToCanvas } from "./layout";
 
 /**
  * Color definitions for coverage status - State Farm branding
  */
 interface ColorScheme {
-  stroke: string
-  fill: string
-  text: string
-  labelBg: string
+  stroke: string;
+  fill: string;
+  text: string;
+  labelBg: string;
 }
 
 interface ColorMap {
-  green: ColorScheme
-  red: ColorScheme
-  yellow: ColorScheme
+  green: ColorScheme;
+  red: ColorScheme;
+  yellow: ColorScheme;
 }
 
 const COLORS: ColorMap = {
   green: {
-    stroke: '#22c55e',
-    fill: 'rgba(34, 197, 94, 0.15)',
-    text: '#ffffff',
-    labelBg: '#22c55e'
+    stroke: "#22c55e",
+    fill: "rgba(34, 197, 94, 0.15)",
+    text: "#ffffff",
+    labelBg: "#22c55e",
   },
   red: {
-    stroke: '#E31837',
-    fill: 'rgba(227, 24, 55, 0.15)',
-    text: '#ffffff',
-    labelBg: '#E31837'
+    stroke: "#E31837",
+    fill: "rgba(227, 24, 55, 0.15)",
+    text: "#ffffff",
+    labelBg: "#E31837",
   },
   yellow: {
-    stroke: '#eab308',
-    fill: 'rgba(234, 179, 8, 0.15)',
-    text: '#000000',
-    labelBg: '#eab308'
-  }
-}
+    stroke: "#eab308",
+    fill: "rgba(234, 179, 8, 0.15)",
+    text: "#000000",
+    labelBg: "#eab308",
+  },
+};
 
 /**
  * Status icons as Unicode characters
  */
 const STATUS_ICONS: Record<CoverageStatus, string> = {
-  covered: '✓',
-  not_covered: '✕',
-  conditional: '⚠'
-}
+  covered: "✓",
+  not_covered: "✕",
+  conditional: "⚠",
+};
 
 /**
  * Status labels
  */
 const STATUS_LABELS: Record<CoverageStatus, string> = {
-  covered: 'Covered',
-  not_covered: 'Not Covered',
-  conditional: 'Conditional'
-}
+  covered: "Covered",
+  not_covered: "Not Covered",
+  conditional: "Conditional",
+};
 
 /**
  * Smoothing factor for exponential moving average (0-1)
  * Higher = more responsive but less smooth
  * Lower = smoother but more lag
  */
-const SMOOTHING_FACTOR = 0.3
+const SMOOTHING_FACTOR = 0.3;
 
 /**
  * Persistence threshold in milliseconds
  * Items stay visible for this long after disappearing
  */
-const PERSISTENCE_THRESHOLD = 500
+const PERSISTENCE_THRESHOLD = 500;
 
 /**
  * Format value as currency
  */
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0
-  }).format(value)
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 /**
  * Tracked item with coverage information
  */
 interface TrackedItem {
-  id: string
-  name: string
-  coordinates: CanvasCoordinates
-  coverage: CoverageResult
-  lastSeen: number
-  score: number
+  id: string;
+  name: string;
+  coordinates: CanvasCoordinates;
+  coverage: CoverageResult;
+  lastSeen: number;
+  score: number;
 }
 
 /**
  * Clicked item data passed to onItemClick callback
  */
 export interface ClickedItem {
-  id: string
-  category: string
-  estimatedValue: number
-  status: CoverageStatus
-  source: 'camera'
+  id: string;
+  category: string;
+  estimatedValue: number;
+  status: CoverageStatus;
+  source: "camera";
 }
 
 /**
  * Props for CoverageOverlay component
  */
 export interface CoverageOverlayProps {
-  videoRef: React.RefObject<HTMLVideoElement | null>
-  detections: Detection[]
-  policyType: PolicyType
-  confidenceThreshold?: number
-  onItemClick?: (item: ClickedItem) => void
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  detections: Detection[];
+  policyType: PolicyType;
+  confidenceThreshold?: number;
+  onItemClick?: (item: ClickedItem) => void;
 }
 
 /**
@@ -145,346 +140,359 @@ export function CoverageOverlay({
   detections,
   policyType,
   confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
-  onItemClick
+  onItemClick,
 }: CoverageOverlayProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const trackedItemsRef = useRef<Map<string, TrackedItem>>(new Map())
-  const animationFrameRef = useRef<number | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trackedItemsRef = useRef<Map<string, TrackedItem>>(new Map());
+  const animationFrameRef = useRef<number | null>(null);
 
   /**
    * Get canvas context
    */
   const getContext = useCallback((): CanvasRenderingContext2D | null => {
-    const canvas = canvasRef.current
-    if (!canvas) return null
-    return canvas.getContext('2d')
-  }, [])
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    return canvas.getContext("2d");
+  }, []);
 
   /**
    * Update canvas dimensions to match video
    */
   const updateCanvasDimensions = useCallback(() => {
-    const canvas = canvasRef.current
-    const video = videoRef?.current
+    const canvas = canvasRef.current;
+    const video = videoRef?.current;
 
-    if (!canvas || !video) return
+    if (!canvas || !video) return;
 
     // Match the displayed overlay area so canvas coordinates align with
     // the visible object-cover video frame.
-    const width = Math.round(canvas.clientWidth || video.clientWidth || video.videoWidth || 640)
-    const height = Math.round(canvas.clientHeight || video.clientHeight || video.videoHeight || 480)
+    const width = Math.round(canvas.clientWidth || video.clientWidth || video.videoWidth || 640);
+    const height = Math.round(
+      canvas.clientHeight || video.clientHeight || video.videoHeight || 480,
+    );
 
     // Only update if dimensions changed
     if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width
-      canvas.height = height
+      canvas.width = width;
+      canvas.height = height;
     }
-  }, [videoRef])
+  }, [videoRef]);
 
   /**
    * Apply exponential moving average smoothing to coordinates
    */
-  const smoothCoordinates = useCallback((
-    current: CanvasCoordinates,
-    previous: CanvasCoordinates | undefined
-  ): CanvasCoordinates => {
-    if (!previous) return current
+  const smoothCoordinates = useCallback(
+    (current: CanvasCoordinates, previous: CanvasCoordinates | undefined): CanvasCoordinates => {
+      if (!previous) return current;
 
-    return {
-      x: previous.x + SMOOTHING_FACTOR * (current.x - previous.x),
-      y: previous.y + SMOOTHING_FACTOR * (current.y - previous.y),
-      width: previous.width + SMOOTHING_FACTOR * (current.width - previous.width),
-      height: previous.height + SMOOTHING_FACTOR * (current.height - previous.height)
-    }
-  }, [])
+      return {
+        x: previous.x + SMOOTHING_FACTOR * (current.x - previous.x),
+        y: previous.y + SMOOTHING_FACTOR * (current.y - previous.y),
+        width: previous.width + SMOOTHING_FACTOR * (current.width - previous.width),
+        height: previous.height + SMOOTHING_FACTOR * (current.height - previous.height),
+      };
+    },
+    [],
+  );
 
   /**
    * Generate a unique ID for a detection based on category and rough position
    */
   const getDetectionId = useCallback((detection: Detection): string => {
-    const category = detection.categories?.[0]?.categoryName || 'unknown'
-    const box = detection.boundingBox || {}
+    const category = detection.categories?.[0]?.categoryName || "unknown";
+    const box = detection.boundingBox || {};
     // Round position to nearest 50px grid to handle small movements
-    const gridX = Math.round((box.originX || 0) / 50)
-    const gridY = Math.round((box.originY || 0) / 50)
-    return `${category}-${gridX}-${gridY}`
-  }, [])
+    const gridX = Math.round((box.originX || 0) / 50);
+    const gridY = Math.round((box.originY || 0) / 50);
+    return `${category}-${gridX}-${gridY}`;
+  }, []);
 
   /**
    * Draw a rounded rectangle
    */
-  const drawRoundedRect = useCallback((
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number
-  ) => {
-    const r = Math.min(radius, width / 2, height / 2)
-    ctx.beginPath()
-    ctx.moveTo(x + r, y)
-    ctx.lineTo(x + width - r, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + r)
-    ctx.lineTo(x + width, y + height - r)
-    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
-    ctx.lineTo(x + r, y + height)
-    ctx.quadraticCurveTo(x, y + height, x, y + height - r)
-    ctx.lineTo(x, y + r)
-    ctx.quadraticCurveTo(x, y, x + r, y)
-    ctx.closePath()
-  }, [])
+  const drawRoundedRect = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      radius: number,
+    ) => {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    },
+    [],
+  );
 
   /**
    * Draw a bounding box with label
    */
-  const drawBoundingBox = useCallback((
-    ctx: CanvasRenderingContext2D,
-    item: TrackedItem,
-    colorScheme: CoverageResult
-  ) => {
-    const { x, y, width, height } = item.coordinates
-    const colors = COLORS[colorScheme.color] || COLORS.red
+  const drawBoundingBox = useCallback(
+    (ctx: CanvasRenderingContext2D, item: TrackedItem, colorScheme: CoverageResult) => {
+      const { x, y, width, height } = item.coordinates;
+      const colors = COLORS[colorScheme.color] || COLORS.red;
 
-    // Box padding for stroke
-    const strokeWidth = 3
-    const padding = strokeWidth / 2
+      // Box padding for stroke
+      const strokeWidth = 3;
+      const padding = strokeWidth / 2;
 
-    // Draw semi-transparent fill
-    ctx.fillStyle = colors.fill
-    ctx.fillRect(x, y, width, height)
+      // Draw semi-transparent fill
+      ctx.fillStyle = colors.fill;
+      ctx.fillRect(x, y, width, height);
 
-    // Draw border
-    ctx.strokeStyle = colors.stroke
-    ctx.lineWidth = strokeWidth
-    ctx.strokeRect(x + padding, y + padding, width - strokeWidth, height - strokeWidth)
+      // Draw border
+      ctx.strokeStyle = colors.stroke;
+      ctx.lineWidth = strokeWidth;
+      ctx.strokeRect(x + padding, y + padding, width - strokeWidth, height - strokeWidth);
 
-    // Prepare label text
-    const icon = STATUS_ICONS[colorScheme.status] || '✕'
-    const label = STATUS_LABELS[colorScheme.status] || 'Unknown'
-    const value = formatCurrency(colorScheme.estimatedValue)
-    const name = item.name.charAt(0).toUpperCase() + item.name.slice(1)
+      // Prepare label text
+      const icon = STATUS_ICONS[colorScheme.status] || "✕";
+      const label = STATUS_LABELS[colorScheme.status] || "Unknown";
+      const value = formatCurrency(colorScheme.estimatedValue);
+      const name = item.name.charAt(0).toUpperCase() + item.name.slice(1);
 
-    const line1 = `${icon} ${name}`
-    const line2 = `${value} • ${label}`
+      const line1 = `${icon} ${name}`;
+      const line2 = `${value} • ${label}`;
 
-    // Calculate label dimensions
-    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif'
-    const line1Width = ctx.measureText(line1).width
-    ctx.font = '12px system-ui, -apple-system, sans-serif'
-    const line2Width = ctx.measureText(line2).width
+      // Calculate label dimensions
+      ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
+      const line1Width = ctx.measureText(line1).width;
+      ctx.font = "12px system-ui, -apple-system, sans-serif";
+      const line2Width = ctx.measureText(line2).width;
 
-    const labelWidth = Math.max(line1Width, line2Width) + 16
-    const lineHeight = 18
-    const labelHeight = lineHeight * 2 + 8
-    const cornerRadius = 4
+      const labelWidth = Math.max(line1Width, line2Width) + 16;
+      const lineHeight = 18;
+      const labelHeight = lineHeight * 2 + 8;
+      const cornerRadius = 4;
 
-    // Determine label position (above box by default)
-    let labelX = x
-    let labelY = y - labelHeight - 4
+      // Determine label position (above box by default)
+      let labelX = x;
+      let labelY = y - labelHeight - 4;
 
-    // Reposition if too close to top edge
-    if (labelY < 10) {
-      labelY = y + height + 4
-    }
+      // Reposition if too close to top edge
+      if (labelY < 10) {
+        labelY = y + height + 4;
+      }
 
-    // Reposition if too close to right edge
-    const canvasWidth = ctx.canvas.width
-    if (labelX + labelWidth > canvasWidth - 10) {
-      labelX = canvasWidth - labelWidth - 10
-    }
+      // Reposition if too close to right edge
+      const canvasWidth = ctx.canvas.width;
+      if (labelX + labelWidth > canvasWidth - 10) {
+        labelX = canvasWidth - labelWidth - 10;
+      }
 
-    // Ensure label doesn't go off left edge
-    if (labelX < 10) {
-      labelX = 10
-    }
+      // Ensure label doesn't go off left edge
+      if (labelX < 10) {
+        labelX = 10;
+      }
 
-    // Draw label background with rounded corners
-    ctx.fillStyle = colors.labelBg
-    drawRoundedRect(ctx, labelX, labelY, labelWidth, labelHeight, cornerRadius)
-    ctx.fill()
+      // Draw label background with rounded corners
+      ctx.fillStyle = colors.labelBg;
+      drawRoundedRect(ctx, labelX, labelY, labelWidth, labelHeight, cornerRadius);
+      ctx.fill();
 
-    // Draw label text
-    ctx.fillStyle = colors.text
-    ctx.textBaseline = 'top'
+      // Draw label text
+      ctx.fillStyle = colors.text;
+      ctx.textBaseline = "top";
 
-    // First line (icon + name)
-    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif'
-    ctx.fillText(line1, labelX + 8, labelY + 6)
+      // First line (icon + name)
+      ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
+      ctx.fillText(line1, labelX + 8, labelY + 6);
 
-    // Second line (value + status)
-    ctx.font = '12px system-ui, -apple-system, sans-serif'
-    ctx.fillText(line2, labelX + 8, labelY + 6 + lineHeight)
-  }, [drawRoundedRect])
+      // Second line (value + status)
+      ctx.font = "12px system-ui, -apple-system, sans-serif";
+      ctx.fillText(line2, labelX + 8, labelY + 6 + lineHeight);
+    },
+    [drawRoundedRect],
+  );
 
   /**
    * Process detections and update tracked items
    */
-  const processDetections = useCallback((layout: ObjectCoverLayout): Map<string, TrackedItem> => {
-    const now = Date.now()
-    const currentIds = new Set<string>()
+  const processDetections = useCallback(
+    (layout: ObjectCoverLayout): Map<string, TrackedItem> => {
+      const now = Date.now();
+      const currentIds = new Set<string>();
 
-    // Filter detections by confidence threshold AND exclude person class
-    const validDetections = (detections || []).filter(d => {
-      const score = d.categories?.[0]?.score || 0
-      const category = d.categories?.[0]?.categoryName || 'unknown'
-      
-      // Skip person detections (humans are not insurable property)
-      if (category === 'person') return false
-      
-      return score >= confidenceThreshold
-    })
+      // Filter detections by confidence threshold AND exclude person class
+      const validDetections = (detections || []).filter((d) => {
+        const score = d.categories?.[0]?.score || 0;
+        const category = d.categories?.[0]?.categoryName || "unknown";
 
-    // Process current detections
-    validDetections.forEach(detection => {
-      const id = getDetectionId(detection)
-      currentIds.add(id)
+        // Skip person detections (humans are not insurable property)
+        if (category === "person") return false;
 
-      const category = detection.categories?.[0]?.categoryName || 'unknown'
-      const box = detection.boundingBox || {}
+        return score >= confidenceThreshold;
+      });
 
-      const currentCoords = projectBoundingBoxToCanvas(box, layout)
+      // Process current detections
+      validDetections.forEach((detection) => {
+        const id = getDetectionId(detection);
+        currentIds.add(id);
 
-      const existing = trackedItemsRef.current.get(id)
-      const smoothedCoords = smoothCoordinates(currentCoords, existing?.coordinates)
+        const category = detection.categories?.[0]?.categoryName || "unknown";
+        const box = detection.boundingBox || {};
 
-      // Look up coverage for this item
-      const coverage = lookupCoverage(category, policyType)
+        const currentCoords = projectBoundingBoxToCanvas(box, layout);
 
-      trackedItemsRef.current.set(id, {
-        id,
-        name: category,
-        coordinates: smoothedCoords,
-        coverage,
-        lastSeen: now,
-        score: detection.categories?.[0]?.score || 0
-      })
-    })
+        const existing = trackedItemsRef.current.get(id);
+        const smoothedCoords = smoothCoordinates(currentCoords, existing?.coordinates);
 
-    // Remove items that haven't been seen for longer than threshold
-    trackedItemsRef.current.forEach((item, id) => {
-      if (!currentIds.has(id) && now - item.lastSeen > PERSISTENCE_THRESHOLD) {
-        trackedItemsRef.current.delete(id)
-      }
-    })
+        // Look up coverage for this item
+        const coverage = lookupCoverage(category, policyType);
 
-    return trackedItemsRef.current
-  }, [detections, policyType, confidenceThreshold, getDetectionId, smoothCoordinates])
+        trackedItemsRef.current.set(id, {
+          id,
+          name: category,
+          coordinates: smoothedCoords,
+          coverage,
+          lastSeen: now,
+          score: detection.categories?.[0]?.score || 0,
+        });
+      });
+
+      // Remove items that haven't been seen for longer than threshold
+      trackedItemsRef.current.forEach((item, id) => {
+        if (!currentIds.has(id) && now - item.lastSeen > PERSISTENCE_THRESHOLD) {
+          trackedItemsRef.current.delete(id);
+        }
+      });
+
+      return trackedItemsRef.current;
+    },
+    [detections, policyType, confidenceThreshold, getDetectionId, smoothCoordinates],
+  );
 
   /**
    * Render the overlay
    */
   const render = useCallback(() => {
-    const ctx = getContext()
-    if (!ctx) return
+    const ctx = getContext();
+    if (!ctx) return;
 
-    const canvas = canvasRef.current
-    const video = videoRef?.current
+    const canvas = canvasRef.current;
+    const video = videoRef?.current;
 
-    if (!canvas) return
+    if (!canvas) return;
 
     // Update canvas dimensions
-    updateCanvasDimensions()
+    updateCanvasDimensions();
 
     // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // If no video or video not ready, don't render detections
-    if (!video || video.readyState < 2) return
+    if (!video || video.readyState < 2) return;
 
     const layout = getObjectCoverLayout(
       video.videoWidth || canvas.width,
       video.videoHeight || canvas.height,
       canvas.width,
-      canvas.height
-    )
+      canvas.height,
+    );
 
     // Process detections and get tracked items
-    const items = processDetections(layout)
+    const items = processDetections(layout);
 
     // Draw each tracked item
-    items.forEach(item => {
-      drawBoundingBox(ctx, item, item.coverage)
-    })
-  }, [getContext, videoRef, updateCanvasDimensions, processDetections, drawBoundingBox])
+    items.forEach((item) => {
+      drawBoundingBox(ctx, item, item.coverage);
+    });
+  }, [getContext, videoRef, updateCanvasDimensions, processDetections, drawBoundingBox]);
 
   /**
    * Animation loop
    */
   const animate = useCallback(() => {
-    render()
-    animationFrameRef.current = requestAnimationFrame(animate)
-  }, [render])
+    render();
+    animationFrameRef.current = requestAnimationFrame(animate);
+  }, [render]);
 
   /**
    * Handle canvas click to detect which item was clicked
    */
-  const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onItemClick) return
+  const handleCanvasClick = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!onItemClick) return;
 
-    const canvas = canvasRef.current
-    if (!canvas) return
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    // Get click coordinates relative to canvas
-    const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-    const clickX = (event.clientX - rect.left) * scaleX
-    const clickY = (event.clientY - rect.top) * scaleY
+      // Get click coordinates relative to canvas
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (event.clientX - rect.left) * scaleX;
+      const clickY = (event.clientY - rect.top) * scaleY;
 
-    // Check which item was clicked (iterate in reverse to click top items first)
-    const items = Array.from(trackedItemsRef.current.values()).reverse()
+      // Check which item was clicked (iterate in reverse to click top items first)
+      const items = Array.from(trackedItemsRef.current.values()).reverse();
 
-    for (const item of items) {
-      const { x, y, width, height } = item.coordinates
+      for (const item of items) {
+        const { x, y, width, height } = item.coordinates;
 
-      // Check if click is within bounding box (with some padding for easier clicking)
-      const padding = 10
-      if (
-        clickX >= x - padding &&
-        clickX <= x + width + padding &&
-        clickY >= y - padding &&
-        clickY <= y + height + padding
-      ) {
-        // Call the onItemClick callback with the clicked item
-        onItemClick({
-          id: item.id,
-          category: item.name,
-          estimatedValue: item.coverage.estimatedValue,
-          status: item.coverage.status,
-          source: 'camera'
-        })
-        break
+        // Check if click is within bounding box (with some padding for easier clicking)
+        const padding = 10;
+        if (
+          clickX >= x - padding &&
+          clickX <= x + width + padding &&
+          clickY >= y - padding &&
+          clickY <= y + height + padding
+        ) {
+          // Call the onItemClick callback with the clicked item
+          onItemClick({
+            id: item.id,
+            category: item.name,
+            estimatedValue: item.coverage.estimatedValue,
+            status: item.coverage.status,
+            source: "camera",
+          });
+          break;
+        }
       }
-    }
-  }, [onItemClick])
+    },
+    [onItemClick],
+  );
 
   // Start/stop animation loop
   useEffect(() => {
-    animationFrameRef.current = requestAnimationFrame(animate)
+    animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
       }
-    }
-  }, [animate])
+    };
+  }, [animate]);
 
   // Clear tracked items when policy changes
   useEffect(() => {
-    trackedItemsRef.current.clear()
-  }, [policyType])
+    trackedItemsRef.current.clear();
+  }, []);
 
   // Memoize canvas style
-  const canvasStyle = useMemo(() => ({
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: onItemClick ? 'auto' as const : 'none' as const,
-    cursor: onItemClick ? 'pointer' as const : 'default' as const
-  }), [onItemClick])
+  const canvasStyle = useMemo(
+    () => ({
+      position: "absolute" as const,
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      pointerEvents: onItemClick ? ("auto" as const) : ("none" as const),
+      cursor: onItemClick ? ("pointer" as const) : ("default" as const),
+    }),
+    [onItemClick],
+  );
 
   return (
     <canvas
@@ -494,7 +502,7 @@ export function CoverageOverlay({
       className="absolute inset-0 w-full h-full"
       onClick={handleCanvasClick}
     />
-  )
+  );
 }
 
-export default CoverageOverlay
+export default CoverageOverlay;

@@ -1,49 +1,49 @@
-import { useMemo, useEffect, useState } from 'react'
-import { motion, useSpring, useTransform } from 'framer-motion'
+import { motion, useSpring, useTransform } from "framer-motion";
+import { AlertTriangle, CheckCircle, DollarSign, Shield, TrendingUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   calculateValues,
   formatCurrency,
   formatPercentage,
-  getUpgradeRecommendations
-} from '@/utils/valueCalculator'
-import { Shield, AlertTriangle, CheckCircle, DollarSign, TrendingUp } from 'lucide-react'
-import type { DashboardProps, ItemBreakdown, CoverageStatus } from '../../types'
+  getUpgradeRecommendations,
+} from "@/utils/valueCalculator";
+import type { CoverageStatus, DashboardProps, ItemBreakdown } from "../../types";
 
 /**
  * AnimatedNumber component - Animates number changes with spring physics
  */
 interface AnimatedNumberProps {
-  value: number
-  formatter: (value: number) => string
+  value: number;
+  formatter: (value: number) => string;
 }
 
 function AnimatedNumber({ value, formatter }: AnimatedNumberProps) {
-  const spring = useSpring(value, { 
-    stiffness: 100, 
+  const spring = useSpring(value, {
+    stiffness: 100,
     damping: 20,
-    duration: 0.5 
-  })
-  
+    duration: 0.5,
+  });
+
   useEffect(() => {
-    spring.set(value)
-  }, [value, spring])
-  
-  const display = useTransform(spring, (current) => formatter(current))
-  const [displayValue, setDisplayValue] = useState(formatter(value))
-  
+    spring.set(value);
+  }, [value, spring]);
+
+  const display = useTransform(spring, (current) => formatter(current));
+  const [displayValue, setDisplayValue] = useState(formatter(value));
+
   useEffect(() => {
-    const unsubscribe = display.on('change', (latest) => {
-      setDisplayValue(latest)
-    })
-    return () => unsubscribe()
-  }, [display])
-  
-  return <span>{displayValue}</span>
+    const unsubscribe = display.on("change", (latest) => {
+      setDisplayValue(latest);
+    });
+    return () => unsubscribe();
+  }, [display]);
+
+  return <span>{displayValue}</span>;
 }
 
 /**
  * Dashboard component - Financial summary dashboard
- * 
+ *
  * Displays:
  * - Total Detected Asset Value (sum of all items)
  * - Protected Value (green items only)
@@ -54,94 +54,91 @@ function AnimatedNumber({ value, formatter }: AnimatedNumberProps) {
  * - Upgrade recommendations when items are uncovered
  * - Positive message when all covered
  */
-export function Dashboard({ 
-  detectedItems = [], 
-  manualItems = [], 
-  policyType = 'renters', 
-  onItemClick 
+export function Dashboard({
+  detectedItems = [],
+  manualItems = [],
+  policyType = "renters",
+  onItemClick,
 }: DashboardProps) {
   // Calculate all dashboard values using the value calculator
   const calculationResult = useMemo(() => {
     // Handle null/undefined inputs gracefully
-    const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : []
-    const safeManualItems = Array.isArray(manualItems) ? manualItems : []
-    const safePolicyType = policyType || 'renters'
+    const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : [];
+    const safeManualItems = Array.isArray(manualItems) ? manualItems : [];
+    const safePolicyType = policyType || "renters";
 
-    return calculateValues(safeDetectedItems, safeManualItems, safePolicyType)
-  }, [detectedItems, manualItems, policyType])
+    return calculateValues(safeDetectedItems, safeManualItems, safePolicyType);
+  }, [detectedItems, manualItems, policyType]);
 
   // Get upgrade recommendations
   const recommendations = useMemo(() => {
-    return getUpgradeRecommendations(calculationResult.items, policyType)
-  }, [calculationResult.items, policyType])
+    return getUpgradeRecommendations(calculationResult.items, policyType);
+  }, [calculationResult.items, policyType]);
 
   // Destructure calculated values
-  const {
-    totalValue,
-    protectedValue,
-    unprotectedValue,
-    coverageGapPercentage,
-    items
-  } = calculationResult
+  const { totalValue, protectedValue, unprotectedValue, coverageGapPercentage, items } =
+    calculationResult;
 
   // Determine if all items are covered
-  const allCovered = items.length > 0 && unprotectedValue === 0
-  const hasItems = items.length > 0
-  const hasRecommendations = recommendations.length > 0
+  const allCovered = items.length > 0 && unprotectedValue === 0;
+  const hasItems = items.length > 0;
+  const hasRecommendations = recommendations.length > 0;
 
   // Status color mapping for Tailwind classes - State Farm branding
-  const statusColors: Record<CoverageStatus, { bg: string; text: string; border: string; icon: string }> = {
+  const statusColors: Record<
+    CoverageStatus,
+    { bg: string; text: string; border: string; icon: string }
+  > = {
     covered: {
-      bg: 'bg-green-100',
-      text: 'text-green-700',
-      border: 'border-green-200',
-      icon: 'text-green-500'
+      bg: "bg-green-100",
+      text: "text-green-700",
+      border: "border-green-200",
+      icon: "text-green-500",
     },
     conditional: {
-      bg: 'bg-yellow-100',
-      text: 'text-yellow-700',
-      border: 'border-yellow-200',
-      icon: 'text-yellow-500'
+      bg: "bg-yellow-100",
+      text: "text-yellow-700",
+      border: "border-yellow-200",
+      icon: "text-yellow-500",
     },
     not_covered: {
-      bg: 'bg-red-100',
-      text: 'text-red-700',
-      border: 'border-red-200',
-      icon: 'text-[#E31837]'
-    }
-  }
+      bg: "bg-red-100",
+      text: "text-red-700",
+      border: "border-red-200",
+      icon: "text-[#E31837]",
+    },
+  };
 
   // Status label mapping
   const statusLabels: Record<CoverageStatus, string> = {
-    covered: 'Covered',
-    conditional: 'Conditional',
-    not_covered: 'Not Covered'
-  }
+    covered: "Covered",
+    conditional: "Conditional",
+    not_covered: "Not Covered",
+  };
 
   return (
-    <div
-      data-testid="dashboard-container"
-      className="w-full h-full bg-gray-50 overflow-y-auto"
-    >
+    <div data-testid="dashboard-container" className="w-full h-full bg-gray-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">Financial Summary</h2>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Shield className="w-4 h-4" />
-            <span className="capitalize">{policyType === 'none' ? 'No Insurance' : `${policyType}'s Insurance`}</span>
+            <span className="capitalize">
+              {policyType === "none" ? "No Insurance" : `${policyType}'s Insurance`}
+            </span>
           </div>
         </div>
 
         {/* Financial Summary Cards - Responsive Grid */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
           initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ staggerChildren: 0.1 }}
         >
           {/* Total Value */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
@@ -159,7 +156,7 @@ export function Dashboard({
           </motion.div>
 
           {/* Protected Value */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15 }}
@@ -177,7 +174,7 @@ export function Dashboard({
           </motion.div>
 
           {/* Unprotected Value - State Farm Red - MOST PROMINENT */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
@@ -196,7 +193,7 @@ export function Dashboard({
           </motion.div>
 
           {/* Coverage Gap */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25 }}
@@ -209,14 +206,17 @@ export function Dashboard({
               </span>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900">
-              <AnimatedNumber value={coverageGapPercentage} formatter={(v) => formatPercentage(v)} />
+              <AnimatedNumber
+                value={coverageGapPercentage}
+                formatter={(v) => formatPercentage(v)}
+              />
             </p>
           </motion.div>
         </motion.div>
 
         {/* Empty State Message */}
         {!hasItems && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-blue-50 border border-blue-200 rounded-xl p-6 sm:p-8 text-center"
@@ -226,18 +226,17 @@ export function Dashboard({
                 <DollarSign className="w-6 h-6 text-[#E31837]" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No Items Detected
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Items Detected</h3>
             <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
-              Point your camera at objects to begin scanning. Detected items will appear here with their insurance coverage status.
+              Point your camera at objects to begin scanning. Detected items will appear here with
+              their insurance coverage status.
             </p>
           </motion.div>
         )}
 
         {/* All Covered Message */}
         {allCovered && hasItems && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6"
@@ -260,7 +259,7 @@ export function Dashboard({
 
         {/* Per-Item Breakdown */}
         {hasItems && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
@@ -270,7 +269,7 @@ export function Dashboard({
             </div>
             <div className="divide-y divide-gray-100">
               {items.map((item: ItemBreakdown, index: number) => {
-                const colors = statusColors[item.status] || statusColors.not_covered
+                const colors = statusColors[item.status] || statusColors.not_covered;
                 return (
                   <motion.button
                     key={item.id}
@@ -282,16 +281,22 @@ export function Dashboard({
                     className="w-full px-3 sm:px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#E31837]"
                   >
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className={`w-3 h-3 rounded-full shrink-0 ${
-                        item.status === 'covered' ? 'bg-green-500' :
-                        item.status === 'conditional' ? 'bg-yellow-500' :
-                        'bg-[#E31837]'
-                      }`} />
+                      <div
+                        className={`w-3 h-3 rounded-full shrink-0 ${
+                          item.status === "covered"
+                            ? "bg-green-500"
+                            : item.status === "conditional"
+                              ? "bg-yellow-500"
+                              : "bg-[#E31837]"
+                        }`}
+                      />
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 capitalize text-sm sm:text-base truncate">
                           {item.category}
                         </p>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}
+                        >
                           {statusLabels[item.status]}
                         </span>
                       </div>
@@ -300,7 +305,7 @@ export function Dashboard({
                       {formatCurrency(item.estimatedValue)}
                     </p>
                   </motion.button>
-                )
+                );
               })}
             </div>
           </motion.div>
@@ -308,7 +313,7 @@ export function Dashboard({
 
         {/* Upgrade Recommendations */}
         {hasRecommendations && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-orange-50 border border-orange-200 rounded-xl p-4"
@@ -320,7 +325,7 @@ export function Dashboard({
             <ul className="space-y-2">
               {recommendations.map((recommendation: string, index: number) => (
                 <motion.li
-                  key={index}
+                  key={recommendation}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -337,7 +342,7 @@ export function Dashboard({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

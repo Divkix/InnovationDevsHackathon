@@ -1,2 +1,1 @@
-export { DetailModal } from './DetailModal'
-export { default } from './DetailModal'
+export { DetailModal, default } from "./DetailModal";
