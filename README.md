@@ -2,7 +2,7 @@
 
 **AR Insurance Coverage Visualizer** — Point your camera at a room and instantly see which belongings are covered by your insurance policy.
 
-Built for **State Farm Innovation Hacks 2.0** hackathon.
+Built for the **State Farm track** at [Innovation Hacks 2.0](https://www.innovationhacks.dev/) — ASU's premier spring hackathon (April 3-5, 2026).
 
 [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react)](https://react.dev/)
@@ -656,13 +656,13 @@ When Gemini API is enabled:
 
 Hackathon project — all rights reserved.
 
-Built with ❤️ for State Farm Innovation Hacks 2.0.
+Built with ❤️ for the State Farm track at Innovation Hacks 2.0.
 
 ---
 
 ## Acknowledgments
 
-- **State Farm** for the hackathon opportunity and brand guidelines
+- **State Farm** for the hackathon opportunity and sponsoring the track
 - **ONNX Runtime Web** team for in-browser ML capabilities
 - **Ultralytics** for YOLO26 model architecture
 - **React & Vite** communities for excellent developer experience
