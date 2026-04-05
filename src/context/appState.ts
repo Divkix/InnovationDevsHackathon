@@ -16,6 +16,16 @@ export const DEFAULT_STATE: AppState = {
   manualItems: [],
   selectedItemId: null,
   confidenceThreshold: 0.5,
+
+  // New feature defaults
+  privacyMode: {
+    enabled: false,
+    localOnlyMessage: "All processing happens on your device. No data leaves your browser.",
+  },
+  activeSimulatorType: null,
+  hazardWarnings: [],
+  simulationResult: null,
+  recommendations: [],
 };
 
 /**
@@ -28,4 +38,6 @@ export const STORAGE_KEYS: StorageKeys = {
   confidenceThreshold: "insurescope_confidenceThreshold",
   cameraPermissionDenied: "insurescope_cameraPermissionDenied",
   manualModeEnabled: "insurescope_manualModeEnabled",
+  privacyMode: "insurescope_privacyMode",
+  activeSimulatorType: "insurescope_activeSimulatorType",
 };
