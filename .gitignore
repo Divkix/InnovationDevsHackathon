@@ -24,3 +24,8 @@ coverage
 *.sln
 *.sw?
 .playwright-mcp/
+
+# ML models (keep only public/models/* versions tracked)
+*.onnx
+*.pt
+*.tflite
