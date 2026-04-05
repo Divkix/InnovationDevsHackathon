@@ -10,6 +10,7 @@ import {
 import type {
   AppContextValue,
   AppTab,
+  CoverageRecommendation,
   DetectedItem,
   DetectedItemsInput,
   DisasterSimulationResult,
@@ -18,7 +19,6 @@ import type {
   ManualItem,
   PolicyType,
   PrivacyModeState,
-  CoverageRecommendation,
 } from "../types";
 import { VALID_POLICY_TYPES } from "../types";
 import { DEFAULT_STATE, STORAGE_KEYS } from "./appState";
@@ -319,13 +319,12 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
    * Enables/disables privacy mode and persists to localStorage
    */
   const setPrivacyMode = useCallback((enabled: boolean): void => {
-    const newMode: PrivacyModeState = {
-      ...privacyMode,
-      enabled,
-    };
-    setPrivacyModeState(newMode);
-    saveToStorage(STORAGE_KEYS.privacyMode, JSON.stringify(newMode));
-  }, [privacyMode]);
+    setPrivacyModeState((prevMode) => {
+      const newMode: PrivacyModeState = { ...prevMode, enabled };
+      saveToStorage(STORAGE_KEYS.privacyMode, JSON.stringify(newMode));
+      return newMode;
+    });
+  }, []);
 
   /**
    * Action: setActiveSimulatorType
