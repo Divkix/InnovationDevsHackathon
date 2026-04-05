@@ -1,0 +1,11 @@
+# Generated files - exclude from GitHub language stats
+public/wasm/*.js linguist-generated=true
+dist/** linguist-generated=true
+coverage/** linguist-generated=true
+
+# Vendored dependencies
+node_modules/** linguist-vendored=true
+
+# Binary data
+*.onnx linguist-generated=true
+*.wasm linguist-generated=true

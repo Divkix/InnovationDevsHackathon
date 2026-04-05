@@ -12,16 +12,27 @@ interface TabConfig {
 export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNavigationProps) {
   const tabs: TabConfig[] = [
     { id: "camera", label: "Camera", icon: Camera, ariaLabel: "Switch to Camera view" },
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, ariaLabel: "Switch to Dashboard view" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      ariaLabel: "Switch to Dashboard view",
+    },
   ];
 
   const handleTabClick = (tabId: AppTab): void => {
     if (tabId !== activeTab) onTabChange(tabId);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, tabId: AppTab): void => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleTabClick(tabId);
+    }
+  };
+
   return (
     <nav
-      aria-label="Main navigation"
       className={`
         fixed bottom-0 left-0 right-0
         md:relative md:bottom-auto md:left-auto md:right-auto
@@ -33,7 +44,11 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
       data-testid="tab-navigation"
     >
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-around md:justify-start md:gap-1 px-4 py-2 pb-[env(safe-area-inset-bottom,8px)] md:pb-2">
+        <div
+          role="tablist"
+          aria-label="Main navigation"
+          className="flex justify-around md:justify-start md:gap-1 px-4 py-2 pb-[env(safe-area-inset-bottom,8px)] md:pb-2"
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -45,7 +60,9 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
                 role="tab"
                 aria-selected={isActive}
                 aria-label={tab.ariaLabel}
+                tabIndex={0}
                 onClick={() => handleTabClick(tab.id)}
+                onKeyDown={(e) => handleKeyDown(e, tab.id)}
                 data-testid={`tab-${tab.id}`}
                 data-active={isActive}
                 className={`
@@ -57,9 +74,10 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
                   font-bold uppercase tracking-widest text-xs md:text-sm
                   transition-colors duration-200 ease-out
                   border-b-4
-                  ${isActive
-                    ? "border-swiss-accent text-swiss-fg"
-                    : "border-transparent text-swiss-fg/50 hover:text-swiss-fg"
+                  ${
+                    isActive
+                      ? "border-swiss-accent text-swiss-fg"
+                      : "border-transparent text-swiss-fg/50 hover:text-swiss-fg"
                   }
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-swiss-accent focus-visible:ring-offset-2
                 `}

@@ -1,7 +1,12 @@
 import { motion, useSpring, useTransform } from "framer-motion";
 import { AlertTriangle, CheckCircle, DollarSign, Shield, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { calculateValues, formatCurrency, formatPercentage, getUpgradeRecommendations } from "@/utils/valueCalculator";
+import {
+  calculateValues,
+  formatCurrency,
+  formatPercentage,
+  getUpgradeRecommendations,
+} from "@/utils/valueCalculator";
 import type { CoverageStatus, DashboardProps, ItemBreakdown } from "../../types";
 
 interface AnimatedNumberProps {
@@ -11,7 +16,9 @@ interface AnimatedNumberProps {
 
 function AnimatedNumber({ value, formatter }: AnimatedNumberProps) {
   const spring = useSpring(value, { stiffness: 100, damping: 20 });
-  useEffect(() => { spring.set(value); }, [value, spring]);
+  useEffect(() => {
+    spring.set(value);
+  }, [value, spring]);
   const display = useTransform(spring, (current) => formatter(current));
   const [displayValue, setDisplayValue] = useState(formatter(value));
   useEffect(() => {
@@ -21,19 +28,25 @@ function AnimatedNumber({ value, formatter }: AnimatedNumberProps) {
   return <span>{displayValue}</span>;
 }
 
-export function Dashboard({ detectedItems = [], manualItems = [], policyType = "renters", onItemClick }: DashboardProps) {
+export function Dashboard({
+  detectedItems = [],
+  manualItems = [],
+  policyType = "renters",
+  onItemClick,
+}: DashboardProps) {
   const calculationResult = useMemo(() => {
     const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : [];
     const safeManualItems = Array.isArray(manualItems) ? manualItems : [];
     return calculateValues(safeDetectedItems, safeManualItems, policyType || "renters");
   }, [detectedItems, manualItems, policyType]);
 
-  const recommendations = useMemo(() =>
-    getUpgradeRecommendations(calculationResult.items, policyType),
-    [calculationResult.items, policyType]
+  const recommendations = useMemo(
+    () => getUpgradeRecommendations(calculationResult.items, policyType),
+    [calculationResult.items, policyType],
   );
 
-  const { totalValue, protectedValue, unprotectedValue, coverageGapPercentage, items } = calculationResult;
+  const { totalValue, protectedValue, unprotectedValue, coverageGapPercentage, items } =
+    calculationResult;
   const allCovered = items.length > 0 && unprotectedValue === 0;
   const hasItems = items.length > 0;
   const hasRecommendations = recommendations.length > 0;
@@ -102,7 +115,7 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = "
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-swiss-bg/80" />
               <span className="text-xs font-black uppercase tracking-widest text-swiss-bg/80">
-                Unprotected
+                UNPROTECTED
               </span>
             </div>
             <p className="text-5xl font-black text-swiss-bg tracking-tight">
@@ -119,7 +132,10 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = "
               </span>
             </div>
             <p className="text-3xl font-black text-swiss-fg">
-              <AnimatedNumber value={coverageGapPercentage} formatter={(v) => formatPercentage(v)} />
+              <AnimatedNumber
+                value={coverageGapPercentage}
+                formatter={(v) => formatPercentage(v)}
+              />
             </p>
           </div>
         </div>
@@ -158,7 +174,7 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = "
               </div>
               <div>
                 <h3 className="font-black uppercase tracking-widest text-lg">
-                  All items fully covered
+                  All items are fully covered
                 </h3>
                 <p className="text-swiss-bg/80">
                   Your current insurance policy protects all detected items.
@@ -192,15 +208,21 @@ export function Dashboard({ detectedItems = [], manualItems = [], policyType = "
                     className="w-full px-6 py-4 flex items-center justify-between border-b border-swiss-fg/20 hover:bg-swiss-muted transition-colors text-left"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 ${colors.bg} ${item.status === 'conditional' ? 'border-2 border-swiss-fg' : ''}`} />
+                      <div
+                        className={`w-3 h-3 ${colors.bg} ${item.status === "conditional" ? "border-2 border-swiss-fg" : ""}`}
+                      />
                       <div>
                         <p className="font-bold text-swiss-fg capitalize">{item.category}</p>
-                        <span className={`inline-flex items-center px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${colors.text}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${colors.text}`}
+                        >
                           {statusLabels[item.status]}
                         </span>
                       </div>
                     </div>
-                    <p className="font-black text-swiss-fg text-lg">{formatCurrency(item.estimatedValue)}</p>
+                    <p className="font-black text-swiss-fg text-lg">
+                      {formatCurrency(item.estimatedValue)}
+                    </p>
                   </motion.button>
                 );
               })}

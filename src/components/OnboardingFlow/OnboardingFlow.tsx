@@ -1,6 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Camera, Car, Check, ChevronLeft, Home, Shield, ShieldAlert } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  Car,
+  Check,
+  ChevronLeft,
+  Home,
+  Shield,
+  ShieldAlert,
+} from "lucide-react";
 import { type KeyboardEvent, type ReactElement, useCallback, useState } from "react";
 import { SwissButton, SwissSectionLabel } from "@/components/Swiss";
 import { useAppContext } from "@/context/AppContext";
@@ -14,10 +23,30 @@ interface PolicyOption {
 }
 
 const POLICY_OPTIONS: PolicyOption[] = [
-  { id: "renters", label: "Renter's Insurance", icon: Home, description: "Coverage for personal property in rented homes" },
-  { id: "homeowners", label: "Homeowner's Insurance", icon: Shield, description: "Full property and belongings coverage" },
-  { id: "auto", label: "Auto Insurance", icon: Car, description: "Vehicle coverage and roadside protection" },
-  { id: "none", label: "No Insurance", icon: ShieldAlert, description: "See what is unprotected (demo mode)" },
+  {
+    id: "renters",
+    label: "Renter's Insurance",
+    icon: Home,
+    description: "Coverage for personal property in rented homes",
+  },
+  {
+    id: "homeowners",
+    label: "Homeowner's Insurance",
+    icon: Shield,
+    description: "Full property and belongings coverage",
+  },
+  {
+    id: "auto",
+    label: "Auto Insurance",
+    icon: Car,
+    description: "Vehicle coverage and roadside protection",
+  },
+  {
+    id: "none",
+    label: "No Insurance",
+    icon: ShieldAlert,
+    description: "See what is unprotected (demo mode)",
+  },
 ];
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElement {
@@ -26,10 +55,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyType | null>(policyType || null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
-  const handlePolicySelect = useCallback((policyId: PolicyType): void => {
-    setSelectedPolicy(policyId);
-    setPolicyType(policyId);
-  }, [setPolicyType]);
+  const handlePolicySelect = useCallback(
+    (policyId: PolicyType): void => {
+      setSelectedPolicy(policyId);
+      setPolicyType(policyId);
+    },
+    [setPolicyType],
+  );
 
   const handleNext = useCallback((): void => {
     if (isTransitioning) return;
@@ -61,12 +93,15 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
     if (onComplete) onComplete();
   }, [setPolicyType, completeOnboarding, onComplete]);
 
-  const handlePolicyKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, policyId: PolicyType): void => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handlePolicySelect(policyId);
-    }
-  }, [handlePolicySelect]);
+  const handlePolicyKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>, policyId: PolicyType): void => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handlePolicySelect(policyId);
+      }
+    },
+    [handlePolicySelect],
+  );
 
   return (
     <div className="min-h-screen bg-swiss swiss-noise flex flex-col" data-testid="onboarding-flow">
@@ -120,7 +155,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                     return (
                       <motion.button
                         key={policy.id}
-                        whileHover={{ backgroundColor: isSelected ? '#FF3000' : '#000000' }}
+                        whileHover={{ backgroundColor: isSelected ? "#FF3000" : "#000000" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handlePolicySelect(policy.id)}
                         onKeyDown={(e) => handlePolicyKeyDown(e, policy.id)}
@@ -131,23 +166,27 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                         className={`
                           relative p-8 flex flex-col items-center text-left
                           border-swiss-fg
-                          ${isFirstRow ? 'border-b-2' : ''}
-                          ${index % 2 === 0 ? 'border-r-2' : ''}
-                          ${isSelected ? 'bg-swiss-accent text-swiss-bg' : 'bg-swiss text-swiss-fg'}
+                          ${isFirstRow ? "border-b-2" : ""}
+                          ${index % 2 === 0 ? "border-r-2" : ""}
+                          ${isSelected ? "bg-swiss-accent text-swiss-bg" : "bg-swiss text-swiss-fg"}
                           transition-colors duration-200
                           focus:outline-none focus-visible:ring-2 focus-visible:ring-swiss-accent focus-visible:ring-offset-2
                         `}
                       >
-                        <div className={`
+                        <div
+                          className={`
                           w-12 h-12 border-2 mb-4 flex items-center justify-center
-                          ${isSelected ? 'border-swiss-bg' : 'border-swiss-fg'}
-                        `}>
+                          ${isSelected ? "border-swiss-bg" : "border-swiss-fg"}
+                        `}
+                        >
                           <Icon className="w-6 h-6" />
                         </div>
                         <h3 className="font-black uppercase tracking-wide text-lg mb-1">
                           {policy.label}
                         </h3>
-                        <p className={`text-sm ${isSelected ? 'text-swiss-bg/80' : 'text-swiss-fg/60'}`}>
+                        <p
+                          className={`text-sm ${isSelected ? "text-swiss-bg/80" : "text-swiss-fg/60"}`}
+                        >
                           {policy.description}
                         </p>
                         {isSelected && (
@@ -167,7 +206,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                   size="large"
                   className="w-full"
                 >
-                  {isTransitioning ? 'Continuing...' : 'Continue'}
+                  {isTransitioning ? "Continuing..." : "Continue"}
                   <ArrowRight className="w-5 h-5" />
                 </SwissButton>
               </motion.div>
@@ -201,10 +240,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                     </div>
                     <div className="p-8 swiss-dots">
                       <ul className="space-y-4">
-                        {['Point camera at objects', 'AI detects items automatically', 'See coverage status instantly'].map((text, i) => (
-                          <li key={i} className="flex items-start gap-3">
+                        {[
+                          { id: "point", text: "Point camera at objects" },
+                          { id: "detect", text: "AI detects items automatically" },
+                          { id: "status", text: "See coverage status instantly" },
+                        ].map((item, i) => (
+                          <li key={item.id} className="flex items-start gap-3">
                             <span className="text-swiss-accent font-black text-lg">0{i + 1}.</span>
-                            <span className="text-swiss-fg font-medium">{text}</span>
+                            <span className="text-swiss-fg font-medium">{item.text}</span>
                           </li>
                         ))}
                       </ul>
@@ -217,13 +260,24 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
                 </p>
 
                 <div className="flex gap-4">
-                  <SwissButton onClick={handleBack} disabled={isTransitioning} variant="secondary" className="flex-1">
+                  <SwissButton
+                    onClick={handleBack}
+                    disabled={isTransitioning}
+                    variant="secondary"
+                    className="flex-1"
+                  >
                     <ChevronLeft className="w-5 h-5" />
                     Back
                   </SwissButton>
-                  <SwissButton onClick={handleNext} disabled={isTransitioning} variant="primary" size="large" className="flex-[2]">
+                  <SwissButton
+                    onClick={handleNext}
+                    disabled={isTransitioning}
+                    variant="primary"
+                    size="large"
+                    className="flex-[2]"
+                  >
                     <Camera className="w-5 h-5" />
-                    {isTransitioning ? 'Starting...' : 'Start Camera'}
+                    {isTransitioning ? "Starting..." : "Start Camera"}
                   </SwissButton>
                 </div>
               </motion.div>
@@ -232,8 +286,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps): ReactElemen
 
           {/* Skip Option */}
           <p className="text-center mt-8 text-sm text-swiss-fg/50">
-            Already have an account?{' '}
-            <button onClick={handleSkip} className="text-swiss-accent hover:underline font-bold uppercase">
+            Already have an account?{" "}
+            <button
+              onClick={handleSkip}
+              className="text-swiss-accent hover:underline font-bold uppercase"
+            >
               Skip to main view
             </button>
           </p>
