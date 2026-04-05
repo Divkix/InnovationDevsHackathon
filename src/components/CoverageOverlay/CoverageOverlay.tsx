@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { lookupCoverage } from '@/utils/coverageLookup'
+import { DEFAULT_CONFIDENCE_THRESHOLD } from '@/components/ConfidenceThresholdSlider/thresholdUtils'
 import { getObjectCoverLayout, projectBoundingBoxToCanvas } from './layout'
 import type {
   PolicyType,
@@ -76,11 +77,6 @@ const SMOOTHING_FACTOR = 0.3
  * Items stay visible for this long after disappearing
  */
 const PERSISTENCE_THRESHOLD = 500
-
-/**
- * Minimum confidence threshold for rendering
- */
-const DEFAULT_CONFIDENCE_THRESHOLD = 0.5
 
 /**
  * Format value as currency
