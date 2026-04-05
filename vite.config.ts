@@ -38,11 +38,6 @@ const config: UserConfig = {
       }
     }
   },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/setupTests.ts'],
-  },
 }
 
 export default defineConfig(config)

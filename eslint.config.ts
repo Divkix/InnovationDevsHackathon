@@ -77,7 +77,7 @@ export default defineConfig([
   },
   // Tooling config files
   {
-    files: ['*.config.ts'],
+    files: ['**/*.config.ts'],
     extends: [js.configs.recommended, ...tsEslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2024,
