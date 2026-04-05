@@ -207,6 +207,94 @@
       "note": "Personal items covered under personal property",
       "conditions": [],
       "upgrade": "None needed"
+    },
+    "jewelry": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 2000,
+      "note": "Jewelry has limited coverage — typically $1,000-$2,500 sub-limit",
+      "conditions": ["Standard policies have low jewelry limits", "High-value pieces need separate scheduling"],
+      "upgrade": "Add scheduled personal property endorsement for valuable jewelry"
+    },
+    "musical_instruments": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1500,
+      "note": "Musical instruments may have coverage limits under personal property",
+      "conditions": ["Professional instruments may exceed standard limits", "May need separate musical instrument policy"],
+      "upgrade": "Consider scheduled personal property or standalone musical instrument policy"
+    },
+    "art_collectibles": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 5000,
+      "note": "Art and collectibles have strict coverage limits — typically $1,000-$2,500",
+      "conditions": ["Standard limits are very low for art", "Professional appraisal usually required"],
+      "upgrade": "Schedule high-value art pieces with professional appraisals"
+    },
+    "cameras": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 2000,
+      "note": "Camera equipment covered under personal property",
+      "conditions": ["Professional gear may need additional coverage"],
+      "upgrade": "Consider scheduled coverage for professional camera equipment over $5,000"
+    },
+    "gaming_equipment": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1500,
+      "note": "Gaming consoles, PCs, and accessories covered under personal property",
+      "conditions": [],
+      "upgrade": "High-end gaming setups may benefit from scheduled coverage"
+    },
+    "power_tools": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Power tools and lawn equipment covered as personal property",
+      "conditions": [],
+      "upgrade": "Consider coverage for expensive professional tool sets"
+    },
+    "exercise_equipment": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Exercise equipment covered under personal property",
+      "conditions": [],
+      "upgrade": "High-end equipment may need additional coverage"
+    },
+    "firearms": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1500,
+      "note": "Firearms typically have sub-limits — usually $2,500-$5,000 total",
+      "conditions": ["State laws may affect coverage", "Safe storage often required", "Collection limits apply"],
+      "upgrade": "Add firearms rider or standalone collector policy for extensive collections"
+    },
+    "silverware": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 3000,
+      "note": "Silverware and china have limited coverage — typically $2,500 limit",
+      "conditions": ["Antique sets may exceed standard limits", "Needs proper documentation"],
+      "upgrade": "Schedule valuable silverware and heirloom china sets"
+    },
+    "furs": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 5000,
+      "note": "Furs have very limited coverage — typically $1,500-$2,500 limit",
+      "conditions": ["Storage requirements often apply", "Standard limits are very low"],
+      "upgrade": "Schedule expensive fur coats with professional appraisal"
+    },
+    "other": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1000,
+      "note": "Coverage depends on item type — verify with your insurance provider",
+      "conditions": ["Must verify coverage for unique items"],
+      "upgrade": "Contact insurance agent for guidance on uncommon items"
     }
   },
   "homeowners": {
@@ -417,6 +505,94 @@
       "note": "Personal items covered",
       "conditions": [],
       "upgrade": "None needed"
+    },
+    "jewelry": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 2000,
+      "note": "Jewelry has limited coverage — higher limits than renter's but still capped",
+      "conditions": ["Standard policies have jewelry sub-limits", "High-value pieces need scheduling"],
+      "upgrade": "Add scheduled personal property for valuable jewelry"
+    },
+    "musical_instruments": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1500,
+      "note": "Musical instruments covered with higher limits than renter's",
+      "conditions": ["Professional grade instruments may need additional coverage"],
+      "upgrade": "Consider scheduled property for expensive instruments"
+    },
+    "art_collectibles": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 5000,
+      "note": "Art and collectibles have coverage limits — higher than renter's but may still be insufficient",
+      "conditions": ["Valuable collections need proper scheduling", "Professional appraisal recommended"],
+      "upgrade": "Schedule valuable art with appraisals and consider fine arts coverage"
+    },
+    "cameras": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 2000,
+      "note": "Camera equipment covered with good limits under personal property",
+      "conditions": [],
+      "upgrade": "Professional photographers should consider scheduled equipment coverage"
+    },
+    "gaming_equipment": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1500,
+      "note": "Gaming equipment well covered under personal property",
+      "conditions": [],
+      "upgrade": "Elite gaming setups may benefit from scheduled coverage"
+    },
+    "power_tools": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 800,
+      "note": "Power tools and lawn equipment covered",
+      "conditions": [],
+      "upgrade": "None needed for typical homeowner use"
+    },
+    "exercise_equipment": {
+      "status": "covered",
+      "color": "green",
+      "estimatedValue": 1200,
+      "note": "Exercise equipment covered under personal property",
+      "conditions": [],
+      "upgrade": "Home gym equipment typically well covered"
+    },
+    "firearms": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1500,
+      "note": "Firearms covered with sub-limits — typically $2,500-$5,000",
+      "conditions": ["Safe storage required", "Collection limits apply", "State regulations vary"],
+      "upgrade": "Add firearms rider for collections or high-value pieces"
+    },
+    "silverware": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 3000,
+      "note": "Silverware has coverage limits but higher than renter's",
+      "conditions": ["Heirloom sets may exceed limits", "Proper documentation needed"],
+      "upgrade": "Schedule valuable silverware and china sets with appraisals"
+    },
+    "furs": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 5000,
+      "note": "Furs have limited coverage — typically $2,500 limit",
+      "conditions": ["Storage requirements apply", "Standard limits are low"],
+      "upgrade": "Schedule expensive furs with professional appraisal"
+    },
+    "other": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1000,
+      "note": "Coverage depends on item type — verify with your agent",
+      "conditions": ["Must verify coverage for unique items"],
+      "upgrade": "Contact insurance agent for uncommon item guidance"
     }
   },
   "auto": {
@@ -627,6 +803,94 @@
       "note": "Personal property NOT covered under auto insurance",
       "conditions": [],
       "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "jewelry": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 2000,
+      "note": "Jewelry NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "musical_instruments": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1500,
+      "note": "Musical instruments NOT covered unless permanently installed in vehicle",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "art_collectibles": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 5000,
+      "note": "Art and collectibles NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "cameras": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 2000,
+      "note": "Cameras NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "gaming_equipment": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1500,
+      "note": "Gaming equipment NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "power_tools": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "Power tools NOT covered unless permanently installed in commercial vehicle",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance, or commercial auto for business use"
+    },
+    "exercise_equipment": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "Exercise equipment NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "firearms": {
+      "status": "conditional",
+      "color": "yellow",
+      "estimatedValue": 1500,
+      "note": "Firearms may have VERY limited coverage if stolen from locked vehicle",
+      "conditions": ["Only if stolen from locked vehicle", "Very low limits ($500-1,000)", "Documentation required"],
+      "upgrade": "You need renter's or homeowner's insurance for proper coverage"
+    },
+    "silverware": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 3000,
+      "note": "Silverware NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "furs": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 5000,
+      "note": "Furs NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
+    },
+    "other": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1000,
+      "note": "Personal property NOT covered under auto insurance",
+      "conditions": [],
+      "upgrade": "You need renter's or homeowner's insurance"
     }
   },
   "none": {
@@ -834,6 +1098,94 @@
       "status": "not_covered",
       "color": "red",
       "estimatedValue": 20,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "jewelry": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 2000,
+      "note": "NO INSURANCE — This valuable item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with scheduled jewelry coverage"
+    },
+    "musical_instruments": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1500,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with musical instrument coverage"
+    },
+    "art_collectibles": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 5000,
+      "note": "NO INSURANCE — This valuable collection is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with fine arts coverage"
+    },
+    "cameras": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 2000,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with scheduled equipment coverage"
+    },
+    "gaming_equipment": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1500,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "power_tools": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 800,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "exercise_equipment": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1200,
+      "note": "NO INSURANCE — This item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance"
+    },
+    "firearms": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1500,
+      "note": "NO INSURANCE — Firearms are completely unprotected without coverage",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with firearms coverage"
+    },
+    "silverware": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 3000,
+      "note": "NO INSURANCE — This valuable item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with scheduled coverage"
+    },
+    "furs": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 5000,
+      "note": "NO INSURANCE — This valuable item is completely unprotected",
+      "conditions": [],
+      "upgrade": "Consider renter's or homeowner's insurance with scheduled coverage"
+    },
+    "other": {
+      "status": "not_covered",
+      "color": "red",
+      "estimatedValue": 1000,
       "note": "NO INSURANCE — This item is completely unprotected",
       "conditions": [],
       "upgrade": "Consider renter's or homeowner's insurance"

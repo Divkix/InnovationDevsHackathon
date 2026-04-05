@@ -37,9 +37,16 @@ vi.mock('../components/Dashboard/Dashboard.jsx', () => ({
   ))
 }))
 
-// Mock localStorage
+// Mock localStorage with onboarding complete
 const localStorageMock = {
-  getItem: vi.fn(),
+  getItem: vi.fn((key) => {
+    // Return default values to simulate completed onboarding
+    if (key === 'insurescope_policyType') return 'renters'
+    if (key === 'insurescope_onboardingComplete') return 'true'
+    if (key === 'insurescope_manualItems') return '[]'
+    if (key === 'insurescope_confidenceThreshold') return '0.5'
+    return null
+  }),
   setItem: vi.fn(),
   removeItem: vi.fn(),
   clear: vi.fn()
@@ -56,7 +63,6 @@ function renderWithProvider(ui) {
 describe('App - Tab Navigation Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    localStorageMock.getItem.mockReturnValue(null)
   })
 
   describe('initial render', () => {
