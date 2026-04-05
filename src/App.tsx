@@ -1,12 +1,23 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Globe, MessageCircle, Package, Plus, Shield, Volume2, VolumeX } from "lucide-react";
-import { type ReactElement, useState } from "react";
+import {
+  FileText,
+  Globe,
+  MessageCircle,
+  Package,
+  Plus,
+  Shield,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { type ReactElement, useMemo, useState } from "react";
 import { AddItemForm, ManualItemsList } from "./components/AddItemForm/AddItemForm";
 import { CameraView } from "./components/CameraView/CameraView";
 import { Dashboard } from "./components/Dashboard/Dashboard";
 import { DetailModal } from "./components/DetailModal/DetailModal";
 import { OnboardingFlow } from "./components/OnboardingFlow/OnboardingFlow";
 import { PolicySelector } from "./components/PolicySelector/PolicySelector";
+import { QuoteHandoffModal } from "./components/QuoteHandoffModal";
+import { QuotePacketCard } from "./components/QuotePacketCard";
 import { TabNavigation } from "./components/TabNavigation/TabNavigation";
 import { useAppContext } from "./context/AppContext";
 import { useGemini } from "./hooks/useGemini";
@@ -36,6 +47,7 @@ function App(): ReactElement {
   // Gemini hook for AI assistance
   const gemini = useGemini();
   const copy = getCopy(language);
+  const detectedItemsList = useMemo(() => Array.from(detectedItems.values()), [detectedItems]);
 
   // Handle camera errors (shown in error state)
   const [, setCameraError] = useState<Error | string | null>(null);
@@ -43,6 +55,7 @@ function App(): ReactElement {
   // State for Add Item form modal
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState<boolean>(false);
   const [editItem, setEditItem] = useState<ManualItem | null>(null);
+  const [isQuoteHandoffOpen, setIsQuoteHandoffOpen] = useState<boolean>(false);
 
   // Handle manual mode fallback
   const handleManualMode = (): void => {
@@ -100,6 +113,14 @@ function App(): ReactElement {
   const handleCloseAddItem = (): void => {
     setIsAddItemFormOpen(false);
     setEditItem(null);
+  };
+
+  const handleOpenQuoteHandoff = (): void => {
+    setIsQuoteHandoffOpen(true);
+  };
+
+  const handleCloseQuoteHandoff = (): void => {
+    setIsQuoteHandoffOpen(false);
   };
 
   // Show onboarding if not complete
@@ -205,10 +226,20 @@ function App(): ReactElement {
               {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
+            <button
+              type="button"
+              onClick={handleOpenQuoteHandoff}
+              className="hidden sm:flex items-center gap-2 px-4 py-3 swiss-button-secondary text-xs"
+              aria-label="Generate quote handoff"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="hidden md:inline">Quote Packet</span>
+            </button>
+
             {/* Policy Selector in Header */}
             <PolicySelector
               variant="compact"
-              detectedItems={Array.from(detectedItems?.values() || [])}
+              detectedItems={detectedItemsList}
               manualItems={manualItems}
             />
           </div>
@@ -284,10 +315,17 @@ function App(): ReactElement {
                 </motion.div>
 
                 <Dashboard
-                  detectedItems={Array.from(detectedItems?.values() || [])}
+                  detectedItems={detectedItemsList}
                   manualItems={manualItems}
                   policyType={policyType}
                   onItemClick={(item) => setSelectedItem(item.id)}
+                />
+
+                <QuotePacketCard
+                  detectedItems={detectedItemsList}
+                  manualItems={manualItems}
+                  policyType={policyType}
+                  language={language}
                 />
 
                 {/* Manual Items Section */}
@@ -338,6 +376,9 @@ function App(): ReactElement {
 
       {/* Add Item Form Modal */}
       <AddItemForm isOpen={isAddItemFormOpen} onClose={handleCloseAddItem} editItem={editItem} />
+
+      {/* Quote Handoff Modal */}
+      <QuoteHandoffModal isOpen={isQuoteHandoffOpen} onClose={handleCloseQuoteHandoff} />
     </div>
   );
 }

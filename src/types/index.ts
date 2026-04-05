@@ -345,6 +345,66 @@ export interface SpeechOptions {
 }
 
 // ============================================================================
+// Quote Packet Types
+// ============================================================================
+
+export interface QuotePacketAttachment {
+  label: string;
+  url: string;
+  kind: "photo" | "document";
+}
+
+export interface QuotePacketItem {
+  id: string;
+  displayName: string;
+  category: string;
+  source: "detected" | "manual";
+  estimatedValue: number;
+  coverageStatus: CoverageStatus;
+  coverageLabel: string;
+  ownershipStatus: OwnershipStatus;
+  proofLabel: string;
+  confidence?: number;
+  notes?: string;
+  attachments: QuotePacketAttachment[];
+}
+
+export interface QuotePacket {
+  packetId: string;
+  generatedAt: string;
+  generatedAtLabel: string;
+  policyType: PolicyType;
+  policyLabel: string;
+  language: SupportedLanguage;
+  languageLabel: string;
+  detectedCount: number;
+  manualCount: number;
+  itemCount: number;
+  totalValue: number;
+  protectedValue: number;
+  unprotectedValue: number;
+  coverageGapPercentage: number;
+  verifiedValue: number;
+  photoCount: number;
+  documentCount: number;
+  evidenceCount: number;
+  reviewCount: number;
+  summary: string;
+  brief: string;
+  markdown: string;
+  handoffSubject: string;
+  recommendedActions: string[];
+  items: QuotePacketItem[];
+}
+
+export interface QuotePacketRequest {
+  detectedItems: DetectedItem[];
+  manualItems: ManualItem[];
+  policyType: PolicyType;
+  language?: SupportedLanguage;
+}
+
+// ============================================================================
 // Component Props Types
 // ============================================================================
 
