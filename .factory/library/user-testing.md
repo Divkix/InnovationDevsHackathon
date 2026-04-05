@@ -34,14 +34,33 @@ const mockDetections = [
 ];
 ```
 
-## Validation Concurrency
+## Flow Validator Guidance: Browser
 
-**Machine specs:** 48GB RAM, 14 CPU cores, macOS
+### Isolation Rules
+- **Data:** Tests run against the same dev server instance. Each validator session should clear localStorage at the start to ensure clean state.
+- **State:** No user accounts or namespaces required. localStorage is the only persistence layer.
+- **Concurrency:** Validators can run concurrently — each operates on independent browser sessions. No shared state conflicts.
 
-**agent-browser:** Each instance consumes ~300MB RAM. Dev server adds ~200MB.
-- Available headroom: ~40GB (after baseline ~8GB usage)
-- Usable headroom (70%): ~28GB
-- 5 concurrent instances: ~1.5GB + 200MB dev server = ~1.7GB total
-- **Max concurrent validators: 5**
+### Testing Boundaries
+- **URL:** http://localhost:5173
+- **Tool:** agent-browser (invoke via Skill tool)
+- **Setup:** Ensure dev server is running on port 5173 before testing
 
-**Resource cost classification:** LIGHT — lightweight React SPA with no heavy server-side processing.
+### Test Data Preparation
+- Clear localStorage before each test to simulate fresh user
+- Set localStorage values to simulate returning user scenarios when needed
+- Mock detection data via localStorage or URL parameters if the app supports it
+
+### Common Patterns
+1. **Fresh user test:** Clear localStorage, load page, verify onboarding shows
+2. **Returning user test:** Set localStorage values, refresh page, verify state restored
+3. **Policy switch test:** Navigate to camera view, change policy, verify UI updates
+4. **Tab switch test:** Click Camera tab, verify camera view; click Dashboard tab, verify dashboard
+
+### Screenshots & Evidence
+- Save screenshots to: `{missionDir}/evidence/camera/{group-id}/`
+- Name format: `{assertion-id}-{description}.png`
+
+### Session Management
+- Use unique session IDs for each flow validator (e.g., `--session "camera-flow-1"`)
+- Close browser sessions after testing completes

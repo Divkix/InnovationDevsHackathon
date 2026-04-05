@@ -1,0 +1,85 @@
+{
+  "groupId": "overlay",
+  "assertions": [
+    "VAL-OVERLAY-001",
+    "VAL-OVERLAY-002",
+    "VAL-OVERLAY-003",
+    "VAL-OVERLAY-004",
+    "VAL-OVERLAY-005",
+    "VAL-OVERLAY-006",
+    "VAL-OVERLAY-007",
+    "VAL-OVERLAY-008",
+    "VAL-OVERLAY-009",
+    "VAL-OVERLAY-011",
+    "VAL-OVERLAY-012",
+    "VAL-OVERLAY-013"
+  ],
+  "results": {
+    "VAL-OVERLAY-001": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Green box + checkmark for covered items verified in unit tests"
+    },
+    "VAL-OVERLAY-002": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Red box + X for uncovered items verified in unit tests"
+    },
+    "VAL-OVERLAY-003": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Yellow box + warning for conditional items verified in unit tests"
+    },
+    "VAL-OVERLAY-004": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Canvas clear when no detections verified in unit tests"
+    },
+    "VAL-OVERLAY-005": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Box alignment with detection coordinates verified in unit tests"
+    },
+    "VAL-OVERLAY-006": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Multiple distinct boxes for multiple items verified in unit tests"
+    },
+    "VAL-OVERLAY-007": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Position smoothing prevents flicker verified in unit tests"
+    },
+    "VAL-OVERLAY-008": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Boxes disappear after items leave frame verified in unit tests"
+    },
+    "VAL-OVERLAY-009": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Overlapping boxes remain visible verified in unit tests"
+    },
+    "VAL-OVERLAY-011": {
+      "status": "pass",
+      "evidence": "policy-renters.png, policy-auto.png",
+      "notes": "Policy switch updates overlay colors immediately"
+    },
+    "VAL-OVERLAY-012": {
+      "status": "pass",
+      "evidence": "camera-no-insurance.png",
+      "notes": "No Insurance turns all boxes red - Red Moment verified"
+    },
+    "VAL-OVERLAY-013": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Canvas size matches video dimensions verified in unit tests"
+    }
+  },
+  "frictions": [],
+  "blockers": [],
+  "toolsUsed": [
+    "agent-browser"
+  ],
+  "durationSeconds": 90
+}

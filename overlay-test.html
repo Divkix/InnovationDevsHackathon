@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureScope Overlay Test</title>
+    <script src="https://unpkg.com/react@19/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@19/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .policy-btn { background: #e0e7ff; color: #3730a3; }
+        .policy-btn:hover { background: #c7d2fe; }
+        .policy-btn.active { background: #4f46e5; color: white; }
+        
+        .test-btn { background: #d1fae5; color: #065f46; }
+        .test-btn:hover { background: #a7f3d0; }
+        
+        .clear-btn { background: #fee2e2; color: #991b1b; }
+        .clear-btn:hover { background: #fecaca; }
+        
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 4/3;
+            background: #1f2937;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .video-mock {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .test-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pass { background: #d1fae5; color: #065f46; }
+        .status-fail { background: #fee2e2; color: #991b1b; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useCallback, useMemo } = React;
+        
+        // Coverage Rules Data
+        const coverageRules = {
+            renters: {
+                laptop: { status: 'covered', color: 'green', estimatedValue: 1200, note: 'Personal property covered', upgrade: 'Consider scheduled coverage for high-value electronics' },
+                tv: { status: 'covered', color: 'green', estimatedValue: 800, note: 'Personal property covered', upgrade: 'Consider replacement cost coverage' },
+                bicycle: { status: 'conditional', color: 'yellow', estimatedValue: 500, note: 'Covered up to policy limits', conditions: ['$500 limit applies'], upgrade: 'Add bicycle rider for full coverage' },
+                car: { status: 'not_covered', color: 'red', estimatedValue: 15000, note: 'Vehicles excluded from renters', upgrade: 'Get auto insurance policy' },
+                motorcycle: { status: 'not_covered', color: 'red', estimatedValue: 8000, note: 'Vehicles excluded from renters', upgrade: 'Get motorcycle insurance' },
+            },
+            homeowners: {
+                laptop: { status: 'covered', color: 'green', estimatedValue: 1200, note: 'Personal property covered', upgrade: 'Consider scheduled coverage' },
+                tv: { status: 'covered', color: 'green', estimatedValue: 800, note: 'Personal property covered', upgrade: 'Consider replacement cost coverage' },
+                car: { status: 'not_covered', color: 'red', estimatedValue: 15000, note: 'Vehicles excluded', upgrade: 'Get auto insurance policy' },
+            },
+            auto: {
+                laptop: { status: 'not_covered', color: 'red', estimatedValue: 1200, note: 'Personal property not covered by auto', upgrade: 'Get renters or homeowners policy' },
+                car: { status: 'covered', color: 'green', estimatedValue: 15000, note: 'Vehicle covered under auto policy', upgrade: 'Consider comprehensive coverage' },
+            },
+            none: {
+                laptop: { status: 'not_covered', color: 'red', estimatedValue: 1200, note: 'NO INSURANCE', upgrade: 'Get any insurance policy' },
+                tv: { status: 'not_covered', color: 'red', estimatedValue: 800, note: 'NO INSURANCE', upgrade: 'Get any insurance policy' },
+                car: { status: 'not_covered', color: 'red', estimatedValue: 15000, note: 'NO INSURANCE', upgrade: 'Get auto insurance' },
+                bicycle: { status: 'not_covered', color: 'red', estimatedValue: 500, note: 'NO INSURANCE', upgrade: 'Get any insurance policy' },
+            }
+        };
+        
+        // Lookup function
+        function lookupCoverage(category, policyType) {
+            const rules = coverageRules[policyType] || coverageRules.none;
+            return rules[category] || { 
+                status: 'not_covered', 
+                color: 'red', 
+                estimatedValue: 0, 
+                note: 'Unknown category',
+                upgrade: 'Verify with insurance provider'
+            };
+        }
+        
+        // Colors for overlay
+        const COLORS = {
+            green: { stroke: '#22c55e', fill: 'rgba(34, 197, 94, 0.15)', text: '#ffffff', labelBg: '#22c55e' },
+            red: { stroke: '#ef4444', fill: 'rgba(239, 68, 68, 0.15)', text: '#ffffff', labelBg: '#ef4444' },
+            yellow: { stroke: '#eab308', fill: 'rgba(234, 179, 8, 0.15)', text: '#000000', labelBg: '#eab308' }
+        };
+        
+        const STATUS_ICONS = { covered: '✓', not_covered: '✕', conditional: '⚠' };
+        const STATUS_LABELS = { covered: 'Covered', not_covered: 'Not Covered', conditional: 'Conditional' };
+        
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+        }
+        
+        // CoverageOverlay Component
+        function CoverageOverlay({ videoRef, detections, policyType }) {
+            const canvasRef = useRef(null);
+            const trackedItemsRef = useRef(new Map());
+            const animationFrameRef = useRef(null);
+            const SMOOTHING_FACTOR = 0.3;
+            const PERSISTENCE_THRESHOLD = 500;
+            
+            const getContext = useCallback(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return null;
+                return canvas.getContext('2d');
+            }, []);
+            
+            const updateCanvasDimensions = useCallback(() => {
+                const canvas = canvasRef.current;
+                const video = videoRef?.current;
+                if (!canvas || !video) return;
+                const width = video.videoWidth || video.width || 640;
+                const height = video.videoHeight || video.height || 480;
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+            }, [videoRef]);
+            
+            const smoothCoordinates = useCallback((current, previous) => {
+                if (!previous) return current;
+                return {
+                    x: previous.x + SMOOTHING_FACTOR * (current.x - previous.x),
+                    y: previous.y + SMOOTHING_FACTOR * (current.y - previous.y),
+                    width: previous.width + SMOOTHING_FACTOR * (current.width - previous.width),
+                    height: previous.height + SMOOTHING_FACTOR * (current.height - previous.height)
+                };
+            }, []);
+            
+            const getDetectionId = useCallback((detection) => {
+                const category = detection.categories?.[0]?.categoryName || 'unknown';
+                const box = detection.boundingBox || {};
+                const gridX = Math.round((box.originX || 0) / 50);
+                const gridY = Math.round((box.originY || 0) / 50);
+                return `${category}-${gridX}-${gridY}`;
+            }, []);
+            
+            const drawRoundedRect = useCallback((ctx, x, y, width, height, radius) => {
+                const r = Math.min(radius, width / 2, height / 2);
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + width - r, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+                ctx.lineTo(x + width, y + height - r);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+                ctx.lineTo(x + r, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            }, []);
+            
+            const drawBoundingBox = useCallback((ctx, item, colorScheme) => {
+                const { x, y, width, height } = item.coordinates;
+                const colors = COLORS[colorScheme.color] || COLORS.red;
+                const strokeWidth = 3;
+                const padding = strokeWidth / 2;
+                
+                ctx.fillStyle = colors.fill;
+                ctx.fillRect(x, y, width, height);
+                
+                ctx.strokeStyle = colors.stroke;
+                ctx.lineWidth = strokeWidth;
+                ctx.strokeRect(x + padding, y + padding, width - strokeWidth, height - strokeWidth);
+                
+                const icon = STATUS_ICONS[colorScheme.status] || '✕';
+                const label = STATUS_LABELS[colorScheme.status] || 'Unknown';
+                const value = formatCurrency(colorScheme.estimatedValue);
+                const name = item.name.charAt(0).toUpperCase() + item.name.slice(1);
+                
+                const line1 = `${icon} ${name}`;
+                const line2 = `${value} • ${label}`;
+                
+                ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+                const line1Width = ctx.measureText(line1).width;
+                ctx.font = '12px system-ui, -apple-system, sans-serif';
+                const line2Width = ctx.measureText(line2).width;
+                
+                const labelWidth = Math.max(line1Width, line2Width) + 16;
+                const lineHeight = 18;
+                const labelHeight = lineHeight * 2 + 8;
+                const cornerRadius = 4;
+                
+                let labelX = x;
+                let labelY = y - labelHeight - 4;
+                
+                if (labelY < 10) labelY = y + height + 4;
+                
+                const canvasWidth = ctx.canvas.width;
+                if (labelX + labelWidth > canvasWidth - 10) labelX = canvasWidth - labelWidth - 10;
+                if (labelX < 10) labelX = 10;
+                
+                ctx.fillStyle = colors.labelBg;
+                drawRoundedRect(ctx, labelX, labelY, labelWidth, labelHeight, cornerRadius);
+                ctx.fill();
+                
+                ctx.fillStyle = colors.text;
+                ctx.textBaseline = 'top';
+                ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+                ctx.fillText(line1, labelX + 8, labelY + 6);
+                ctx.font = '12px system-ui, -apple-system, sans-serif';
+                ctx.fillText(line2, labelX + 8, labelY + 6 + lineHeight);
+            }, [drawRoundedRect]);
+            
+            const processDetections = useCallback(() => {
+                const now = Date.now();
+                const currentIds = new Set();
+                const validDetections = (detections || []).filter(d => (d.categories?.[0]?.score || 0) >= 0.5);
+                
+                validDetections.forEach(detection => {
+                    const id = getDetectionId(detection);
+                    currentIds.add(id);
+                    const category = detection.categories?.[0]?.categoryName || 'unknown';
+                    const box = detection.boundingBox || {};
+                    const currentCoords = { x: box.originX || 0, y: box.originY || 0, width: box.width || 100, height: box.height || 100 };
+                    const existing = trackedItemsRef.current.get(id);
+                    const smoothedCoords = smoothCoordinates(currentCoords, existing?.coordinates);
+                    const coverage = lookupCoverage(category, policyType);
+                    
+                    trackedItemsRef.current.set(id, {
+                        id, name: category, coordinates: smoothedCoords, coverage, lastSeen: now,
+                        score: detection.categories?.[0]?.score || 0
+                    });
+                });
+                
+                trackedItemsRef.current.forEach((item, id) => {
+                    if (!currentIds.has(id) && now - item.lastSeen > PERSISTENCE_THRESHOLD) {
+                        trackedItemsRef.current.delete(id);
+                    }
+                });
+                
+                return trackedItemsRef.current;
+            }, [detections, policyType, getDetectionId, smoothCoordinates]);
+            
+            const render = useCallback(() => {
+                const ctx = getContext();
+                if (!ctx) return;
+                const canvas = canvasRef.current;
+                const video = videoRef?.current;
+                updateCanvasDimensions();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (!video || video.readyState < 2) return;
+                const items = processDetections();
+                items.forEach(item => drawBoundingBox(ctx, item, item.coverage));
+            }, [getContext, videoRef, updateCanvasDimensions, processDetections, drawBoundingBox]);
+            
+            const animate = useCallback(() => {
+                render();
+                animationFrameRef.current = requestAnimationFrame(animate);
+            }, [render]);
+            
+            useEffect(() => {
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
+            }, [animate]);
+            
+            useEffect(() => { trackedItemsRef.current.clear(); }, [policyType]);
+            
+            const canvasStyle = useMemo(() => ({ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }), []);
+            
+            return React.createElement('canvas', { ref: canvasRef, 'data-testid': 'coverage-overlay', style: canvasStyle, className: 'overlay-canvas' });
+        }
+        
+        // Mock Video Element
+        function MockVideo({ videoRef }) {
+            useEffect(() => {
+                if (videoRef) {
+                    videoRef.current = {
+                        videoWidth: 640, videoHeight: 480, width: 640, height: 480, readyState: 2,
+                        play: () => {}, pause: () => {}
+                    };
+                }
+            }, [videoRef]);
+            
+            return React.createElement('div', { 
+                className: 'video-mock',
+                style: { 
+                    background: 'linear-gradient(135deg, #1f2937 0%, #374151 50%, #1f2937 100%)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280'
+                }
+            }, 'Mock Camera Feed');
+        }
+        
+        // Test App Component
+        function TestApp() {
+            const [policyType, setPolicyType] = useState('renters');
+            const [detections, setDetections] = useState([]);
+            const [currentTest, setCurrentTest] = useState(null);
+            const videoRef = useRef(null);
+            
+            // Mock detection presets for each test
+            const testPresets = {
+                'VAL-OVERLAY-001': [ // Green box for covered items
+                    { categories: [{ categoryName: 'laptop', score: 0.95 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ],
+                'VAL-OVERLAY-002': [ // Red box for uncovered items
+                    { categories: [{ categoryName: 'car', score: 0.92 }], boundingBox: { originX: 150, originY: 120, width: 280, height: 180 } }
+                ],
+                'VAL-OVERLAY-003': [ // Yellow box for conditional items
+                    { categories: [{ categoryName: 'bicycle', score: 0.88 }], boundingBox: { originX: 80, originY: 200, width: 180, height: 120 } }
+                ],
+                'VAL-OVERLAY-004': [], // No detections (canvas clear)
+                'VAL-OVERLAY-005': [ // Boxes align with coordinates
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 50, originY: 50, width: 150, height: 100 } },
+                    { categories: [{ categoryName: 'tv', score: 0.85 }], boundingBox: { originX: 400, originY: 80, width: 180, height: 120 } }
+                ],
+                'VAL-OVERLAY-006': [ // Multiple distinct boxes
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 80, originY: 80, width: 160, height: 120 } },
+                    { categories: [{ categoryName: 'tv', score: 0.85 }], boundingBox: { originX: 350, originY: 60, width: 180, height: 120 } },
+                    { categories: [{ categoryName: 'car', score: 0.8 }], boundingBox: { originX: 100, originY: 280, width: 300, height: 150 } }
+                ],
+                'VAL-OVERLAY-007': [ // Smoothing (single item that will move slightly)
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ],
+                'VAL-OVERLAY-008': [ // Persistence threshold test
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ],
+                'VAL-OVERLAY-009': [ // Overlapping boxes
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } },
+                    { categories: [{ categoryName: 'keyboard', score: 0.85 }], boundingBox: { originX: 150, originY: 180, width: 150, height: 80 } }
+                ],
+                'VAL-OVERLAY-011-RENTERS': [ // Policy switch - renters
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ],
+                'VAL-OVERLAY-011-AUTO': [ // Policy switch - auto (same item, different color)
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ],
+                'VAL-OVERLAY-012': [ // No Insurance - all red
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } },
+                    { categories: [{ categoryName: 'tv', score: 0.85 }], boundingBox: { originX: 350, originY: 80, width: 180, height: 120 } }
+                ],
+                'VAL-OVERLAY-013': [ // Canvas size test
+                    { categories: [{ categoryName: 'laptop', score: 0.9 }], boundingBox: { originX: 100, originY: 100, width: 200, height: 150 } }
+                ]
+            };
+            
+            const runTest = (testId) => {
+                setCurrentTest(testId);
+                setDetections(testPresets[testId] || []);
+            };
+            
+            const clearDetections = () => {
+                setDetections([]);
+                setCurrentTest(null);
+            };
+            
+            const changePolicy = (policy) => {
+                setPolicyType(policy);
+                // Re-run current test with new policy if applicable
+                if (currentTest && currentTest.includes('011')) {
+                    if (policy === 'renters') runTest('VAL-OVERLAY-011-RENTERS');
+                    if (policy === 'auto') runTest('VAL-OVERLAY-011-AUTO');
+                }
+                if (currentTest === 'VAL-OVERLAY-012' && policy !== 'none') {
+                    // Reset to show the difference
+                    clearDetections();
+                }
+            };
+            
+            return React.createElement('div', { className: 'test-container' },
+                React.createElement('h1', { className: 'test-title' }, 'InsureScope Overlay Test Harness'),
+                
+                React.createElement('div', { className: 'test-section' },
+                    React.createElement('h2', null, 'Policy Selection'),
+                    React.createElement('div', { className: 'test-controls' },
+                        ['renters', 'homeowners', 'auto', 'none'].map(policy => 
+                            React.createElement('button', {
+                                key: policy,
+                                className: `policy-btn ${policyType === policy ? 'active' : ''}`,
+                                onClick: () => changePolicy(policy)
+                            }, policy.charAt(0).toUpperCase() + policy.slice(1))
+                        )
+                    )
+                ),
+                
+                React.createElement('div', { className: 'test-section' },
+                    React.createElement('h2', null, 'Test Assertions'),
+                    React.createElement('div', { className: 'test-controls' },
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-001') }, 'VAL-001: Green Box'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-002') }, 'VAL-002: Red Box'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-003') }, 'VAL-003: Yellow Box'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-004') }, 'VAL-004: Empty'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-005') }, 'VAL-005: Coordinates'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-006') }, 'VAL-006: Multiple'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-007') }, 'VAL-007: Smoothing'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-008') }, 'VAL-008: Persistence'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-009') }, 'VAL-009: Overlapping'),
+                        React.createElement('button', { className: 'test-btn', onClick: () => runTest('VAL-OVERLAY-012') }, 'VAL-012: No Insurance'),
+                        React.createElement('button', { className: 'clear-btn', onClick: clearDetections }, 'Clear All')
+                    )
+                ),
+                
+                React.createElement('div', { className: 'camera-container' },
+                    React.createElement(MockVideo, { videoRef }),
+                    React.createElement(CoverageOverlay, { videoRef, detections, policyType })
+                ),
+                
+                React.createElement('div', { className: 'test-info' },
+                    React.createElement('p', null, 
+                        'Current Policy: ', 
+                        React.createElement('strong', null, policyType)
+                    ),
+                    React.createElement('p', null, 
+                        'Active Test: ', 
+                        currentTest ? React.createElement('span', { className: 'test-status status-pending' }, currentTest) : 'None'
+                    ),
+                    React.createElement('p', null, 
+                        'Detections: ', 
+                        React.createElement('strong', null, detections.length)
+                    ),
+                    React.createElement('pre', null, JSON.stringify(detections, null, 2))
+                )
+            );
+        }
+        
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(TestApp));
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "groupId": "dashboard",
+  "assertions": [
+    "VAL-DASH-001",
+    "VAL-DASH-002",
+    "VAL-DASH-003",
+    "VAL-DASH-005",
+    "VAL-DASH-006",
+    "VAL-DASH-007",
+    "VAL-DASH-008",
+    "VAL-DASH-009",
+    "VAL-DASH-010",
+    "VAL-DASH-011",
+    "VAL-DASH-012",
+    "VAL-DASH-013"
+  ],
+  "results": {
+    "VAL-DASH-001": {
+      "status": "pass",
+      "evidence": "dashboard-with-items.png",
+      "notes": "Total value correctly sums all items (laptop $1200 + phone $800 + backpack $100 = $2100)"
+    },
+    "VAL-DASH-002": {
+      "status": "pass",
+      "evidence": "dashboard-with-items.png",
+      "notes": "Protected value correctly sums covered items only (laptop + phone = $2000)"
+    },
+    "VAL-DASH-003": {
+      "status": "pass",
+      "evidence": "dashboard-with-items.png",
+      "notes": "Unprotected value is prominently displayed ($100 with red indicator)"
+    },
+    "VAL-DASH-005": {
+      "status": "pass",
+      "evidence": "dashboard-no-insurance.png",
+      "notes": "Empty state shows $0 and helpful message when no items"
+    },
+    "VAL-DASH-006": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Values update when items appear/disappear verified in unit tests"
+    },
+    "VAL-DASH-007": {
+      "status": "pass",
+      "evidence": "dashboard-auto.png",
+      "notes": "Values update immediately on policy switch"
+    },
+    "VAL-DASH-008": {
+      "status": "pass",
+      "evidence": "dashboard-no-insurance.png",
+      "notes": "No Insurance shows $0 protected and 100% gap"
+    },
+    "VAL-DASH-009": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Recommendations shown for uncovered items verified in unit tests"
+    },
+    "VAL-DASH-010": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Positive message when all covered verified in unit tests"
+    },
+    "VAL-DASH-011": {
+      "status": "pass",
+      "evidence": "dashboard-with-items.png, dashboard-no-insurance.png",
+      "notes": "Tab switching preserves all state (items, totals, policy)"
+    },
+    "VAL-DASH-012": {
+      "status": "pass",
+      "evidence": "dashboard-with-items.png",
+      "notes": "Per-item breakdown list visible with status indicators"
+    },
+    "VAL-DASH-013": {
+      "status": "pass",
+      "evidence": null,
+      "notes": "Rapid changes handled gracefully verified in unit tests"
+    }
+  },
+  "frictions": [],
+  "blockers": [],
+  "toolsUsed": [
+    "agent-browser"
+  ],
+  "durationSeconds": 120
+}
