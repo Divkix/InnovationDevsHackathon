@@ -12,8 +12,13 @@ import type {
   AppTab,
   DetectedItem,
   DetectedItemsInput,
+  DisasterSimulationResult,
+  DisasterType,
+  HazardWarning,
   ManualItem,
   PolicyType,
+  PrivacyModeState,
+  CoverageRecommendation,
 } from "../types";
 import { VALID_POLICY_TYPES } from "../types";
 import { DEFAULT_STATE, STORAGE_KEYS } from "./appState";
@@ -132,6 +137,35 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
   );
   const [selectedItemId, setSelectedItemIdState] = useState<string | null>(
     DEFAULT_STATE.selectedItemId,
+  );
+
+  // Load persisted privacy mode
+  const [privacyMode, setPrivacyModeState] = useState<PrivacyModeState>(() =>
+    loadFromStorage<PrivacyModeState>(
+      STORAGE_KEYS.privacyMode,
+      DEFAULT_STATE.privacyMode,
+      (v) => JSON.parse(v) as PrivacyModeState,
+    ),
+  );
+
+  // Load persisted simulator type
+  const [activeSimulatorType, setActiveSimulatorTypeState] = useState<DisasterType | null>(() =>
+    loadFromStorage<DisasterType | null>(
+      STORAGE_KEYS.activeSimulatorType,
+      DEFAULT_STATE.activeSimulatorType,
+      (v) => v as DisasterType | null,
+    ),
+  );
+
+  // Transient state (not persisted)
+  const [hazardWarnings, setHazardWarningsState] = useState<HazardWarning[]>(
+    DEFAULT_STATE.hazardWarnings,
+  );
+  const [simulationResult, setSimulationResultState] = useState<DisasterSimulationResult | null>(
+    DEFAULT_STATE.simulationResult,
+  );
+  const [recommendations, setRecommendationsState] = useState<CoverageRecommendation[]>(
+    DEFAULT_STATE.recommendations,
   );
 
   /**
@@ -280,6 +314,56 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
     saveToStorage(STORAGE_KEYS.cameraPermissionDenied, "false");
   }, []);
 
+  /**
+   * Action: setPrivacyMode
+   * Enables/disables privacy mode and persists to localStorage
+   */
+  const setPrivacyMode = useCallback((enabled: boolean): void => {
+    const newMode: PrivacyModeState = {
+      ...privacyMode,
+      enabled,
+    };
+    setPrivacyModeState(newMode);
+    saveToStorage(STORAGE_KEYS.privacyMode, JSON.stringify(newMode));
+  }, [privacyMode]);
+
+  /**
+   * Action: setActiveSimulatorType
+   * Sets the active disaster simulator type and persists to localStorage
+   */
+  const setActiveSimulatorType = useCallback((type: DisasterType | null): void => {
+    setActiveSimulatorTypeState(type);
+    if (type) {
+      saveToStorage(STORAGE_KEYS.activeSimulatorType, type);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.activeSimulatorType);
+    }
+  }, []);
+
+  /**
+   * Action: setHazardWarnings
+   * Updates hazard warnings (transient, computed from detections)
+   */
+  const setHazardWarnings = useCallback((warnings: HazardWarning[]): void => {
+    setHazardWarningsState(warnings);
+  }, []);
+
+  /**
+   * Action: setSimulationResult
+   * Updates disaster simulation result (transient, computed on demand)
+   */
+  const setSimulationResult = useCallback((result: DisasterSimulationResult | null): void => {
+    setSimulationResultState(result);
+  }, []);
+
+  /**
+   * Action: setRecommendations
+   * Updates coverage recommendations (transient, computed from gaps)
+   */
+  const setRecommendations = useCallback((newRecommendations: CoverageRecommendation[]): void => {
+    setRecommendationsState(newRecommendations);
+  }, []);
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo<AppContextValue>(
     () => ({
@@ -293,6 +377,12 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       confidenceThreshold,
       cameraPermissionDenied,
       manualModeEnabled,
+      // New state
+      privacyMode,
+      activeSimulatorType,
+      hazardWarnings,
+      simulationResult,
+      recommendations,
       // Actions
       setPolicyType,
       completeOnboarding,
@@ -307,6 +397,12 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       enableManualMode,
       disableManualMode,
       resetCameraPermission,
+      // New actions
+      setPrivacyMode,
+      setActiveSimulatorType,
+      setHazardWarnings,
+      setSimulationResult,
+      setRecommendations,
     }),
     [
       policyType,
@@ -318,6 +414,11 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       confidenceThreshold,
       cameraPermissionDenied,
       manualModeEnabled,
+      privacyMode,
+      activeSimulatorType,
+      hazardWarnings,
+      simulationResult,
+      recommendations,
       setPolicyType,
       completeOnboarding,
       setActiveTab,
@@ -331,6 +432,11 @@ export function AppProvider({ children }: AppProviderProps): ReactElement {
       enableManualMode,
       disableManualMode,
       resetCameraPermission,
+      setPrivacyMode,
+      setActiveSimulatorType,
+      setHazardWarnings,
+      setSimulationResult,
+      setRecommendations,
     ],
   );
 
