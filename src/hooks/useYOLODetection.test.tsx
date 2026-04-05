@@ -215,7 +215,13 @@ describe("useYOLODetection", () => {
 		it("loads model from correct path", async () => {
 			renderHook(() => useYOLODetection());
 			await vi.waitFor(() => {
-				expect(mockSessionCreate).toHaveBeenCalled();
+				expect(mockSessionCreate).toHaveBeenCalledWith(
+					expect.stringContaining("/models/yolo26n/yolo26n.onnx"),
+					expect.objectContaining({
+						executionProviders: ["wasm"],
+						graphOptimizationLevel: "all",
+					}),
+				);
 			});
 		});
 

@@ -617,10 +617,14 @@ describe('CameraView', () => {
         expect(mockUpdateDetectedItems).toHaveBeenCalledWith(expect.any(Map))
       })
 
+      expect(mockUpdateDetectedItems).toHaveBeenCalledTimes(1)
+
       const payload = mockUpdateDetectedItems.mock.calls[0]?.[0] as Map<string, DetectedItem>
+      expect(payload).toBeInstanceOf(Map)
       expect(payload.get('detection-0')).toMatchObject({
         id: 'detection-0',
         category: 'laptop',
+        confidence: 0.9,
       })
       
       // Verify full type compliance - regression test

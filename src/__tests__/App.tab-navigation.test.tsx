@@ -435,6 +435,7 @@ describe('App - Tab Navigation Integration', () => {
       
       // Should switch to dashboard (manual mode enables dashboard tab)
       await waitFor(() => {
+        expect(screen.getByTestId('tab-dashboard')).toHaveAttribute('data-active', 'true')
         expect(screen.getByTestId('mock-dashboard')).toBeInTheDocument()
       })
     })
