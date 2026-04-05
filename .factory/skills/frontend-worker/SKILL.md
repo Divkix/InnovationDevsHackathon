@@ -16,84 +16,45 @@ All features in this mission — building React components, hooks, utilities, da
 - **agent-browser** — For manual UI verification after implementation. Use to verify pages load, components render, and user interactions work.
 - **code-edit** — For precise file edits when modifying existing files.
 
-## Work Procedure
+## Work Procedure — HACKATHON SPEED MODE
 
-### 1. Read Context
-Read these files in order:
-1. `AGENTS.md` in the mission directory for boundaries, conventions, and architecture
-2. `.factory/library/architecture.md` for system design
-3. `.factory/library/environment.md` for env vars and dependencies
-4. `.factory/services.yaml` for available commands
-5. The feature description for what to build
+### 1. Read Context (QUICK)
+Skim the feature description. Check existing components in `src/components/` to understand patterns already used.
 
-### 2. Write Tests First (TDD — RED)
-- Before ANY implementation code, write failing tests
-- Test files co-located with source: `Component.test.jsx` next to `Component.jsx`
-- Use Vitest + @testing-library/react
-- For components that depend on camera/detection, mock the `useObjectDetection` hook
-- Run tests to confirm they FAIL: `npm test`
-
-### 3. Implement (GREEN)
-- Write the minimum code to make tests pass
-- Follow the architecture in `.factory/library/architecture.md`
-- Use Tailwind CSS for all styling — no custom CSS files
+### 2. IMPLEMENT FIRST (Build Fast)
+- Write the component/feature code directly — NO tests first
+- Follow existing patterns from already-built components
+- Use Tailwind CSS for all styling
 - Use path alias `@/` for `src/` imports
-- Follow React conventions: hooks for logic, components for UI
-- Run tests to confirm they PASS: `npm test`
+- Keep it simple — ship working code over perfect code
 
-### 4. Manual Verification
-- Start the dev server: `npx vite --port 5173`
+### 3. Quick Browser Check
+- Start dev server if not running: `npx vite --port 5173 --host`
 - Open http://localhost:5173 in agent-browser
-- Verify the feature works visually:
-  - Page loads without errors
-  - Components render correctly
-  - Interactions work (click, type, navigate)
-  - Check browser console for errors/warnings
-- Each verified flow = one `interactiveChecks` entry
+- Take ONE screenshot to verify the feature renders
+- Check browser console for errors
+- If it works, commit and move on
 
-### 5. Run Quality Checks
-- `npm test` — all tests must pass
-- Check for any console errors in agent-browser
-- Verify no TypeScript/ESLint errors (if configured)
-
-### 6. Commit and Handoff
-- Stage and commit changes with a descriptive message
-- Complete the handoff with all required fields
+### 4. Commit and Handoff
+- Stage and commit changes
+- Complete handoff — keep it brief
 
 ## Example Handoff
 
 ```json
 {
-  "salientSummary": "Built CoverageOverlay component with green/red/yellow bounding box rendering. TDD: wrote 8 tests covering color coding, positioning, multi-object rendering, and empty state — all passing. Verified in browser with mocked detections.",
-  "whatWasImplemented": "CoverageOverlay.jsx: canvas-based overlay renderer that draws color-coded bounding boxes (green=covered, red=not covered, yellow=conditional) with item labels and values. Supports multiple simultaneous detections and overlays positioned at exact detection coordinates.",
+  "salientSummary": "Built AddItemForm with category selection, value input, and dashboard integration. Verified in browser.",
+  "whatWasImplemented": "AddItemForm.jsx: form with 10+ insurance categories, name/value fields, validation. Integrates with AppContext for manual item CRUD.",
   "whatWasLeftUndone": "",
   "verification": {
     "commandsRun": [
-      { "command": "npm test -- --grep 'CoverageOverlay'", "exitCode": 0, "observation": "8 tests passing" },
-      { "command": "npx vite --port 5173", "exitCode": 0, "observation": "Dev server started successfully" }
+      { "command": "npx vite --port 5173", "exitCode": 0, "observation": "Dev server started" }
     ],
     "interactiveChecks": [
-      { "action": "Navigated to http://localhost:5173 with mocked detections (laptop, car, bicycle)", "observed": "Three bounding boxes rendered: laptop green ($1,200 Covered), car red ($15,000 Not Covered), bicycle yellow ($500 Conditional)" },
-      { "action": "Switched policy to 'No Insurance'", "observed": "All three boxes turned red with 'Not Covered' labels" }
+      { "action": "Opened app, added jewelry item via form", "observed": "Item appeared in dashboard with correct coverage status" }
     ]
   },
-  "tests": {
-    "added": [
-      {
-        "file": "src/components/CoverageOverlay/CoverageOverlay.test.jsx",
-        "cases": [
-          { "name": "renders green box for covered item", "verifies": "VAL-OVERLAY-001" },
-          { "name": "renders red box for uncovered item", "verifies": "VAL-OVERLAY-002" },
-          { "name": "renders yellow box for conditional item", "verifies": "VAL-OVERLAY-003" },
-          { "name": "renders no boxes when no detections", "verifies": "VAL-OVERLAY-004" },
-          { "name": "positions box at detection coordinates", "verifies": "VAL-OVERLAY-005" },
-          { "name": "renders separate boxes for multiple detections", "verifies": "VAL-OVERLAY-006" },
-          { "name": "handles overlapping boxes", "verifies": "VAL-OVERLAY-009" },
-          { "name": "updates colors on policy change", "verifies": "VAL-OVERLAY-011" }
-        ]
-      }
-    ]
-  },
+  "tests": { "added": [] },
   "discoveredIssues": []
 }
 ```
