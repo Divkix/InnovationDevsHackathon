@@ -353,10 +353,18 @@ export function DetailModal({
   }, [language, speechCopy]);
 
   useEffect(() => {
-    setGeminiExplanation(coverageExplanation);
+    const nextIdentity = item?.id ?? item?.category ?? item?.source ?? null;
+    if (!nextIdentity) {
+      setGeminiExplanation(null);
+      setSpeechMessage(null);
+      setIsLoadingExplanation(false);
+      return;
+    }
+
+    setGeminiExplanation(coverageExplanation ?? null);
     setSpeechMessage(null);
     setIsLoadingExplanation(false);
-  }, [coverageExplanation]);
+  }, [coverageExplanation, item]);
 
   const handleAskGemini = useCallback(async () => {
     if (!gemini || !item || !coverage || isLoadingExplanation) {
