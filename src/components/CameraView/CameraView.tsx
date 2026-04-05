@@ -162,12 +162,13 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         const itemsMap = new Map()
         results.detections.forEach((detection, index) => {
           const category = detection.categories?.[0]?.categoryName || 'unknown'
+          const confidence = detection.categories?.[0]?.score || 0
           itemsMap.set(`detection-${index}`, {
             id: `detection-${index}`,
-            name: category,
+            category: category,
+            confidence: confidence,
             boundingBox: detection.boundingBox,
-            score: detection.categories?.[0]?.score || 0,
-            category: category
+            categories: detection.categories || [{ categoryName: category, score: confidence, displayName: category }],
           })
         })
         updateDetectedItems(itemsMap)
@@ -193,12 +194,13 @@ export function CameraView({ onError, onManualMode, onItemClick }: CameraViewPro
         const itemsMap = new Map()
         results.detections.forEach((detection, index) => {
           const category = detection.categories?.[0]?.categoryName || 'unknown'
+          const confidence = detection.categories?.[0]?.score || 0
           itemsMap.set(`detection-${index}`, {
             id: `detection-${index}`,
-            name: category,
+            category: category,
+            confidence: confidence,
             boundingBox: detection.boundingBox,
-            score: detection.categories?.[0]?.score || 0,
-            category: category
+            categories: detection.categories || [{ categoryName: category, score: confidence, displayName: category }],
           })
         })
         updateDetectedItems(itemsMap)

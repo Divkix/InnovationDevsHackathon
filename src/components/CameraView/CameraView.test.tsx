@@ -622,6 +622,13 @@ describe('CameraView', () => {
         id: 'detection-0',
         category: 'laptop',
       })
+      
+      // Verify full type compliance - regression test
+      const item = payload.get('detection-0')
+      expect(item).toHaveProperty('confidence')
+      expect(item).toHaveProperty('categories')
+      expect(item).not.toHaveProperty('name')
+      expect(item).not.toHaveProperty('score')
     })
     
     it('calls detect function with video element', async () => {
