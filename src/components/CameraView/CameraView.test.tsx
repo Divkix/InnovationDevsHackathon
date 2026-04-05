@@ -29,14 +29,11 @@ describe("CameraView", () => {
     confidenceThreshold: 0.5,
     cameraPermissionDenied: false,
     manualModeEnabled: false,
-    privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+    privacyMode: { enabled: false, localOnlyMessage: "" },
     activeSimulatorType: null,
     hazardWarnings: [],
     simulationResult: null,
     recommendations: [],
-    language: "en",
-    voiceEnabled: true,
-    ttsEnabled: true,
     setPolicyType: vi.fn(),
     completeOnboarding: vi.fn(),
     setActiveTab: vi.fn(),
@@ -54,6 +51,9 @@ describe("CameraView", () => {
     setHazardWarnings: vi.fn(),
     setSimulationResult: vi.fn(),
     setRecommendations: vi.fn(),
+    language: "en",
+    voiceEnabled: true,
+    ttsEnabled: true,
     setLanguage: vi.fn(),
     setVoiceEnabled: vi.fn(),
     setTtsEnabled: vi.fn(),
@@ -91,8 +91,26 @@ describe("CameraView", () => {
     rafCallbacks = rafCallbacks.filter((_, index) => index !== id - 1);
   }) as Mock<(id: number) => void>;
 
+  async function runAllAnimationFrames(timestamp: number): Promise<void> {
+    const pendingCallbacks = [...rafCallbacks];
+    await Promise.all(pendingCallbacks.map((callback) => callback(timestamp)));
+  }
+
+  async function markVideoReady(): Promise<HTMLVideoElement> {
+    const video = (await screen.findByTestId("camera-video")) as HTMLVideoElement;
+    Object.defineProperty(video, "readyState", { value: 2, writable: true });
+    Object.defineProperty(video, "videoWidth", { value: 1280, writable: true });
+    Object.defineProperty(video, "videoHeight", { value: 720, writable: true });
+    video.dispatchEvent(new Event("loadedmetadata"));
+    video.dispatchEvent(new Event("loadeddata"));
+    video.dispatchEvent(new Event("canplay"));
+    return video;
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
 
     // Reset RAF mocks
     rafCallbacks = [];
@@ -124,14 +142,11 @@ describe("CameraView", () => {
       confidenceThreshold: 0.5,
       cameraPermissionDenied: false,
       manualModeEnabled: false,
-      privacyMode: { enabled: false, localOnlyMessage: "All processing happens on your device." },
+      privacyMode: { enabled: false, localOnlyMessage: "" },
       activeSimulatorType: null,
       hazardWarnings: [],
       simulationResult: null,
       recommendations: [],
-      language: "en",
-      voiceEnabled: true,
-      ttsEnabled: true,
       setPolicyType: vi.fn(),
       completeOnboarding: vi.fn(),
       setActiveTab: vi.fn(),
@@ -149,9 +164,6 @@ describe("CameraView", () => {
       setHazardWarnings: vi.fn(),
       setSimulationResult: vi.fn(),
       setRecommendations: vi.fn(),
-      setLanguage: vi.fn(),
-      setVoiceEnabled: vi.fn(),
-      setTtsEnabled: vi.fn(),
     });
 
     const mockUseObjectDetection = useObjectDetection as Mock<() => UseYOLODetectionReturn>;
@@ -378,6 +390,27 @@ describe("CameraView", () => {
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
         policyType: "homeowners",
+        updateDetectedItems: vi.fn(),
+        onboardingComplete: false,
+        activeTab: "camera",
+        detectedItems: new Map(),
+        manualItems: [],
+        selectedItemId: null,
+        confidenceThreshold: 0.5,
+        cameraPermissionDenied: false,
+        manualModeEnabled: false,
+        setPolicyType: vi.fn(),
+        completeOnboarding: vi.fn(),
+        setActiveTab: vi.fn(),
+        addManualItem: vi.fn(),
+        removeManualItem: vi.fn(),
+        updateManualItem: vi.fn(),
+        setSelectedItem: vi.fn(),
+        setConfidenceThreshold: vi.fn(),
+        setCameraPermissionDenied: vi.fn(),
+        enableManualMode: vi.fn(),
+        disableManualMode: vi.fn(),
+        resetCameraPermission: vi.fn(),
       });
 
       render(<CameraView />);
@@ -391,6 +424,27 @@ describe("CameraView", () => {
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
         policyType: "renters",
+        updateDetectedItems: vi.fn(),
+        onboardingComplete: false,
+        activeTab: "camera",
+        detectedItems: new Map(),
+        manualItems: [],
+        selectedItemId: null,
+        confidenceThreshold: 0.5,
+        cameraPermissionDenied: false,
+        manualModeEnabled: false,
+        setPolicyType: vi.fn(),
+        completeOnboarding: vi.fn(),
+        setActiveTab: vi.fn(),
+        addManualItem: vi.fn(),
+        removeManualItem: vi.fn(),
+        updateManualItem: vi.fn(),
+        setSelectedItem: vi.fn(),
+        setConfidenceThreshold: vi.fn(),
+        setCameraPermissionDenied: vi.fn(),
+        enableManualMode: vi.fn(),
+        disableManualMode: vi.fn(),
+        resetCameraPermission: vi.fn(),
       });
 
       render(<CameraView />);
@@ -404,6 +458,27 @@ describe("CameraView", () => {
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
         policyType: "auto",
+        updateDetectedItems: vi.fn(),
+        onboardingComplete: false,
+        activeTab: "camera",
+        detectedItems: new Map(),
+        manualItems: [],
+        selectedItemId: null,
+        confidenceThreshold: 0.5,
+        cameraPermissionDenied: false,
+        manualModeEnabled: false,
+        setPolicyType: vi.fn(),
+        completeOnboarding: vi.fn(),
+        setActiveTab: vi.fn(),
+        addManualItem: vi.fn(),
+        removeManualItem: vi.fn(),
+        updateManualItem: vi.fn(),
+        setSelectedItem: vi.fn(),
+        setConfidenceThreshold: vi.fn(),
+        setCameraPermissionDenied: vi.fn(),
+        enableManualMode: vi.fn(),
+        disableManualMode: vi.fn(),
+        resetCameraPermission: vi.fn(),
       });
 
       render(<CameraView />);
@@ -417,6 +492,27 @@ describe("CameraView", () => {
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
         policyType: "none",
+        updateDetectedItems: vi.fn(),
+        onboardingComplete: false,
+        activeTab: "camera",
+        detectedItems: new Map(),
+        manualItems: [],
+        selectedItemId: null,
+        confidenceThreshold: 0.5,
+        cameraPermissionDenied: false,
+        manualModeEnabled: false,
+        setPolicyType: vi.fn(),
+        completeOnboarding: vi.fn(),
+        setActiveTab: vi.fn(),
+        addManualItem: vi.fn(),
+        removeManualItem: vi.fn(),
+        updateManualItem: vi.fn(),
+        setSelectedItem: vi.fn(),
+        setConfidenceThreshold: vi.fn(),
+        setCameraPermissionDenied: vi.fn(),
+        enableManualMode: vi.fn(),
+        disableManualMode: vi.fn(),
+        resetCameraPermission: vi.fn(),
       });
 
       render(<CameraView />);
@@ -531,12 +627,11 @@ describe("CameraView", () => {
       });
     });
 
-    it("passes a real detected-items map into context when detections are found", async () => {
+    it("passes a detected-items map into context only after detections become stable", async () => {
       const mockUpdateDetectedItems = vi.fn();
 
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
-        ...baseContextValue,
         ...baseContextValue,
         updateDetectedItems: mockUpdateDetectedItems,
       });
@@ -555,36 +650,43 @@ describe("CameraView", () => {
         detect: vi.fn().mockResolvedValue(mockDetections),
         isLoaded: true,
         error: null,
-        isMockMode: false,
+        isMockMode: true,
       });
 
       render(<CameraView />);
 
-      await waitFor(() => {
-        const video = screen.getByTestId("camera-video");
-        Object.defineProperty(video, "readyState", { value: 2, writable: true });
-      });
+      const baseTime = 1_000;
 
       await act(async () => {
-        await rafCallbacks[rafCallbacks.length - 1](performance.now());
+        await runAllAnimationFrames(baseTime);
+      });
+
+      expect(mockUpdateDetectedItems).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await runAllAnimationFrames(baseTime + 350);
+      });
+
+      expect(mockUpdateDetectedItems).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await runAllAnimationFrames(baseTime + 800);
       });
 
       await waitFor(() => {
         expect(mockUpdateDetectedItems).toHaveBeenCalledWith(expect.any(Map));
       });
 
-      expect(mockUpdateDetectedItems).toHaveBeenCalledTimes(1);
-
-      const payload = mockUpdateDetectedItems.mock.calls[0]?.[0] as Map<string, DetectedItem>;
+      const payload = mockUpdateDetectedItems.mock.calls.at(-1)?.[0] as Map<string, DetectedItem>;
       expect(payload).toBeInstanceOf(Map);
-      expect(payload.get("detection-0")).toMatchObject({
-        id: "detection-0",
+      expect(payload.get("laptop-0-0")).toMatchObject({
+        id: "laptop-0-0",
         category: "laptop",
         confidence: 0.9,
       });
 
       // Verify full type compliance - regression test
-      const item = payload.get("detection-0");
+      const item = payload.get("laptop-0-0");
       expect(item).toHaveProperty("confidence");
       expect(item).toHaveProperty("categories");
       expect(item).not.toHaveProperty("name");
@@ -604,16 +706,14 @@ describe("CameraView", () => {
       render(<CameraView />);
 
       // Get the video element and simulate it being ready
-      await waitFor(() => {
-        const video = screen.getByTestId("camera-video");
-        // Simulate video having data (readyState >= 2)
-        Object.defineProperty(video, "readyState", { value: 2, writable: true });
+      await act(async () => {
+        await markVideoReady();
       });
 
       // Trigger the RAF callback to start detection
       await act(async () => {
         if (rafCallbacks.length > 0) {
-          await rafCallbacks[rafCallbacks.length - 1](performance.now());
+          await runAllAnimationFrames(performance.now());
         }
       });
 
@@ -622,13 +722,33 @@ describe("CameraView", () => {
       });
     });
 
-    it("updates detected items in context when detections are found", async () => {
+    it("updates detected items in context after the detection persists long enough", async () => {
       const mockUpdateDetectedItems = vi.fn();
       const mockUseAppContext = useAppContext as Mock<() => AppContextValue>;
       mockUseAppContext.mockReturnValue({
         ...baseContextValue,
         policyType: "renters",
         updateDetectedItems: mockUpdateDetectedItems,
+        onboardingComplete: false,
+        activeTab: "camera",
+        detectedItems: new Map(),
+        manualItems: [],
+        selectedItemId: null,
+        confidenceThreshold: 0.5,
+        cameraPermissionDenied: false,
+        manualModeEnabled: false,
+        setPolicyType: vi.fn(),
+        completeOnboarding: vi.fn(),
+        setActiveTab: vi.fn(),
+        addManualItem: vi.fn(),
+        removeManualItem: vi.fn(),
+        updateManualItem: vi.fn(),
+        setSelectedItem: vi.fn(),
+        setConfidenceThreshold: vi.fn(),
+        setCameraPermissionDenied: vi.fn(),
+        enableManualMode: vi.fn(),
+        disableManualMode: vi.fn(),
+        resetCameraPermission: vi.fn(),
       });
 
       const mockDetections: { detections: Detection[] } = {
@@ -646,21 +766,33 @@ describe("CameraView", () => {
         detect: mockDetect,
         isLoaded: true,
         error: null,
-        isMockMode: false,
+        isMockMode: true,
       });
 
       render(<CameraView />);
 
-      // Get the video element and simulate it being ready
-      await waitFor(() => {
-        const video = screen.getByTestId("camera-video");
-        Object.defineProperty(video, "readyState", { value: 2, writable: true });
-      });
+      const baseTime = 1_000;
 
       // Trigger the RAF callback
       await act(async () => {
         if (rafCallbacks.length > 0) {
-          await rafCallbacks[rafCallbacks.length - 1](performance.now());
+          await runAllAnimationFrames(baseTime);
+        }
+      });
+
+      expect(mockUpdateDetectedItems).not.toHaveBeenCalled();
+
+      await act(async () => {
+        if (rafCallbacks.length > 0) {
+          await runAllAnimationFrames(baseTime + 350);
+        }
+      });
+
+      expect(mockUpdateDetectedItems).not.toHaveBeenCalled();
+
+      await act(async () => {
+        if (rafCallbacks.length > 0) {
+          await runAllAnimationFrames(baseTime + 800);
         }
       });
 
