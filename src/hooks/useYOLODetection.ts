@@ -7,7 +7,7 @@ import { MOCK_STORAGE_KEY } from "./useMockDetection";
 
 // Model configuration
 const MODEL_INPUT_SIZE = 640;
-const CONFIDENCE_THRESHOLD = 0.5;
+const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
 
 /**
  * Resolve public asset URL with base path handling
@@ -128,7 +128,9 @@ export interface UseYOLODetectionReturn {
  *
  * Supports mock mode via ?mock=true URL param or localStorage flag.
  */
-export function useYOLODetection(): UseYOLODetectionReturn {
+export function useYOLODetection(
+  confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
+): UseYOLODetectionReturn {
   const sessionRef = useRef<ort.InferenceSession | null>(null);
   // Lock to prevent detection during unmount
   const isDetectingRef = useRef<boolean>(false);
@@ -330,7 +332,7 @@ export function useYOLODetection(): UseYOLODetectionReturn {
           const processedDetections = processYOLOOutput(
             detections,
             COCO_CLASS_NAMES,
-            CONFIDENCE_THRESHOLD,
+            confidenceThreshold,
             {
               scaleX,
               scaleY,
@@ -357,7 +359,7 @@ export function useYOLODetection(): UseYOLODetectionReturn {
         isDetectingRef.current = false;
       }
     },
-    [isMockMode, isLoaded],
+    [confidenceThreshold, isMockMode, isLoaded],
   );
 
   return { detect, isLoaded, error, isMockMode };

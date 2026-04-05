@@ -120,7 +120,12 @@ export function createItemBreakdown(
       breakdown.push({
         id: item.id,
         category: item.category,
-        estimatedValue: coverage.estimatedValue,
+        estimatedValue:
+          typeof item.valuation?.finalValue === "number"
+            ? item.valuation.finalValue
+            : typeof item.coverage?.estimatedValue === "number"
+              ? item.coverage.estimatedValue
+              : coverage.estimatedValue,
         status: coverage.status,
         color: coverage.color,
         source: "detected",
@@ -148,7 +153,11 @@ export function createItemBreakdown(
 
       // For manual items, use the user-provided value if available, otherwise use the default
       const estimatedValue =
-        typeof item.estimatedValue === "number" ? item.estimatedValue : coverage.estimatedValue;
+        typeof item.valuation?.finalValue === "number"
+          ? item.valuation.finalValue
+          : typeof item.estimatedValue === "number"
+            ? item.estimatedValue
+            : coverage.estimatedValue;
 
       breakdown.push({
         id: item.id,

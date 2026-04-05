@@ -1,6 +1,12 @@
 import { motion, useSpring, useTransform } from "framer-motion";
 import { AlertTriangle, CheckCircle, DollarSign, Shield, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { OwnershipSummaryCard } from "@/components/OwnershipSummaryCard";
+import {
+  countOwnershipStatus,
+  countReviewFlags,
+  getFinalItemValue,
+} from "@/utils/ownershipHelpers";
 import {
   calculateValues,
   formatCurrency,
@@ -9,54 +15,129 @@ import {
 } from "@/utils/valueCalculator";
 import type { CoverageStatus, DashboardProps, ItemBreakdown } from "../../types";
 
+/**
+ * AnimatedNumber component - Animates number changes with spring physics
+ */
 interface AnimatedNumberProps {
   value: number;
   formatter: (value: number) => string;
 }
 
 function AnimatedNumber({ value, formatter }: AnimatedNumberProps) {
-  const spring = useSpring(value, { stiffness: 100, damping: 20 });
+  const spring = useSpring(value, {
+    stiffness: 100,
+    damping: 20,
+    duration: 0.5,
+  });
+
   useEffect(() => {
     spring.set(value);
   }, [value, spring]);
+
   const display = useTransform(spring, (current) => formatter(current));
   const [displayValue, setDisplayValue] = useState(formatter(value));
+
   useEffect(() => {
-    const unsubscribe = display.on("change", (latest) => setDisplayValue(latest));
+    const unsubscribe = display.on("change", (latest) => {
+      setDisplayValue(latest);
+    });
     return () => unsubscribe();
   }, [display]);
+
   return <span>{displayValue}</span>;
 }
 
+/**
+ * Dashboard component - Financial summary dashboard
+ *
+ * Displays:
+ * - Total Detected Asset Value (sum of all items)
+ * - Protected Value (green items only)
+ * - UNPROTECTED VALUE (red + yellow items, BIG RED prominent)
+ * - Coverage Gap % (unprotected/total * 100)
+ * - Per-item breakdown list with name, value, and color-coded status (clickable)
+ * - Empty/zero state with helpful message when no items
+ * - Upgrade recommendations when items are uncovered
+ * - Positive message when all covered
+ */
 export function Dashboard({
   detectedItems = [],
   manualItems = [],
   policyType = "renters",
   onItemClick,
 }: DashboardProps) {
+  // Calculate all dashboard values using the value calculator
   const calculationResult = useMemo(() => {
+    // Handle null/undefined inputs gracefully
     const safeDetectedItems = Array.isArray(detectedItems) ? detectedItems : [];
     const safeManualItems = Array.isArray(manualItems) ? manualItems : [];
-    return calculateValues(safeDetectedItems, safeManualItems, policyType || "renters");
+    const safePolicyType = policyType || "renters";
+
+    return calculateValues(safeDetectedItems, safeManualItems, safePolicyType);
   }, [detectedItems, manualItems, policyType]);
 
-  const recommendations = useMemo(
-    () => getUpgradeRecommendations(calculationResult.items, policyType),
-    [calculationResult.items, policyType],
-  );
+  // Get upgrade recommendations
+  const recommendations = useMemo(() => {
+    return getUpgradeRecommendations(calculationResult.items, policyType);
+  }, [calculationResult.items, policyType]);
 
+  // Destructure calculated values
   const { totalValue, protectedValue, unprotectedValue, coverageGapPercentage, items } =
     calculationResult;
+
+  // Determine if all items are covered
   const allCovered = items.length > 0 && unprotectedValue === 0;
   const hasItems = items.length > 0;
   const hasRecommendations = recommendations.length > 0;
+  const verifiedItemsCount = useMemo(
+    () => countOwnershipStatus(manualItems, "verified"),
+    [manualItems],
+  );
+  const pendingSerialCaptures = useMemo(
+    () =>
+      countOwnershipStatus(manualItems, "needs_serial") +
+      countOwnershipStatus(manualItems, "serial_captured"),
+    [manualItems],
+  );
+  const reviewFlags = useMemo(() => countReviewFlags(manualItems), [manualItems]);
+  const totalVerifiedValue = useMemo(
+    () =>
+      manualItems.reduce((total, item) => {
+        if (item.ownership?.status !== "verified") {
+          return total;
+        }
 
-  const statusColors: Record<CoverageStatus, { bg: string; text: string; border: string }> = {
-    covered: { bg: "bg-swiss-fg", text: "text-swiss-bg", border: "border-swiss-fg" },
-    conditional: { bg: "bg-swiss", text: "text-swiss-fg", border: "border-swiss-fg" },
-    not_covered: { bg: "bg-swiss-accent", text: "text-swiss-bg", border: "border-swiss-accent" },
+        return total + getFinalItemValue(item);
+      }, 0),
+    [manualItems],
+  );
+
+  // Status color mapping for Tailwind classes - State Farm branding
+  const statusColors: Record<
+    CoverageStatus,
+    { bg: string; text: string; border: string; icon: string }
+  > = {
+    covered: {
+      bg: "bg-green-100",
+      text: "text-green-700",
+      border: "border-green-200",
+      icon: "text-green-500",
+    },
+    conditional: {
+      bg: "bg-yellow-100",
+      text: "text-yellow-700",
+      border: "border-yellow-200",
+      icon: "text-yellow-500",
+    },
+    not_covered: {
+      bg: "bg-red-100",
+      text: "text-red-700",
+      border: "border-red-200",
+      icon: "text-[#E31837]",
+    },
   };
 
+  // Status label mapping
   const statusLabels: Record<CoverageStatus, string> = {
     covered: "Covered",
     conditional: "Conditional",
@@ -64,99 +145,126 @@ export function Dashboard({
   };
 
   return (
-    <div data-testid="dashboard-container" className="w-full h-full bg-swiss overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div data-testid="dashboard-container" className="w-full h-full bg-gray-50 overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-swiss-fg pb-4">
-          <h2 className="text-2xl font-black text-swiss-fg uppercase tracking-widest">
-            Financial Summary
-          </h2>
-          <div className="flex items-center gap-2 text-sm">
-            <Shield className="w-5 h-5" />
-            <span className="uppercase tracking-widest font-bold">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">Financial Summary</h2>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Shield className="w-4 h-4" />
+            <span className="capitalize">
               {policyType === "none" ? "No Insurance" : `${policyType}'s Insurance`}
             </span>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-swiss-fg">
+        {/* Financial Summary Cards - Responsive Grid */}
+        <OwnershipSummaryCard
+          verifiedItemsCount={verifiedItemsCount}
+          pendingSerialCaptures={pendingSerialCaptures}
+          reviewFlags={reviewFlags}
+          totalVerifiedValue={totalVerifiedValue}
+        />
+
+        <motion.div
+          className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ staggerChildren: 0.1 }}
+        >
           {/* Total Value */}
-          <div className="p-6 border-b-2 sm:border-b-0 sm:border-r-2 border-swiss-fg bg-swiss">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-swiss-fg/60" />
-              <span className="text-xs font-bold uppercase tracking-widest text-swiss-fg/60">
+              <DollarSign className="w-4 h-4 text-gray-500" />
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Total Value
               </span>
             </div>
-            <p className="text-3xl font-black text-swiss-fg">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
               <AnimatedNumber value={totalValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
           {/* Protected Value */}
-          <div className="p-6 border-b-2 lg:border-b-0 lg:border-r-2 border-swiss-fg bg-swiss">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-swiss-fg" />
-              <span className="text-xs font-bold uppercase tracking-widest text-swiss-fg/60">
+              <Shield className="w-4 h-4 text-green-500" />
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Protected
               </span>
             </div>
-            <p className="text-3xl font-black text-swiss-fg">
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
               <AnimatedNumber value={protectedValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
-          {/* Unprotected Value — MOST PROMINENT */}
-          <div
+          {/* Unprotected Value - State Farm Red - MOST PROMINENT */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
             data-testid="unprotected-section"
-            className="p-6 bg-swiss-accent text-swiss-bg sm:col-span-2 lg:col-span-1 border-b-2 lg:border-b-0 lg:border-r-2 border-swiss-fg"
+            className="bg-gradient-to-br from-[#E31837] to-[#B8122C] rounded-xl shadow-lg p-4 sm:p-5 col-span-1 xs:col-span-2 lg:col-span-1 transform hover:scale-[1.02] transition-transform"
           >
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-swiss-bg/80" />
-              <span className="text-xs font-black uppercase tracking-widest text-swiss-bg/80">
+              <AlertTriangle className="w-5 h-5 text-white/90" />
+              <span className="text-xs font-bold text-white/90 uppercase tracking-wide">
                 UNPROTECTED
               </span>
             </div>
-            <p className="text-5xl font-black text-swiss-bg tracking-tight">
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight drop-shadow-sm">
               <AnimatedNumber value={unprotectedValue} formatter={formatCurrency} />
             </p>
-          </div>
+          </motion.div>
 
           {/* Coverage Gap */}
-          <div className="p-6 bg-swiss sm:col-span-2 lg:col-span-1">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5"
+          >
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-swiss-fg/60" />
-              <span className="text-xs font-bold uppercase tracking-widest text-swiss-fg/60">
+              <TrendingUp className="w-4 h-4 text-gray-500" />
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Coverage Gap
               </span>
             </div>
-            <p className="text-3xl font-black text-swiss-fg">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
               <AnimatedNumber
                 value={coverageGapPercentage}
                 formatter={(v) => formatPercentage(v)}
               />
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* Empty State */}
+        {/* Empty State Message */}
         {!hasItems && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-2 border-swiss-fg p-12 text-center swiss-dots"
+            className="bg-blue-50 border border-blue-200 rounded-xl p-6 sm:p-8 text-center"
           >
-            <div className="flex justify-center mb-4">
-              <div className="border-2 border-swiss-fg p-4">
-                <DollarSign className="w-8 h-8 text-swiss-fg" />
+            <div className="flex justify-center mb-3">
+              <div className="bg-blue-100 rounded-full p-3">
+                <DollarSign className="w-6 h-6 text-[#E31837]" />
               </div>
             </div>
-            <h3 className="text-xl font-black text-swiss-fg uppercase tracking-widest mb-2">
-              No Items Detected
-            </h3>
-            <p className="text-swiss-fg/70 max-w-md mx-auto">
-              Point your camera at objects to begin scanning. Detected items will appear here.
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Items Detected</h3>
+            <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
+              Point your camera at objects to begin scanning. Detected items will appear here with
+              their insurance coverage status.
             </p>
           </motion.div>
         )}
@@ -164,19 +272,19 @@ export function Dashboard({
         {/* All Covered Message */}
         {allCovered && hasItems && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="border-2 border-swiss-fg p-6 bg-swiss-fg text-swiss-bg"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6"
           >
-            <div className="flex items-center gap-4">
-              <div className="border-2 border-swiss-bg p-2">
-                <CheckCircle className="w-6 h-6 text-swiss-bg" />
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 rounded-full p-2">
+                <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 className="font-black uppercase tracking-widest text-lg">
-                  All items are fully covered
+                <h3 className="text-base sm:text-lg font-semibold text-green-900">
+                  All items are fully covered!
                 </h3>
-                <p className="text-swiss-bg/80">
+                <p className="text-green-700 text-sm sm:text-base">
                   Your current insurance policy protects all detected items.
                 </p>
               </div>
@@ -184,43 +292,51 @@ export function Dashboard({
           </motion.div>
         )}
 
-        {/* Item Breakdown Table */}
+        {/* Per-Item Breakdown */}
         {hasItems && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-2 border-swiss-fg"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
           >
-            <div className="px-6 py-4 border-b-2 border-swiss-fg bg-swiss-muted swiss-grid-pattern">
-              <h3 className="font-black uppercase tracking-widest text-swiss-fg">Item Breakdown</h3>
+            <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Item Breakdown</h3>
             </div>
-            <div>
+            <div className="divide-y divide-gray-100">
               {items.map((item: ItemBreakdown, index: number) => {
-                const colors = statusColors[item.status];
+                const colors = statusColors[item.status] || statusColors.not_covered;
                 return (
                   <motion.button
                     key={item.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
                     data-testid="item-row"
                     onClick={() => onItemClick?.(item)}
-                    className="w-full px-6 py-4 flex items-center justify-between border-b border-swiss-fg/20 hover:bg-swiss-muted transition-colors text-left"
+                    className="w-full px-3 sm:px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#E31837]"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                       <div
-                        className={`w-3 h-3 ${colors.bg} ${item.status === "conditional" ? "border-2 border-swiss-fg" : ""}`}
+                        className={`w-3 h-3 rounded-full shrink-0 ${
+                          item.status === "covered"
+                            ? "bg-green-500"
+                            : item.status === "conditional"
+                              ? "bg-yellow-500"
+                              : "bg-[#E31837]"
+                        }`}
                       />
-                      <div>
-                        <p className="font-bold text-swiss-fg capitalize">{item.category}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 capitalize text-sm sm:text-base truncate">
+                          {item.category}
+                        </p>
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${colors.text}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}
                         >
                           {statusLabels[item.status]}
                         </span>
                       </div>
                     </div>
-                    <p className="font-black text-swiss-fg text-lg">
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base shrink-0 ml-2">
                       {formatCurrency(item.estimatedValue)}
                     </p>
                   </motion.button>
@@ -230,37 +346,33 @@ export function Dashboard({
           </motion.div>
         )}
 
-        {/* Recommendations */}
+        {/* Upgrade Recommendations */}
         {hasRecommendations && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-2 border-swiss-accent"
+            className="bg-orange-50 border border-orange-200 rounded-xl p-4"
           >
-            <div className="px-6 py-4 border-b-2 border-swiss-accent bg-swiss-accent text-swiss-bg">
-              <h3 className="font-black uppercase tracking-widest flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Recommendations
-              </h3>
-            </div>
-            <div className="p-6 swiss-diagonal">
-              <ul className="space-y-4">
-                {recommendations.map((recommendation: string, index: number) => (
-                  <motion.li
-                    key={recommendation}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-start gap-3"
-                  >
-                    <span className="inline-flex items-center justify-center w-8 h-8 bg-swiss-fg text-swiss-bg font-black text-sm shrink-0">
-                      {index + 1}
-                    </span>
-                    <span className="text-swiss-fg font-medium">{recommendation}</span>
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
+            <h3 className="font-semibold text-orange-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
+              <TrendingUp className="w-5 h-5" />
+              Recommendations
+            </h3>
+            <ul className="space-y-2">
+              {recommendations.map((recommendation: string, index: number) => (
+                <motion.li
+                  key={recommendation}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start gap-2 text-orange-800 text-sm sm:text-base"
+                >
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-200 text-orange-700 text-xs font-medium shrink-0 mt-0.5">
+                    {index + 1}
+                  </span>
+                  <span>{recommendation}</span>
+                </motion.li>
+              ))}
+            </ul>
           </motion.div>
         )}
       </div>

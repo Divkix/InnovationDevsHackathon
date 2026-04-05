@@ -7,7 +7,7 @@ import { DetailModal } from "./DetailModal";
 
 // Mock localStorage
 const localStorageMock: {
-  getItem: Mock<() => string | null>;
+  getItem: Mock<(key: string) => string | null>;
   setItem: Mock<() => void>;
   removeItem: Mock<() => void>;
   clear: Mock<() => void>;
@@ -17,10 +17,12 @@ const localStorageMock: {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
+const storageState: Record<string, string> = {};
 Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
   writable: true,
 });
+localStorageMock.getItem.mockImplementation((key: string) => storageState[key] ?? null);
 
 // Mock coverageLookup
 vi.mock("@/utils/coverageLookup", () => ({
@@ -203,7 +205,9 @@ describe("DetailModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorageMock.getItem.mockReturnValue(null);
+    Object.keys(storageState).forEach((key) => {
+      delete storageState[key];
+    });
   });
 
   // VAL-DM-001: Detail modal opens on bounding box tap/click
@@ -566,6 +570,85 @@ describe("DetailModal", () => {
 
       const backdrop = screen.getByTestId("modal-backdrop");
       expect(backdrop).toHaveClass("bg-black/50");
+    });
+  });
+
+  // VAL-DM-006B: Detail modal voice playback should use the selected language
+  describe("Voice Playback", () => {
+    const voicedItem = createDetectedItem("1", "laptop", "camera");
+
+    beforeEach(() => {
+      storageState.insurescope_language = "es";
+      storageState.insurescope_voiceEnabled = "true";
+      storageState.insurescope_ttsEnabled = "true";
+    });
+
+    it("speaks the Gemini explanation text when available", () => {
+      const cancelMock = vi.fn();
+      const speakMock = vi.fn();
+
+      class MockUtterance {
+        text: string;
+        lang = "";
+        rate = 1;
+        pitch = 1;
+        volume = 1;
+
+        constructor(text: string) {
+          this.text = text;
+        }
+      }
+
+      Object.defineProperty(window, "speechSynthesis", {
+        configurable: true,
+        value: { cancel: cancelMock, speak: speakMock },
+      });
+      Object.defineProperty(window, "SpeechSynthesisUtterance", {
+        configurable: true,
+        value: MockUtterance,
+      });
+
+      renderWithProvider(
+        <DetailModal
+          isOpen={true}
+          onClose={mockOnClose}
+          item={voicedItem}
+          policyType="renters"
+          coverageExplanation="Su laptop normalmente está cubierta bajo renters, sujeto al deducible."
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /listen to explanation/i }));
+
+      expect(cancelMock).toHaveBeenCalledOnce();
+      expect(speakMock).toHaveBeenCalledOnce();
+
+      const utterance = speakMock.mock.calls[0]?.[0] as MockUtterance;
+      expect(utterance.text).toBe(
+        "Su laptop normalmente está cubierta bajo renters, sujeto al deducible.",
+      );
+      expect(utterance.lang).toBe("es-ES");
+    });
+
+    it("shows a fallback message when browser speech synthesis is unavailable", () => {
+      Object.defineProperty(window, "speechSynthesis", {
+        configurable: true,
+        value: undefined,
+      });
+      Object.defineProperty(window, "SpeechSynthesisUtterance", {
+        configurable: true,
+        value: undefined,
+      });
+
+      renderWithProvider(
+        <DetailModal isOpen={true} onClose={mockOnClose} item={voicedItem} policyType="renters" />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /listen to summary/i }));
+
+      expect(
+        screen.getByText(/voice playback is not supported in this browser/i),
+      ).toBeInTheDocument();
     });
   });
 

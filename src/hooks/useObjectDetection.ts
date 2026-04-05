@@ -11,9 +11,9 @@ import { type UseYOLODetectionReturn, useYOLODetection } from "./useYOLODetectio
  *
  * @returns Detection methods and state from YOLO26
  */
-export function useObjectDetection(): UseYOLODetectionReturn {
+export function useObjectDetection(confidenceThreshold?: number): UseYOLODetectionReturn {
   // Delegate to YOLO26-based implementation
-  return useYOLODetection();
+  return useYOLODetection(confidenceThreshold);
 }
 
 export default useObjectDetection;
