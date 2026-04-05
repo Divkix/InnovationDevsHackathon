@@ -62,16 +62,27 @@ export function useObjectDetection() {
 
     async function initializeDetector() {
       try {
+        // Create a timeout promise to detect hanging initialization
+        const timeoutMs = 15000
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error(`Model loading timeout after ${timeoutMs}ms. Check network connection and CDN accessibility.`))
+          }, timeoutMs)
+        })
+
         // Load MediaPipe WASM files from CDN
-        const vision = await FilesetResolver.forVisionTasks(
+        const visionPromise = FilesetResolver.forVisionTasks(
           'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm'
         )
+
+        // Race between initialization and timeout
+        const vision = await Promise.race([visionPromise, timeoutPromise])
 
         // Check if component is still mounted
         if (cancelledRef.current) return
 
         // Create ObjectDetector with specified model configuration
-        detectorInstance = await ObjectDetector.createFromOptions(vision, {
+        const detectorPromise = ObjectDetector.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0_uint8.tflite',
             delegate: 'GPU'
@@ -79,6 +90,9 @@ export function useObjectDetection() {
           runningMode: 'VIDEO',
           scoreThreshold: 0.5
         })
+
+        // Race detector creation with timeout
+        detectorInstance = await Promise.race([detectorPromise, timeoutPromise])
 
         // Check again if component is still mounted after async operation
         if (cancelledRef.current) {
@@ -97,7 +111,9 @@ export function useObjectDetection() {
 
         // Set appropriate error message based on error type
         let errorMessage = 'Failed to initialize object detection'
-        if (err.message?.includes('WASM') || err.message?.includes('wasm')) {
+        if (err.message?.includes('timeout')) {
+          errorMessage = err.message
+        } else if (err.message?.includes('WASM') || err.message?.includes('wasm')) {
           errorMessage = `WASM loading failed: ${err.message}`
         } else if (err.message?.includes('model') || err.message?.includes('fetch') || err.message?.includes('network')) {
           errorMessage = `Model initialization failed: ${err.message}`

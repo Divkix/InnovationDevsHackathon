@@ -263,7 +263,7 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
   
   const policyInfo = getPolicyInfo()
   
-  // Loading state with State Farm branding
+  // Loading state with State Farm branding and timeout warning
   if (isLoadingModel) {
     return (
       <motion.div
@@ -282,6 +282,9 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
         <p className="text-white text-base sm:text-lg font-semibold">Loading AI Model...</p>
         <p className="text-gray-400 text-xs sm:text-sm mt-2 text-center px-4">
           Please wait while we initialize the object detector
+        </p>
+        <p className="text-gray-500 text-xs mt-4 text-center px-4">
+          (This may take up to 15 seconds)
         </p>
       </motion.div>
     )
@@ -313,7 +316,9 @@ export function CameraView({ onError, onManualMode, onItemClick }) {
             : isBrowserUnsupported
             ? 'Your browser does not support camera access. Please use a modern browser like Chrome, Safari, or Firefox.'
             : isModelError
-            ? 'The AI detection model failed to load. This may be due to a network issue. Please try reloading the page.'
+            ? (modelError?.message?.includes('timeout') 
+                ? 'The AI model took too long to load. This is typically due to network issues or CDN unavailability. Please check your internet connection and try again.'
+                : 'The AI detection model failed to load. This may be due to a network issue. Please try reloading the page.')
             : currentError.message}
         </p>
         
