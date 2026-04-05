@@ -1,143 +1,159 @@
 import { useState } from 'react'
 import { useAppContext } from './context/AppContext.jsx'
 import { Dashboard } from './components/Dashboard/Dashboard.jsx'
+import { PolicySelector } from './components/PolicySelector/PolicySelector.jsx'
+import { Camera, LayoutDashboard } from 'lucide-react'
 
 function App() {
-  const [count, setCount] = useState(0)
   const { 
     policyType, 
     onboardingComplete, 
     activeTab,
     manualItems,
-    setPolicyType, 
-    completeOnboarding,
+    detectedItems,
     setActiveTab,
-    addManualItem,
-    removeManualItem
   } = useAppContext()
 
   // Render Dashboard when active tab is 'dashboard'
   if (activeTab === 'dashboard') {
     return (
-      <Dashboard 
-        detectedItems={[]}
-        manualItems={manualItems}
-        policyType={policyType}
-      />
+      <div className="min-h-screen bg-gray-100 flex flex-col">
+        {/* Header with Policy Selector */}
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">IS</span>
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">InsureScope</h1>
+            </div>
+            
+            {/* Policy Selector in Header */}
+            <PolicySelector 
+              variant="compact" 
+              detectedItems={Array.from(detectedItems?.values() || [])}
+              manualItems={manualItems}
+            />
+          </div>
+        </header>
+
+        {/* Tab Navigation */}
+        <div className="bg-white border-b border-gray-200 px-4 py-2">
+          <div className="max-w-6xl mx-auto flex gap-4">
+            <button
+              onClick={() => setActiveTab('camera')}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                ${activeTab === 'camera' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-600 hover:bg-gray-100'
+                }
+              `}
+            >
+              <Camera className="w-4 h-4" />
+              Camera
+            </button>
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                ${activeTab === 'dashboard' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-600 hover:bg-gray-100'
+                }
+              `}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </button>
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        <main className="flex-1 p-4">
+          <Dashboard 
+            detectedItems={Array.from(detectedItems?.values() || [])}
+            manualItems={manualItems}
+            policyType={policyType}
+          />
+        </main>
+      </div>
     )
   }
 
+  // Camera view with header
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
-          InsureScope
-        </h1>
-        <p className="text-gray-600 text-center mb-6">
-          AI-powered insurance coverage analysis
-        </p>
-        
-        {/* AppContext Demo */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-3">App State (AppContext)</h2>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Policy Type:</span>
-              <span className="font-medium text-blue-600" data-testid="display-policy">{policyType}</span>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Header with Policy Selector */}
+      <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">IS</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Onboarding Complete:</span>
-              <span className="font-medium text-blue-600" data-testid="display-onboarding">{onboardingComplete ? 'Yes' : 'No'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Active Tab:</span>
-              <span className="font-medium text-blue-600" data-testid="display-tab">{activeTab}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Manual Items:</span>
-              <span className="font-medium text-blue-600" data-testid="display-items">{manualItems.length}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3 mb-6">
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => setPolicyType('homeowners')}
-              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Homeowners
-            </button>
-            <button
-              onClick={() => setPolicyType('auto')}
-              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Auto
-            </button>
-            <button
-              onClick={() => setPolicyType('none')}
-              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              No Insurance
-            </button>
+            <h1 className="text-xl font-bold text-gray-900">InsureScope</h1>
           </div>
           
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => setActiveTab(activeTab === 'camera' ? 'dashboard' : 'camera')}
-              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Toggle Tab
-            </button>
-            <button
-              onClick={() => completeOnboarding()}
-              className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Complete Onboarding
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => addManualItem({ id: `item-${Date.now()}`, name: 'New Item', value: 100 })}
-              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Add Manual Item
-            </button>
-            <button
-              onClick={() => manualItems.length > 0 && removeManualItem(manualItems[manualItems.length - 1].id)}
-              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Remove Last Item
-            </button>
-          </div>
+          {/* Policy Selector in Header */}
+          <PolicySelector 
+            variant="compact" 
+            detectedItems={Array.from(detectedItems?.values() || [])}
+            manualItems={manualItems}
+          />
         </div>
-        
-        <div className="flex flex-col items-center gap-4">
+      </header>
+
+      {/* Tab Navigation */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2">
+        <div className="max-w-6xl mx-auto flex gap-4">
           <button
-            onClick={() => setCount((count) => count + 1)}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+            onClick={() => setActiveTab('camera')}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+              ${activeTab === 'camera' 
+                ? 'bg-blue-100 text-blue-700' 
+                : 'text-gray-600 hover:bg-gray-100'
+              }
+            `}
           >
-            Count is {count}
+            <Camera className="w-4 h-4" />
+            Camera
           </button>
-          
-          <div className="flex gap-2 mt-4">
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full font-medium">
-              React ✓
-            </span>
-            <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
-              Vite ✓
-            </span>
-            <span className="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full font-medium">
-              Tailwind ✓
-            </span>
-            <span className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full font-medium">
-              AppContext ✓
-            </span>
-          </div>
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+              ${activeTab === 'dashboard' 
+                ? 'bg-blue-100 text-blue-700' 
+                : 'text-gray-600 hover:bg-gray-100'
+              }
+            `}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Dashboard
+          </button>
         </div>
       </div>
+
+      {/* Main Content - Full Policy Selector Demo */}
+      <main className="flex-1 p-4 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Full Policy Selector */}
+          <PolicySelector 
+            detectedItems={Array.from(detectedItems?.values() || [])}
+            manualItems={manualItems}
+          />
+          
+          {/* Info Card */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-semibold text-blue-900 mb-2">About Policy Selection</h3>
+            <p className="text-blue-800 text-sm">
+              Select your insurance policy type above to see how different policies cover your detected items. 
+              Try "No Insurance" to see the <strong>Red Moment</strong> — when all items appear red and unprotected!
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
